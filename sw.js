@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teleaudio-v6';
+const CACHE_NAME = 'teleaudio-v76';
 const ASSETS = [
   './',
   './index.html',
@@ -12,7 +12,9 @@ const ASSETS = [
   './logos/canalsurmas.png', './logos/eltoro.png', './logos/trece.png',
   './logos/euronews.png', './logos/rne.png', './logos/r5.png',
   './logos/los40.png', './logos/dial.png', './logos/radiole.png', './logos/melodia.png',
-  './logos/tv3.png', './logos/esport3.png', './logos/sx3.png', './logos/tdt324.png', './logos/7tvgranada.png', './logos/radiocable.png'
+  './logos/tv3.png', './logos/esport3.png', './logos/sx3.png', './logos/tdt324.png', './logos/7tvgranada.png', './logos/radiocable.png',
+  './logos/rmtv.png', './logos/esradio.png', './logos/rmarca.png', './logos/rac1.png', './logos/catradio.png',
+  './logos/euskadi.png', './logos/galega.png', './logos/ondavalencia.png', './logos/musictv.png'
   './logos/ser.png', './logos/cope.png', './logos/onda0.png',
   './logos/c100.png', './logos/rockfm.png', './logos/kissfm.png', './logos/europafm.png', './logos/radiocable.png'
 ];
