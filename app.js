@@ -132,7 +132,7 @@
     const isHls = ch.url.includes('.m3u8');
 
     if (isHls && !canPlayHls && window.Hls && Hls.isSupported()) {
-      hls = new Hls({ maxBufferLength: 30 });
+      hls = new Hls({ maxBufferLength: 180, maxMaxBufferLength: 300 });
       hls.loadSource(ch.url);
       hls.attachMedia(audio);
       hls.on(Hls.Events.ERROR, (e, data) => { if (data.fatal) showError(); });
@@ -158,6 +158,7 @@
     stopStream();
     isPlaying = false;
     currentItem = null;
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
     updateUI();
     statusText.textContent = 'Toca un canal para escucharlo';
   }
@@ -193,6 +194,7 @@
   // ================= MEDIA SESSION (pantalla bloqueada) =================
   function setMediaSession(ch) {
     if (!('mediaSession' in navigator)) return;
+    navigator.mediaSession.playbackState = 'playing';
     navigator.mediaSession.metadata = new MediaMetadata({
       title: ch.name,
       artist: 'TeleAudio',
