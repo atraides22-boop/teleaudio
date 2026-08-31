@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teleaudio-v4';
+const CACHE_NAME = 'teleaudio-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,8 @@ const ASSETS = [
   './logos/clan.png', './logos/canalsur.png', './logos/canalsur2.png',
   './logos/canalsurmas.png', './logos/eltoro.png', './logos/trece.png',
   './logos/euronews.png', './logos/rne.png', './logos/r5.png',
+  './logos/los40.png', './logos/dial.png', './logos/radiole.png', './logos/melodia.png',
+  './logos/tv3.png', './logos/esport3.png', './logos/sx3.png', './logos/tdt324.png', './logos/7tvgranada.png', './logos/radiocable.png'
   './logos/ser.png', './logos/cope.png', './logos/onda0.png',
   './logos/c100.png', './logos/rockfm.png', './logos/kissfm.png', './logos/europafm.png', './logos/radiocable.png'
 ];
