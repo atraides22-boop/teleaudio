@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teleaudio-v5';
+const CACHE_NAME = 'teleaudio-v6';
 const ASSETS = [
   './',
   './index.html',
