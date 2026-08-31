@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>TeleAudio - La tele en tu oreja</title>
-  <meta name="description" content="Escucha el audio de los canales de televisión españoles sin imagen. Ahorra datos mientras trabajas o haces deporte.">
-  <meta name="theme-color" content="#0b0f19">
+  <meta name="description" content="Escucha el audio de los canales de televisión y radios españolas sin imagen. Ahorra datos.">
+  <meta name="theme-color" id="meta-theme" content="#0b0f19">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
@@ -17,13 +17,22 @@
         <img src="icon.svg" alt="TeleAudio" class="app-logo">
         <div>
           <h1>TeleAudio</h1>
-          <span class="subtitle">La tele en tu oreja · solo audio</span>
+          <span class="subtitle">La tele y la radio en tu oreja</span>
         </div>
       </div>
-      <button id="power-btn" class="power-btn" title="Reproducir/Parar">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
-      </button>
+      <div class="header-actions">
+        <button id="theme-btn" class="icon-btn" title="Tema claro/oscuro">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <button id="settings-btn" class="icon-btn" title="Ajustes">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button id="power-btn" class="power-btn" title="Reproducir/Parar">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+        </button>
+      </div>
     </div>
+
     <div id="now-playing" class="now-playing" style="display:none;">
       <div class="np-info">
         <img id="np-logo" src="" alt="" class="np-logo">
@@ -32,12 +41,22 @@
           <div id="np-name" class="np-name">—</div>
         </div>
       </div>
-      <div class="np-equalizer" id="np-eq">
-        <span></span><span></span><span></span><span></span>
+      <div class="np-right">
+        <span id="timer-badge" class="timer-badge" style="display:none;">⏱ 30:00</span>
+        <div class="np-equalizer" id="np-eq">
+          <span></span><span></span><span></span><span></span>
+        </div>
       </div>
     </div>
-    <input type="search" id="search" class="search" placeholder="🔍 Buscar canal...">
+
+    <input type="search" id="search" class="search" placeholder="🔍 Buscar canal o emisora...">
   </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="tv">📺 TV</button>
+    <button class="tab" data-tab="radio">📻 Radio</button>
+    <button class="tab" data-tab="favs">❤️ Favoritos</button>
+  </nav>
 
   <main>
     <div id="channel-grid" class="channel-grid"></div>
@@ -50,6 +69,48 @@
     <span id="status-text">Toca un canal para escucharlo</span>
     <span class="data-note">📡 Solo audio · ahorro de datos</span>
   </footer>
+
+  <!-- Modal ajustes -->
+  <div id="settings-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>⚙️ Ajustes</h2>
+        <button class="modal-close" data-close="settings-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-group">
+          <h3>⏱ Temporizador de apagado</h3>
+          <div class="btn-row">
+            <button class="btn" data-timer="15">15 min</button>
+            <button class="btn" data-timer="30">30 min</button>
+            <button class="btn" data-timer="60">60 min</button>
+            <button class="btn" data-timer="0">Off</button>
+          </div>
+        </div>
+        <div class="setting-group">
+          <h3>⏰ Despertador</h3>
+          <div class="alarm-row">
+            <input type="time" id="alarm-time" value="07:00">
+            <select id="alarm-channel"></select>
+            <button id="alarm-set-btn" class="btn btn-primary">Activar</button>
+          </div>
+          <div id="alarm-status" class="alarm-status"></div>
+          <p class="hint">⚠️ Suena si la app está abierta (en segundo plano). Es una limitación de las apps web.</p>
+        </div>
+        <div class="setting-group">
+          <h3>🎨 Tema</h3>
+          <div class="btn-row">
+            <button id="theme-dark-btn" class="btn">🌙 Oscuro</button>
+            <button id="theme-light-btn" class="btn">☀️ Claro</button>
+          </div>
+        </div>
+        <div class="setting-group">
+          <h3>ℹ️ Acerca de</h3>
+          <p class="hint">TeleAudio v2 — La tele y la radio en tu oreja. Solo audio, ahorro de datos. Los streams son los oficiales públicos de cada cadena.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div id="toast" class="toast"></div>
 
