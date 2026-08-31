@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>TeleAudio - La tele en tu oreja</title>
+  <meta name="description" content="Escucha el audio de los canales de televisión españoles sin imagen. Ahorra datos mientras trabajas o haces deporte.">
+  <meta name="theme-color" content="#0b0f19">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-top">
+      <div class="logo-title">
+        <img src="icon.svg" alt="TeleAudio" class="app-logo">
+        <div>
+          <h1>TeleAudio</h1>
+          <span class="subtitle">La tele en tu oreja · solo audio</span>
+        </div>
+      </div>
+      <button id="power-btn" class="power-btn" title="Reproducir/Parar">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+      </button>
+    </div>
+    <div id="now-playing" class="now-playing" style="display:none;">
+      <div class="np-info">
+        <img id="np-logo" src="" alt="" class="np-logo">
+        <div>
+          <div class="np-label">SONANDO AHORA</div>
+          <div id="np-name" class="np-name">—</div>
+        </div>
+      </div>
+      <div class="np-equalizer" id="np-eq">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+    <input type="search" id="search" class="search" placeholder="🔍 Buscar canal...">
+  </header>
+
+  <main>
+    <div id="channel-grid" class="channel-grid"></div>
+    <div id="error-banner" class="error-banner" style="display:none;">
+      ⚠️ No se puede reproducir este canal. Prueba con otro.
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <span id="status-text">Toca un canal para escucharlo</span>
+    <span class="data-note">📡 Solo audio · ahorro de datos</span>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="hls.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
