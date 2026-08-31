@@ -1,16 +1,33 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0b0f19"/>
-      <stop offset="100%" stop-color="#1e293b"/>
+      <stop offset="55%" stop-color="#111c3a"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
     </linearGradient>
-    <linearGradient id="wave" x1="0%" y1="0%" x2="0%" y2="100%">
+    <linearGradient id="barGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#22d3ee"/>
       <stop offset="100%" stop-color="#6366f1"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="110" fill="url(#bg)"/>
-  <circle cx="256" cy="256" r="150" fill="none" stroke="url(#wave)" stroke-width="22"/>
-  <circle cx="256" cy="256" r="82" fill="url(#wave)"/>
-  <path d="M216 180 v152 M256 140 v232 M296 180 v152" stroke="#0b0f19" stroke-width="18" stroke-linecap="round"/>
+
+  <!-- Fondo redondeado -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bgGrad)"/>
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="none" stroke="#22d3ee" stroke-opacity="0.25" stroke-width="4"/>
+
+  <!-- Anillo de señal de radio -->
+  <path d="M256 190 a96 96 0 0 1 0 132" fill="none" stroke="url(#ringGrad)" stroke-width="14" stroke-linecap="round" opacity="0.5"/>
+  <path d="M256 232 a54 54 0 0 1 0 48" fill="none" stroke="url(#ringGrad)" stroke-width="12" stroke-linecap="round" opacity="0.75"/>
+
+  <!-- Barras de onda de sonido -->
+  <rect x="196" y="196" width="34" height="120" rx="17" fill="url(#barGrad)"/>
+  <rect x="239" y="156" width="34" height="200" rx="17" fill="url(#barGrad)"/>
+  <rect x="282" y="196" width="34" height="120" rx="17" fill="url(#barGrad)"/>
+
+  <!-- Punto central -->
+  <circle cx="256" cy="256" r="16" fill="#22d3ee"/>
 </svg>

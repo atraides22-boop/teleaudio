@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teleaudio-v3';
+const CACHE_NAME = 'teleaudio-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -12,7 +12,7 @@ const ASSETS = [
   './logos/canalsurmas.png', './logos/eltoro.png', './logos/trece.png',
   './logos/euronews.png', './logos/rne.png', './logos/r5.png',
   './logos/ser.png', './logos/cope.png', './logos/onda0.png',
-  './logos/c100.png', './logos/rockfm.png', './logos/kissfm.png', './logos/europafm.png'
+  './logos/c100.png', './logos/rockfm.png', './logos/kissfm.png', './logos/europafm.png', './logos/radiocable.png'
 ];
 
 self.addEventListener('install', (e) => {
