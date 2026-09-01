@@ -564,6 +564,8 @@
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       currentTab = tab.dataset.tab;
+      // Cada vez que se abre 'Canción del día', buscar la versión más nueva
+      if (currentTab === 'cancion') loadSongs();
       renderChannels();
     });
   });
