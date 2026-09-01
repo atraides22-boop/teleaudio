@@ -5,7 +5,7 @@ const ASSETS = [
   './style.css',
   './app.js',
   './hls.min.js',
-  './manifest.json',
+  './manifest.json', './canciones.json',
   './icon.svg',
   './logos/la1.png', './logos/la2.png', './logos/24h.png', './logos/tdp.png',
   './logos/clan.png', './logos/canalsur.png', './logos/canalsur2.png',

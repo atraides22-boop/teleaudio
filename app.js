@@ -96,28 +96,50 @@
 
   const ALL = [...TV_CHANNELS, ...RADIO_STATIONS];
 
-  // ================= LA CANCIÓN DEL DÍA =================
-  const DAILY_SONGS = [
-    { title: 'Ay-Ay-Ay', artist: 'José Mojica', url: 'https://archive.org/download/edison-80793_01_9526/cusb_ed_80793_01_9526_0a.mp3' },
-    { title: 'Marchita El Alma', artist: 'José Mojica', url: 'https://archive.org/download/edison-60051_01_10384/cusb_ed_60051_01_10384_0a.mp3' },
-    { title: 'Mi Nena', artist: 'Grabación Edison', url: 'https://archive.org/download/edison-60025_01_6396/cusb_ed_60025_01_6396_0b.mp3' },
-    { title: 'Carta De Un Isleño', artist: 'Grabación Edison', url: 'https://archive.org/download/edison-60001_01_5408/cusb_ed_60001_01_5408_0c.mp3' }
-  ];
+  // ================= LA CANCIÓN DEL DÍA (historial) =================
+  const CANCIONES_URL = 'https://atraides22-boop.github.io/teleaudio/canciones.json';
+  let songHistory = [];
 
+  // Carga el historial: primero remoto (actualizado por el editor), luego local
+  async function loadSongs() {
+    try {
+      const res = await fetch(CANCIONES_URL + '?v=' + Date.now(), { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.canciones) && data.canciones.length) {
+          songHistory = data.canciones;
+          localStorage.setItem('teleaudio_song_history', JSON.stringify(songHistory));
+          if (currentTab === 'cancion') renderChannels();
+          return;
+        }
+      }
+    } catch (e) { /* sin conexión o bloqueado */ }
+    // Fallback: caché local
+    try {
+      const cached = localStorage.getItem('teleaudio_song_history');
+      if (cached) songHistory = JSON.parse(cached);
+    } catch (e) {}
+  }
+
+  // Canción de hoy = la que tiene la fecha de hoy; si no, la más reciente
   function getSongOfDay() {
-    // Canción personalizada (si el usuario puso una)
+    // Override personal (si el usuario puso una en ajustes)
     const custom = localStorage.getItem('teleaudio_song_custom');
     if (custom) {
       try {
         const c = JSON.parse(custom);
-        if (c && c.url) return c;
+        if (c && c.url) return { fecha: new Date().toISOString().slice(0, 10), titulo: c.title, artista: c.artist, youtube: c.url, spotify: '' };
       } catch (e) {}
     }
-    // Rotación automática: una canción distinta cada día del año
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 0);
-    const dayOfYear = Math.floor((now - start) / 86400000);
-    return DAILY_SONGS[dayOfYear % DAILY_SONGS.length];
+    if (!songHistory.length) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    const deHoy = songHistory.find(s => s.fecha === today);
+    return deHoy || songHistory[0];
+  }
+
+  function openSongLink(url) {
+    if (!url) return;
+    window.open(url, isNative ? '_system' : '_blank');
   }
 
   // ================= DOM =================
@@ -161,42 +183,95 @@
     return list.filter(c => !q || c.name.toLowerCase().includes(q));
   }
 
+  function fmtFecha(fecha) {
+    try {
+      const d = new Date(fecha + 'T12:00:00');
+      return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    } catch (e) { return fecha; }
+  }
+
+  function songLinks(song, big) {
+    const wrap = document.createElement('div');
+    wrap.className = 'song-links';
+    if (song.youtube) {
+      const b = document.createElement('button');
+      b.className = big ? 'song-play-btn yt' : 'song-mini-btn yt';
+      b.textContent = '▶ YouTube';
+      b.addEventListener('click', () => openSongLink(song.youtube));
+      wrap.appendChild(b);
+    }
+    if (song.spotify) {
+      const b = document.createElement('button');
+      b.className = big ? 'song-play-btn sp' : 'song-mini-btn sp';
+      b.textContent = '🎧 Spotify';
+      b.addEventListener('click', () => openSongLink(song.spotify));
+      wrap.appendChild(b);
+    }
+    if (!song.youtube && !song.spotify) {
+      const p = document.createElement('div');
+      p.className = 'song-nolink';
+      p.textContent = 'Enlace próximamente…';
+      wrap.appendChild(p);
+    }
+    return wrap;
+  }
+
   function renderSongOfDay() {
     grid.innerHTML = '';
     const song = getSongOfDay();
+    if (!song) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:30px;">Aún no hay canción del día. ¡Vuelve pronto!</div>';
+      return;
+    }
+
+    // --- Canción de hoy (grande) ---
     const card = document.createElement('div');
     card.className = 'song-card';
-
     const disc = document.createElement('div');
     disc.className = 'song-disc';
     disc.innerHTML = '🎵';
-
     const title = document.createElement('div');
     title.className = 'song-title';
-    title.textContent = song.title;
-
+    title.textContent = song.titulo;
     const artist = document.createElement('div');
     artist.className = 'song-artist';
-    artist.textContent = song.artist || '';
-
-    const playBtn = document.createElement('button');
-    playBtn.className = 'song-play-btn';
-    playBtn.textContent = '▶ Reproducir';
-    playBtn.addEventListener('click', () => {
-      playItem({ id: 'cancion-dia', name: song.title + ' — ' + (song.artist || 'La canción del día'), logo: 'icon.svg', url: song.url });
-    });
-
+    artist.textContent = song.artista || '';
     const date = document.createElement('div');
     date.className = 'song-date';
-    const d = new Date();
-    date.textContent = d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-
+    date.textContent = '🎵 La canción de hoy — ' + fmtFecha(song.fecha || new Date().toISOString().slice(0, 10));
     card.appendChild(date);
     card.appendChild(disc);
     card.appendChild(title);
     card.appendChild(artist);
-    card.appendChild(playBtn);
+    card.appendChild(songLinks(song, true));
     grid.appendChild(card);
+
+    // --- Historial de canciones anteriores ---
+    const rest = songHistory.filter(s => s.fecha !== (song.fecha || ''));
+    if (rest.length) {
+      const header = document.createElement('div');
+      header.className = 'section-header';
+      header.textContent = '📜 Canciones anteriores';
+      grid.appendChild(header);
+
+      rest.forEach(s => {
+        const row = document.createElement('div');
+        row.className = 'song-history-row';
+        const info = document.createElement('div');
+        info.className = 'song-history-info';
+        const t = document.createElement('div');
+        t.className = 'song-history-title';
+        t.textContent = s.titulo + (s.artista ? ' — ' + s.artista : '');
+        const f = document.createElement('div');
+        f.className = 'song-history-date';
+        f.textContent = fmtFecha(s.fecha);
+        info.appendChild(t);
+        info.appendChild(f);
+        row.appendChild(info);
+        row.appendChild(songLinks(s, false));
+        grid.appendChild(row);
+      });
+    }
   }
 
   function renderChannels() {
@@ -541,5 +616,6 @@
   // ================= INICIO =================
   setTheme(localStorage.getItem('teleaudio_theme') || 'dark');
   setupAlarm();
+  loadSongs();
   renderChannels();
 })();

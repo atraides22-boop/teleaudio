@@ -366,3 +366,48 @@ body {
   cursor: pointer;
 }
 .song-play-btn:active { transform: scale(0.96); }
+
+/* Botones de enlace (YouTube/Spotify) */
+.song-links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.song-play-btn.yt { background: #ff0033; color: #fff; }
+.song-play-btn.sp { background: #1db954; color: #fff; }
+.song-mini-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.song-mini-btn.yt { background: #ff0033; }
+.song-mini-btn.sp { background: #1db954; }
+.song-nolink { color: var(--muted); font-size: 0.8rem; }
+
+/* Filas del historial */
+.song-history-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.song-history-info { min-width: 0; }
+.song-history-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 46vw;
+}
+.song-history-date {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: capitalize;
+}
