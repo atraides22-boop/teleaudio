@@ -434,3 +434,28 @@ body {
   min-height: 1.2em;
 }
 .song-play-btn:disabled { opacity: 0.5; }
+
+/* Botón de me gusta */
+.like-btn {
+  padding: 10px 18px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.like-btn.voted {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+.song-history-row .like-btn {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}

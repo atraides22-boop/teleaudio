@@ -99,6 +99,10 @@
   // ================= LA CANCIÓN DEL DÍA (historial) =================
   const CANCIONES_URL = 'https://atraides22-boop.github.io/teleaudio/canciones.json';
   let songHistory = [];
+  // Likes globales por fecha (los rellena el desarrollador al recibir los avisos)
+  let songLikes = JSON.parse(localStorage.getItem('teleaudio_song_likes') || '{}');
+  // Fechas a las que este dispositivo ya ha dado like
+  const myLikes = new Set(JSON.parse(localStorage.getItem('teleaudio_my_likes') || '[]'));
 
   // Carga el historial: primero remoto (actualizado por el editor), luego local
   async function loadSongs() {
@@ -109,6 +113,13 @@
         if (data && Array.isArray(data.canciones) && data.canciones.length) {
           songHistory = data.canciones;
           localStorage.setItem('teleaudio_song_history', JSON.stringify(songHistory));
+          // Recoger los likes globales incluidos en el JSON (campo "likes")
+          const likes = {};
+          data.canciones.forEach(s => { if (s.likes) likes[s.fecha] = s.likes; });
+          if (Object.keys(likes).length) {
+            songLikes = likes;
+            localStorage.setItem('teleaudio_song_likes', JSON.stringify(likes));
+          }
           if (currentTab === 'cancion') renderChannels();
           return;
         }
@@ -135,6 +146,40 @@
     const today = new Date().toISOString().slice(0, 10);
     const deHoy = songHistory.find(s => s.fecha === today);
     return deHoy || songHistory[0];
+  }
+
+  function giveLike(song) {
+    const fecha = song.fecha || new Date().toISOString().slice(0, 10);
+    if (myLikes.has(fecha)) {
+      showToast('Ya votaste esta canción 👍');
+      return;
+    }
+    myLikes.add(fecha);
+    localStorage.setItem('teleaudio_my_likes', JSON.stringify([...myLikes]));
+    songLikes[fecha] = (songLikes[fecha] || 0) + 1;
+    localStorage.setItem('teleaudio_song_likes', JSON.stringify(songLikes));
+    // Avisar al desarrollador (solo la app nativa tiene Telegram)
+    if (isNative) {
+      try {
+        Capacitor.Plugins.BackgroundAudio.sendLike({
+          name: localStorage.getItem('teleaudio_user_name') || 'Anónimo',
+          songTitle: song.titulo,
+          songDate: fecha
+        }).catch(() => {});
+      } catch (e) {}
+    }
+    showToast('❤️ ¡Gracias por tu voto!');
+    renderChannels();
+  }
+
+  function likeButton(song) {
+    const fecha = song.fecha || new Date().toISOString().slice(0, 10);
+    const voted = myLikes.has(fecha);
+    const btn = document.createElement('button');
+    btn.className = 'like-btn' + (voted ? ' voted' : '');
+    btn.textContent = (voted ? '❤️' : '👍') + ' ' + (songLikes[fecha] || 0);
+    btn.addEventListener('click', () => giveLike(song));
+    return btn;
   }
 
   function openSongLink(url) {
@@ -243,6 +288,7 @@
     card.appendChild(disc);
     card.appendChild(title);
     card.appendChild(artist);
+    card.appendChild(likeButton(song));
     card.appendChild(songLinks(song, true));
     grid.appendChild(card);
 
@@ -268,6 +314,7 @@
         info.appendChild(t);
         info.appendChild(f);
         row.appendChild(info);
+        row.appendChild(likeButton(s));
         row.appendChild(songLinks(s, false));
         grid.appendChild(row);
       });
