@@ -96,6 +96,30 @@
 
   const ALL = [...TV_CHANNELS, ...RADIO_STATIONS];
 
+  // ================= LA CANCIÓN DEL DÍA =================
+  const DAILY_SONGS = [
+    { title: 'Ay-Ay-Ay', artist: 'José Mojica', url: 'https://archive.org/download/edison-80793_01_9526/cusb_ed_80793_01_9526_0a.mp3' },
+    { title: 'Marchita El Alma', artist: 'José Mojica', url: 'https://archive.org/download/edison-60051_01_10384/cusb_ed_60051_01_10384_0a.mp3' },
+    { title: 'Mi Nena', artist: 'Grabación Edison', url: 'https://archive.org/download/edison-60025_01_6396/cusb_ed_60025_01_6396_0b.mp3' },
+    { title: 'Carta De Un Isleño', artist: 'Grabación Edison', url: 'https://archive.org/download/edison-60001_01_5408/cusb_ed_60001_01_5408_0c.mp3' }
+  ];
+
+  function getSongOfDay() {
+    // Canción personalizada (si el usuario puso una)
+    const custom = localStorage.getItem('teleaudio_song_custom');
+    if (custom) {
+      try {
+        const c = JSON.parse(custom);
+        if (c && c.url) return c;
+      } catch (e) {}
+    }
+    // Rotación automática: una canción distinta cada día del año
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const dayOfYear = Math.floor((now - start) / 86400000);
+    return DAILY_SONGS[dayOfYear % DAILY_SONGS.length];
+  }
+
   // ================= DOM =================
   const $ = (id) => document.getElementById(id);
   const grid = $('channel-grid');
@@ -132,12 +156,55 @@
     let list;
     if (tab === 'tv') list = TV_CHANNELS;
     else if (tab === 'radio') list = RADIO_STATIONS;
+    else if (tab === 'cancion') return [];
     else list = ALL.filter(c => favs.has(c.id));
     return list.filter(c => !q || c.name.toLowerCase().includes(q));
   }
 
+  function renderSongOfDay() {
+    grid.innerHTML = '';
+    const song = getSongOfDay();
+    const card = document.createElement('div');
+    card.className = 'song-card';
+
+    const disc = document.createElement('div');
+    disc.className = 'song-disc';
+    disc.innerHTML = '🎵';
+
+    const title = document.createElement('div');
+    title.className = 'song-title';
+    title.textContent = song.title;
+
+    const artist = document.createElement('div');
+    artist.className = 'song-artist';
+    artist.textContent = song.artist || '';
+
+    const playBtn = document.createElement('button');
+    playBtn.className = 'song-play-btn';
+    playBtn.textContent = '▶ Reproducir';
+    playBtn.addEventListener('click', () => {
+      playItem({ id: 'cancion-dia', name: song.title + ' — ' + (song.artist || 'La canción del día'), logo: 'icon.svg', url: song.url });
+    });
+
+    const date = document.createElement('div');
+    date.className = 'song-date';
+    const d = new Date();
+    date.textContent = d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+
+    card.appendChild(date);
+    card.appendChild(disc);
+    card.appendChild(title);
+    card.appendChild(artist);
+    card.appendChild(playBtn);
+    grid.appendChild(card);
+  }
+
   function renderChannels() {
     grid.innerHTML = '';
+    if (currentTab === 'cancion') {
+      renderSongOfDay();
+      return;
+    }
     const list = getVisibleList(currentTab, search.value);
     const hasQuery = (search.value || '').trim().length > 0;
 
@@ -434,6 +501,24 @@
 
   document.querySelectorAll('[data-timer]').forEach(btn => {
     btn.addEventListener('click', () => setSleepTimer(parseInt(btn.dataset.timer, 10)));
+  });
+
+  // Canción del día personalizada
+  $('song-set-btn').addEventListener('click', () => {
+    const url = $('song-url').value.trim();
+    const title = $('song-title').value.trim() || 'Mi canción';
+    const artist = $('song-artist').value.trim() || '';
+    if (!url) { showToast('Pon la URL del audio primero'); return; }
+    localStorage.setItem('teleaudio_song_custom', JSON.stringify({ title: title, artist: artist, url: url }));
+    if (currentTab === 'cancion') renderChannels();
+    closeModal('settings-modal');
+    showToast('🎵 Canción del día cambiada');
+  });
+  $('song-reset-btn').addEventListener('click', () => {
+    localStorage.removeItem('teleaudio_song_custom');
+    if (currentTab === 'cancion') renderChannels();
+    closeModal('settings-modal');
+    showToast('↺ Rotación automática de nuevo');
   });
 
   $('theme-dark-btn').addEventListener('click', () => setTheme('dark'));

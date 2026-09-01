@@ -55,7 +55,8 @@
   <nav class="tabs">
     <button class="tab active" data-tab="tv">📺 TV</button>
     <button class="tab" data-tab="radio">📻 Radio</button>
-    <button class="tab" data-tab="favs">❤️ Favoritos</button>
+    <button class="tab" data-tab="cancion">🎵 Canción del día</button>
+    <button class="tab" data-tab="favs">❤️ Favs</button>
   </nav>
 
   <main>
@@ -103,6 +104,19 @@
             <button id="theme-dark-btn" class="btn">🌙 Oscuro</button>
             <button id="theme-light-btn" class="btn">☀️ Claro</button>
           </div>
+        </div>
+        <div class="setting-group">
+          <h3>🎵 Canción del día personalizada</h3>
+          <p class="hint">Si quieres otra canción, pega el enlace directo del audio (mp3) y pon título y artista.</p>
+          <div class="alarm-row">
+            <input type="text" id="song-url" placeholder="URL del audio (mp3)">
+          </div>
+          <div class="alarm-row">
+            <input type="text" id="song-title" placeholder="Título">
+            <input type="text" id="song-artist" placeholder="Artista">
+          </div>
+          <button id="song-set-btn" class="btn btn-primary">Poner como canción del día</button>
+          <button id="song-reset-btn" class="btn">↺ Volver a la rotación automática</button>
         </div>
         <div class="setting-group">
           <h3>ℹ️ Acerca de</h3>
