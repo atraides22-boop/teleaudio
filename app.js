@@ -178,7 +178,7 @@
     let list;
     if (tab === 'tv') list = TV_CHANNELS;
     else if (tab === 'radio') list = RADIO_STATIONS;
-    else if (tab === 'cancion') return [];
+    else if (tab === 'cancion' || tab === 'comentarios') return [];
     else list = ALL.filter(c => favs.has(c.id));
     return list.filter(c => !q || c.name.toLowerCase().includes(q));
   }
@@ -274,8 +274,93 @@
     }
   }
 
+  function renderComments() {
+    grid.innerHTML = '';
+    const card = document.createElement('div');
+    card.className = 'song-card';
+
+    const icon = document.createElement('div');
+    icon.className = 'song-disc';
+    icon.innerHTML = '💬';
+    icon.style.animation = 'none';
+
+    const t = document.createElement('div');
+    t.className = 'song-title';
+    t.textContent = '¿Qué opinas?';
+
+    const sub = document.createElement('div');
+    sub.className = 'song-artist';
+    sub.textContent = 'Cuéntame qué te gusta, qué falla o qué te gustaría añadir. Tu comentario me llega directo.';
+
+    const nameInput = document.createElement('input');
+    nameInput.className = 'comment-input';
+    nameInput.placeholder = 'Tu nombre (opcional)';
+    nameInput.maxLength = 30;
+
+    const textInput = document.createElement('textarea');
+    textInput.className = 'comment-textarea';
+    textInput.placeholder = 'Escribe tu comentario o sugerencia…';
+    textInput.maxLength = 500;
+
+    const status = document.createElement('div');
+    status.className = 'comment-status';
+
+    const sendBtn = document.createElement('button');
+    sendBtn.className = 'song-play-btn';
+    sendBtn.textContent = '📨 Enviar comentario';
+    sendBtn.addEventListener('click', () => {
+      const name = nameInput.value.trim() || 'Anónimo';
+      const text = textInput.value.trim();
+      if (!text) { status.textContent = '✏️ Escribe algo primero'; return; }
+      status.textContent = '⏳ Enviando…';
+      sendBtn.disabled = true;
+      sendComment(name, text).then(ok => {
+        if (ok) {
+          status.textContent = '✅ ¡Gracias! Comentario enviado';
+          textInput.value = '';
+          nameInput.value = '';
+        } else {
+          status.textContent = '❌ No se pudo enviar. Comprueba tu conexión.';
+          sendBtn.disabled = false;
+        }
+      });
+    });
+
+    card.appendChild(icon);
+    card.appendChild(t);
+    card.appendChild(sub);
+    card.appendChild(nameInput);
+    card.appendChild(textInput);
+    card.appendChild(sendBtn);
+    card.appendChild(status);
+    grid.appendChild(card);
+  }
+
+  // Envío: en la app nativa lo hace el plugin (sin CORS); en web, intento directo
+  function sendComment(name, text) {
+    if (isNative) {
+      return new Promise(resolve => {
+        try {
+          Capacitor.Plugins.BackgroundAudio.sendComment({ name: name, text: text })
+            .then(() => resolve(true))
+            .catch(() => resolve(false));
+        } catch (e) { resolve(false); }
+      });
+    }
+    // Web: sin backend propio, se abre el correo del desarrollador
+    try {
+      const body = encodeURIComponent('Nombre: ' + name + '\n\n' + text);
+      window.open('mailto:aparatoia50@gmail.com?subject=' + encodeURIComponent('Sugerencia TeleAudio') + '&body=' + body, '_self');
+      return Promise.resolve(true);
+    } catch (e) { return Promise.resolve(false); }
+  }
+
   function renderChannels() {
     grid.innerHTML = '';
+    if (currentTab === 'comentarios') {
+      renderComments();
+      return;
+    }
     if (currentTab === 'cancion') {
       renderSongOfDay();
       return;

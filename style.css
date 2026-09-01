@@ -411,3 +411,26 @@ body {
   color: var(--muted);
   text-transform: capitalize;
 }
+
+/* Formulario de comentarios */
+.comment-input, .comment-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+.comment-textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+.comment-status {
+  font-size: 0.85rem;
+  color: var(--muted);
+  min-height: 1.2em;
+}
+.song-play-btn:disabled { opacity: 0.5; }
