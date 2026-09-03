@@ -802,7 +802,11 @@
     { id: 'noticias', icon: '📰', name: 'Noticias de España', desc: 'El País, RTVE Noticias, ABC, 20minutos, El Español…', handles: ['elpais.com', 'rtvenoticias.rtve.es', 'abc.es', '20minutos.es', 'elespanol.com'] },
     { id: 'deportes', icon: '⚽', name: 'Deportes', desc: 'AS, Sport…', handles: ['as.com', 'sport.es'] },
     { id: 'humor', icon: '😂', name: 'Humor', desc: 'El Mundo Today', handles: ['elmundotoday.com'] },
-    { id: 'cordoba', icon: '🏛️', name: 'Córdoba', desc: 'Cordópolis, lo de tu tierra', handles: ['cordopolis.es'] }
+    { id: 'cordoba', icon: '🏛️', name: 'Córdoba', desc: 'Cordópolis, lo de tu tierra', handles: ['cordopolis.es'] },
+    { id: 'tiempo', icon: '🌡️', name: 'El Tiempo', desc: 'AEMET: avisos y temperaturas al momento', handles: ['aemet.es'] },
+    { id: 'ciencia', icon: '🔬', name: 'Ciencia', desc: 'Muy Interesante, El País Ciencia, Apuntes de ciencia', handles: ['muyinteresante.com', 'elpaiscyt.bsky.social', 'apuntesciencia.bsky.social'] },
+    { id: 'cultura', icon: '🎨', name: 'Cultura', desc: 'elDiario Cultura, Ministerio de Cultura', handles: ['eldiariocultura.bsky.social', 'culturagob.bsky.social'] },
+    { id: 'musica', icon: '🎸', name: 'Historias de música', desc: 'Anécdotas y leyendas de la música', handles: ['lahistorieta.bsky.social'] }
   ];
 
   // Cargar credenciales guardadas
@@ -992,17 +996,16 @@
     grid.appendChild(feedBox);
 
     const emisoraGrid = document.createElement('div');
-    emisoraGrid.style.cssText = 'display:flex;flex-direction:column;gap:8px;width:100%;';
+    emisoraGrid.className = 'social-emisoras';
 
     BS_EMISORAS.forEach(em => {
       const btn = document.createElement('button');
-      btn.className = 'song-play-btn';
-      btn.style.cssText = 'display:flex;align-items:center;gap:10px;text-align:left;width:100%;justify-content:flex-start;';
-      btn.innerHTML = '<span style="font-size:1.4rem;">' + em.icon + '</span><span><b>' + em.name + '</b><br><small style="opacity:0.75;">' + em.desc + '</small></span>';
+      btn.className = 'social-emisora' + (bsPlaying && bsSource === em.id ? ' playing' : '');
+      btn.innerHTML = '<span class="em-icon">' + em.icon + '</span><span><span class="em-name">' + em.name + '</span><span class="em-desc">' + em.desc + '</span></span>';
       btn.addEventListener('click', async () => {
         if (bsPlaying && bsSource === em.id) {
           bsStop();
-          btn.textContent = '▶ ' + em.name;
+          btn.classList.remove('playing');
           feedBox.style.display = 'none';
           return;
         }
@@ -1012,6 +1015,8 @@
           if (!feed.length) { status.textContent = '😴 Ahora mismo no hay mensajes'; return; }
           bsSource = em.id;
           feedBox.style.display = 'block';
+          document.querySelectorAll('.social-emisora').forEach(b => b.classList.remove('playing'));
+          btn.classList.add('playing');
           arrancarFeed(feed, em.name, null);
         } catch (e) {
           status.textContent = '❌ ' + e.message;
