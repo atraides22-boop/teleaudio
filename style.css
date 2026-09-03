@@ -461,36 +461,36 @@ body {
 }
 
 /* Social Radio (Bluesky) */
+/* Social Radio: cuadrícula compacta de emisoras */
 .social-emisoras {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
   width: 100%;
-}
-@media (max-width: 380px) {
-  .social-emisoras { grid-template-columns: 1fr; }
 }
 .social-emisora {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  text-align: left;
-  padding: 10px 12px;
+  justify-content: center;
+  gap: 3px;
+  text-align: center;
+  padding: 8px 4px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--text);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  line-height: 1.15;
   transition: all 0.15s;
-  width: 100%;
+  min-height: 62px;
   box-sizing: border-box;
 }
-.social-emisora:active { transform: scale(0.97); }
+.social-emisora:active { transform: scale(0.95); }
 .social-emisora.playing { border-color: var(--accent); background: var(--accent); color: var(--bg); font-weight: 700; }
-.social-emisora .em-icon { font-size: 1.3rem; flex-shrink: 0; }
-.social-emisora .em-name { font-weight: 700; display: block; line-height: 1.2; }
-.social-emisora .em-desc { font-size: 0.7rem; opacity: 0.75; display: block; line-height: 1.2; }
+.social-emisora .em-icon { font-size: 1.25rem; }
+.social-emisora .em-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
 
 .bs-feed-box {

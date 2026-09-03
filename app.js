@@ -798,16 +798,23 @@
   let bsSource = null; // 'timeline' o id de emisora
 
   // Emisoras generales: cuentas públicas que cualquiera puede escuchar SIN cuenta
+  // name corto para la cuadrícula; handles = cuentas; desc = tooltip
   const BS_EMISORAS = [
-    { id: 'noticias', icon: '📰', name: 'Noticias de España', desc: 'El País, RTVE Noticias, ABC, 20minutos, El Español…', handles: ['elpais.com', 'rtvenoticias.rtve.es', 'abc.es', '20minutos.es', 'elespanol.com'] },
-    { id: 'deportes', icon: '⚽', name: 'Deportes', desc: 'AS, Sport…', handles: ['as.com', 'sport.es'] },
+    { id: 'noticias', icon: '📰', name: 'Noticias', desc: 'El País, RTVE, ABC, 20minutos, El Español', handles: ['elpais.com', 'rtvenoticias.rtve.es', 'abc.es', '20minutos.es', 'elespanol.com'] },
+    { id: 'tiempo', icon: '🌡️', name: 'El Tiempo', desc: 'AEMET: avisos y temperaturas', handles: ['aemet.es'] },
+    { id: 'deportes', icon: '⚽', name: 'Deportes', desc: 'AS, Sport', handles: ['as.com', 'sport.es'] },
+    { id: 'cordoba', icon: '🏛️', name: 'Córdoba', desc: 'Cordópolis, tu tierra', handles: ['cordopolis.es'] },
+    { id: 'tecnologia', icon: '💻', name: 'Tecnología', desc: 'Xataka, Genbeta: gadgets y software', handles: ['xataka.bsky.social', 'genbeta.bsky.social'] },
+    { id: 'ia', icon: '🤖', name: 'Inteligencia Artificial', desc: 'RevistaIA y más', handles: ['revistaia.bsky.social', 'genbeta.bsky.social', 'elpaiscyt.bsky.social'] },
+    { id: 'juegos', icon: '🎮', name: 'Videojuegos', desc: 'VidaExtra, Nintenderos, 3DJuegos', handles: ['vidaextracom.bsky.social', 'nintenderos.com', '3djuegos.bsky.social'] },
+    { id: 'ciencia', icon: '🔬', name: 'Ciencia', desc: 'Muy Interesante, El País Ciencia', handles: ['muyinteresante.com', 'elpaiscyt.bsky.social', 'apuntesciencia.bsky.social'] },
     { id: 'humor', icon: '😂', name: 'Humor', desc: 'El Mundo Today', handles: ['elmundotoday.com'] },
-    { id: 'cordoba', icon: '🏛️', name: 'Córdoba', desc: 'Cordópolis, lo de tu tierra', handles: ['cordopolis.es'] },
-    { id: 'tiempo', icon: '🌡️', name: 'El Tiempo', desc: 'AEMET: avisos y temperaturas al momento', handles: ['aemet.es'] },
-    { id: 'ciencia', icon: '🔬', name: 'Ciencia', desc: 'Muy Interesante, El País Ciencia, Apuntes de ciencia', handles: ['muyinteresante.com', 'elpaiscyt.bsky.social', 'apuntesciencia.bsky.social'] },
-    { id: 'cultura', icon: '🎨', name: 'Cultura', desc: 'elDiario Cultura, Ministerio de Cultura', handles: ['eldiariocultura.bsky.social', 'culturagob.bsky.social'] },
-    { id: 'musica', icon: '🎸', name: 'Historias de música', desc: 'Anécdotas y leyendas de la música', handles: ['lahistorieta.bsky.social'] },
-    { id: 'tecnologia', icon: '💻', name: 'Tecnología y juegos', desc: 'Xataka, IA, ordenadores y videojuegos', handles: ['xataka.bsky.social', 'revistaia.bsky.social', 'vidaextracom.bsky.social', 'nintenderos.com', 'genbeta.bsky.social', '3djuegos.bsky.social'] }
+    { id: 'cultura', icon: '🎨', name: 'Cultura', desc: 'elDiario Cultura, Min. Cultura', handles: ['eldiariocultura.bsky.social', 'culturagob.bsky.social'] },
+    { id: 'musica', icon: '🎸', name: 'Música', desc: 'Historias y leyendas de la música', handles: ['lahistorieta.bsky.social'] },
+    { id: 'salud', icon: '🩺', name: 'Salud', desc: 'Sanidad, MSF, Infosalus', handles: ['sanidad.gob.es', 'msfespana.bsky.social', 'infosalus.com'] },
+    { id: 'economia', icon: '📈', name: 'Economía', desc: 'Economía Justa, CGT economía', handles: ['economiajusta.bsky.social', 'economiacgt.es'] },
+    { id: 'animales', icon: '🐾', name: 'Animales', desc: 'Fotos y curiosidades animales', handles: ['animales.pro', 'animalesgob.bsky.social', 'animaritos.bsky.social'] },
+    { id: 'comida', icon: '🍳', name: 'Comida', desc: 'El Comidista, Gastronomía y Cía', handles: ['elcomidista.bsky.social', 'gastronomiaycia.bsky.social'] }
   ];
 
   // Cargar credenciales guardadas
@@ -985,10 +992,10 @@
     // ---------- Emisoras generales (sin cuenta) ----------
     const gTitle = document.createElement('div');
     gTitle.className = 'song-artist';
-    gTitle.style.margin = '18px 0 4px';
+    gTitle.style.margin = '18px 0 8px';
     gTitle.style.fontWeight = '700';
     gTitle.style.fontSize = '0.95rem';
-    gTitle.textContent = '📻 Emisoras generales (sin Bluesky)';
+    gTitle.textContent = '📻 Emisoras · sin necesidad de cuenta';
     grid.appendChild(gTitle);
 
     const feedBox = document.createElement('div');
@@ -1002,7 +1009,8 @@
     BS_EMISORAS.forEach(em => {
       const btn = document.createElement('button');
       btn.className = 'social-emisora' + (bsPlaying && bsSource === em.id ? ' playing' : '');
-      btn.innerHTML = '<span class="em-icon">' + em.icon + '</span><span><span class="em-name">' + em.name + '</span><span class="em-desc">' + em.desc + '</span></span>';
+      btn.title = em.icon + ' ' + em.name + ' — ' + em.desc;
+      btn.innerHTML = '<span class="em-icon">' + em.icon + '</span><span class="em-name">' + em.name + '</span>';
       btn.addEventListener('click', async () => {
         if (bsPlaying && bsSource === em.id) {
           bsStop();
