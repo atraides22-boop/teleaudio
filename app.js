@@ -1034,7 +1034,11 @@
       const es = voices.find(v => v.lang.startsWith('es'));
       if (es) u.voice = es;
       u.onend = () => setTimeout(bsSpeakNext, 4000); // pausa entre posts
-      u.onerror = () => 
+      u.onerror = () => setTimeout(bsSpeakNext, 2000);
+      speechSynthesis.speak(u);
+    }
+  }
+
   // Refresca qué botón de emisora se ve activo (si la cuadrícula está visible)
   function bsMarcaEmisoras() {
     const es = bsSource === 'timeline' ? null : BS_EMISORAS.find(e => e.id === bsSource);
@@ -1124,11 +1128,6 @@
     const next = BS_EMISORAS[(i + dir + BS_EMISORAS.length) % BS_EMISORAS.length];
     showToast(next.icon + ' ' + next.name);
     bsPlayEmisoraById(next.id);
-  }
-
-setTimeout(bsSpeakNext, 2000);
-      speechSynthesis.speak(u);
-    }
   }
 
   function renderSocial() {
