@@ -789,11 +789,21 @@
 
   // ================= SOCIAL RADIO (BLUESKY) =================
   const BS_URL = 'https://bsky.social';
+  const BS_PUBLIC = 'https://public.api.bsky.app';
   let bsToken = null;
   let bsFeed = [];
   let bsPlaying = false;
   let bsCurrent = -1;
   let bsTimer = null;
+  let bsSource = null; // 'timeline' o id de emisora
+
+  // Emisoras generales: cuentas públicas que cualquiera puede escuchar SIN cuenta
+  const BS_EMISORAS = [
+    { id: 'noticias', icon: '📰', name: 'Noticias de España', desc: 'El País, RTVE Noticias, ABC, 20minutos, El Español…', handles: ['elpais.com', 'rtvenoticias.rtve.es', 'abc.es', '20minutos.es', 'elespanol.com'] },
+    { id: 'deportes', icon: '⚽', name: 'Deportes', desc: 'AS, Sport…', handles: ['as.com', 'sport.es'] },
+    { id: 'humor', icon: '😂', name: 'Humor', desc: 'El Mundo Today', handles: ['elmundotoday.com'] },
+    { id: 'cordoba', icon: '🏛️', name: 'Córdoba', desc: 'Cordópolis, lo de tu tierra', handles: ['cordopolis.es'] }
+  ];
 
   // Cargar credenciales guardadas
   function getBsCreds() {
@@ -824,11 +834,44 @@
     return (data.feed || []).map(item => {
       const p = item.post || {};
       const rec = p.record || {};
-      // Quitar URLs y emojis raros para que la voz lea mejor
-      let text = (rec.text || '').replace(/https?:\/\/\S+/g, '').replace(/@\S+/g, '');
+      // Quitar URLs y menciones para que la voz lea mejor
+      let text = limpiarPost(rec.text || '');
       const author = (p.author && (p.author.displayName || p.author.handle)) || 'Alguien';
-      return { author: author, text: text.trim(), time: (rec.createdAt || '').slice(0, 10) };
+      return { author: author, text: text, time: (rec.createdAt || '').slice(0, 10) };
     }).filter(s => s.text.length > 0);
+  }
+
+  // Lee los últimos posts de cuentas públicas SIN necesidad de cuenta
+  async function bsFetchPublic(handles) {
+    const todos = [];
+    for (const h of handles) {
+      try {
+        const res = await fetch(BS_PUBLIC + '/xrpc/app.bsky.feed.getAuthorFeed?actor=' + encodeURIComponent(h) + '&limit=4');
+        const data = await res.json();
+        if (!res.ok) continue;
+        (data.feed || []).forEach(item => {
+          const p = item.post || {};
+          const rec = p.record || {};
+          const author = (p.author && (p.author.displayName || p.author.handle)) || h;
+          todos.push({ author: author, text: limpiarPost(rec.text || ''), time: (rec.createdAt || '').slice(0, 10) });
+        });
+      } catch (e) { /* saltar cuenta con error */ }
+    }
+    return todos
+      .filter(s => s.text.length > 0)
+      .sort((a, b) => b.time.localeCompare(a.time))
+      .slice(0, 18);
+  }
+
+  // Limpia el texto de un post para que la voz lea bien: URLs, menciones, emojis raros
+  function limpiarPost(txt) {
+    return (txt || '')
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/@\S+/g, '')
+      .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{2B00}-\u{2BFF}]/gu, '')
+      .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   function bsStop() {
@@ -874,6 +917,7 @@
     grid.innerHTML = '';
     const creds = getBsCreds();
 
+    // ---------- Cabecera ----------
     const card = document.createElement('div');
     card.className = 'song-card';
     card.style.textAlign = 'center';
@@ -889,7 +933,7 @@
 
     const sub = document.createElement('div');
     sub.className = 'song-artist';
-    sub.textContent = 'Tu timeline de Bluesky, leído en voz como una radio.';
+    sub.textContent = 'Noticias, deportes y humor leídos en voz, como una radio. Funciona sin cuenta.';
 
     const status = document.createElement('div');
     status.id = 'bs-status';
@@ -898,20 +942,163 @@
     card.appendChild(icon);
     card.appendChild(t);
     card.appendChild(sub);
+    grid.appendChild(card);
 
-    if (!creds || !creds.password) {
-      // --- Formulario de conexión ---
+    // ---------- Función común de arranque ----------
+    // Muestra el feed en caja, y si autoplay, empieza a leer en bucle
+    function arrancarFeed(feed, label, playBtnRef) {
+      feedBox.innerHTML = '';
+      feed.slice(0, 8).forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'bs-feed-item';
+        row.innerHTML = '<b>' + item.author + '</b> · ' + item.text.slice(0, 90) + '…';
+        feedBox.appendChild(row);
+      });
+      if (bsPlaying) bsStop();
+      bsFeed = feed;
+      bsPlaying = true;
+      bsCurrent = -1;
+      if (playBtnRef) playBtnRef.textContent = '⏹ Parar radio';
+      status.textContent = '🔊 ' + label + ' · ' + feed.length + ' mensajes en bucle';
+
+      if (isNative) {
+        const frases = feed.map(item => 'De ' + item.author + '. ' + item.text);
+        try {
+          Capacitor.Plugins.BackgroundAudio.startSocialRadio({ frases: frases });
+        } catch (e) {
+          status.textContent = '❌ No se pudo iniciar la voz: ' + e.message;
+          bsPlaying = false;
+        }
+      } else if ('speechSynthesis' in window) {
+        bsSpeakNext();
+        bsTimer = setInterval(() => { if (!speechSynthesis.speaking) bsSpeakNext(); }, 1000);
+      } else {
+        status.textContent = '❌ Tu navegador no tiene voz. Usa la app de Android.';
+      }
+    }
+
+    // ---------- Emisoras generales (sin cuenta) ----------
+    const gTitle = document.createElement('div');
+    gTitle.className = 'song-artist';
+    gTitle.style.margin = '18px 0 4px';
+    gTitle.style.fontWeight = '700';
+    gTitle.style.fontSize = '0.95rem';
+    gTitle.textContent = '📻 Emisoras generales (sin Bluesky)';
+    grid.appendChild(gTitle);
+
+    const feedBox = document.createElement('div');
+    feedBox.className = 'bs-feed-box';
+    feedBox.style.display = 'none';
+    grid.appendChild(feedBox);
+
+    const emisoraGrid = document.createElement('div');
+    emisoraGrid.style.cssText = 'display:flex;flex-direction:column;gap:8px;width:100%;';
+
+    BS_EMISORAS.forEach(em => {
+      const btn = document.createElement('button');
+      btn.className = 'song-play-btn';
+      btn.style.cssText = 'display:flex;align-items:center;gap:10px;text-align:left;width:100%;justify-content:flex-start;';
+      btn.innerHTML = '<span style="font-size:1.4rem;">' + em.icon + '</span><span><b>' + em.name + '</b><br><small style="opacity:0.75;">' + em.desc + '</small></span>';
+      btn.addEventListener('click', async () => {
+        if (bsPlaying && bsSource === em.id) {
+          bsStop();
+          btn.textContent = '▶ ' + em.name;
+          feedBox.style.display = 'none';
+          return;
+        }
+        status.textContent = '⏳ Buscando lo último de ' + em.name + '…';
+        try {
+          const feed = await bsFetchPublic(em.handles);
+          if (!feed.length) { status.textContent = '😴 Ahora mismo no hay mensajes'; return; }
+          bsSource = em.id;
+          feedBox.style.display = 'block';
+          arrancarFeed(feed, em.name, null);
+        } catch (e) {
+          status.textContent = '❌ ' + e.message;
+        }
+      });
+      emisoraGrid.appendChild(btn);
+    });
+    grid.appendChild(emisoraGrid);
+
+    // ---------- Timeline personal (con cuenta) ----------
+    const pTitle = document.createElement('div');
+    pTitle.className = 'song-artist';
+    pTitle.style.margin = '22px 0 4px';
+    pTitle.style.fontWeight = '700';
+    pTitle.style.fontSize = '0.95rem';
+    pTitle.textContent = '🦋 Tu timeline (con tu cuenta de Bluesky)';
+    grid.appendChild(pTitle);
+
+    if (creds && creds.password) {
+      // --- Conectado: controles ---
+      const btnRow = document.createElement('div');
+      btnRow.className = 'btn-row';
+
+      const playBtn = document.createElement('button');
+      playBtn.className = 'btn btn-primary';
+      playBtn.style.flex = '1';
+      playBtn.textContent = bsPlaying && bsSource === 'timeline' ? '⏹ Parar radio' : '▶ Escuchar mi timeline';
+
+      const refreshBtn = document.createElement('button');
+      refreshBtn.className = 'btn';
+      refreshBtn.title = 'Traer los posts más recientes';
+      refreshBtn.textContent = '🔄 Actualizar';
+
+      async function cargarTimeline(autoplay) {
+        if (!bsToken) {
+          status.textContent = '⏳ Conectando…';
+          await bsLogin(creds.identifier, creds.password);
+        }
+        status.textContent = '⏳ Leyendo tu timeline…';
+        const feed = await bsFetchTimeline();
+        if (!feed.length) { status.textContent = '😴 Tu timeline está vacío por ahora'; return; }
+        bsSource = 'timeline';
+        feedBox.style.display = 'block';
+        arrancarFeed(feed, 'Tu timeline', autoplay ? playBtn : null);
+        if (!autoplay) status.textContent = '✅ Timeline actualizado: ' + feed.length + ' mensajes';
+      }
+
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = '⏳…';
+        try {
+          await cargarTimeline(bsPlaying && bsSource === 'timeline');
+        } catch (e) {
+          status.textContent = '❌ ' + e.message;
+        }
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = '🔄 Actualizar';
+      });
+
+      playBtn.addEventListener('click', async () => {
+        if (bsPlaying && bsSource === 'timeline') {
+          bsStop();
+          playBtn.textContent = '▶ Escuchar mi timeline';
+          return;
+        }
+        try {
+          await cargarTimeline(true);
+        } catch (e) {
+          status.textContent = '❌ ' + e.message;
+        }
+      });
+
+      btnRow.appendChild(playBtn);
+      btnRow.appendChild(refreshBtn);
+      grid.appendChild(btnRow);
+    } else {
+      // --- Sin conectar: formulario de conexión ---
       const userIn = document.createElement('input');
       userIn.className = 'comment-input';
       userIn.placeholder = 'Tu usuario de Bluesky (manruca.bsky.social)';
-      userIn.value = creds ? creds.identifier : '';
       const passIn = document.createElement('input');
       passIn.className = 'comment-input';
       passIn.type = 'password';
       passIn.placeholder = 'Contraseña de aplicación (xxxx-xxxx-xxxx-xxxx)';
       const hint = document.createElement('div');
       hint.className = 'comment-status';
-      hint.textContent = 'Crea una contraseña de app en Bluesky → Ajustes → Privacidad y seguridad → Contraseñas de aplicación';
+      hint.textContent = 'Opcional: crea una contraseña de app en Bluesky → Ajustes → Privacidad y seguridad → Contraseñas de aplicación';
       const connectBtn = document.createElement('button');
       connectBtn.className = 'song-play-btn';
       connectBtn.textContent = '🔗 Conectar Bluesky';
@@ -931,110 +1118,13 @@
         }
       });
 
-      card.appendChild(userIn);
-      card.appendChild(passIn);
-      card.appendChild(hint);
-      card.appendChild(connectBtn);
-      card.appendChild(status);
-      grid.appendChild(card);
-      return;
+      grid.appendChild(userIn);
+      grid.appendChild(passIn);
+      grid.appendChild(hint);
+      grid.appendChild(connectBtn);
     }
 
-    // --- Conectado: controles ---
-    const btnRow = document.createElement('div');
-    btnRow.className = 'btn-row';
-
-    const playBtn = document.createElement('button');
-    playBtn.className = 'btn btn-primary';
-    playBtn.style.flex = '1';
-    playBtn.textContent = bsPlaying ? '⏹ Parar radio' : '▶ Escuchar mi timeline';
-
-    const refreshBtn = document.createElement('button');
-    refreshBtn.className = 'btn';
-    refreshBtn.title = 'Traer los posts más recientes';
-    refreshBtn.textContent = '🔄 Actualizar';
-
-    const feedBox = document.createElement('div');
-    feedBox.className = 'bs-feed-box';
-    feedBox.textContent = 'Cargando tu timeline…';
-
-    async function bsCargarYActualizar(autoplay) {
-      if (!bsToken) {
-        status.textContent = '⏳ Conectando…';
-        await bsLogin(creds.identifier, creds.password);
-      }
-      status.textContent = '⏳ Leyendo tu timeline…';
-      bsFeed = await bsFetchTimeline();
-      if (!bsFeed.length) { status.textContent = '😴 Tu timeline está vacío por ahora'; return; }
-      feedBox.innerHTML = '';
-      bsFeed.slice(0, 8).forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'bs-feed-item';
-        row.innerHTML = '<b>' + item.author + '</b> · ' + item.text.slice(0, 90) + '…';
-        feedBox.appendChild(row);
-      });
-      if (autoplay) {
-        if (!isNative) {
-          // En web: cortar la voz y arrancar de nuevo con la lista nueva
-          bsStop();
-        }
-        bsPlaying = true;
-        bsCurrent = -1;
-        playBtn.textContent = '⏹ Parar radio';
-        status.textContent = '🔊 Leyendo ' + bsFeed.length + ' mensajes en bucle';
-
-        if (isNative) {
-          // En nativo: el servicio corta la voz vieja y reinicia solo
-          const frases = bsFeed.map(item => 'De ' + item.author + '. ' + item.text);
-          try {
-            Capacitor.Plugins.BackgroundAudio.startSocialRadio({ frases: frases });
-          } catch (e) {
-            status.textContent = '❌ No se pudo iniciar la voz: ' + e.message;
-            bsPlaying = false;
-          }
-        } else if ('speechSynthesis' in window) {
-          bsSpeakNext();
-          bsTimer = setInterval(() => { if (!speechSynthesis.speaking) bsSpeakNext(); }, 1000);
-        } else {
-          status.textContent = '❌ Tu navegador no tiene voz. Usa la app de Android.';
-        }
-      } else {
-        status.textContent = '✅ Timeline actualizado: ' + bsFeed.length + ' mensajes';
-      }
-    }
-
-    // Actualizar (sin cortar si no está sonando; si suena, reinicia con lo último)
-    refreshBtn.addEventListener('click', async () => {
-      refreshBtn.disabled = true;
-      refreshBtn.textContent = '⏳…';
-      try {
-        await bsCargarYActualizar(bsPlaying);
-      } catch (e) {
-        status.textContent = '❌ ' + e.message;
-      }
-      refreshBtn.disabled = false;
-      refreshBtn.textContent = '🔄 Actualizar';
-    });
-
-    playBtn.addEventListener('click', async () => {
-      if (bsPlaying) {
-        bsStop();
-        playBtn.textContent = '▶ Escuchar mi timeline';
-        return;
-      }
-      try {
-        await bsCargarYActualizar(true);
-      } catch (e) {
-        status.textContent = '❌ ' + e.message;
-      }
-    });
-
-    btnRow.appendChild(playBtn);
-    btnRow.appendChild(refreshBtn);
-    card.appendChild(btnRow);
-    card.appendChild(feedBox);
-    card.appendChild(status);
-    grid.appendChild(card);
+    grid.appendChild(status);
   }
 
   // ================= INICIO =================
