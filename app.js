@@ -531,7 +531,9 @@
   function stopPlayback() {
     if (isNative) {
       try { Capacitor.Plugins.BackgroundAudio.pause(); } catch (e) {}
+      try { Capacitor.Plugins.BackgroundAudio.stopSocialRadio(); } catch (e) {}
     }
+    bsStop();
     stopStream();
     isPlaying = false;
     currentItem = null;
@@ -799,6 +801,9 @@
     bsPlaying = false;
     bsCurrent = -1;
     clearInterval(bsTimer);
+    if (isNative) {
+      try { Capacitor.Plugins.BackgroundAudio.stopSocialRadio(); } catch (e) {}
+    }
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     const st = document.getElementById('bs-status');
     if (st) st.textContent = '';
@@ -935,7 +940,17 @@
         bsCurrent = -1;
         playBtn.textContent = '⏹ Parar radio';
         status.textContent = '🔊 Leyendo ' + bsFeed.length + ' mensajes en bucle';
-        if ('speechSynthesis' in window) {
+
+        if (isNative) {
+          // Voz nativa de Android: funciona con pantalla apagada
+          const frases = bsFeed.map(item => 'De ' + item.author + '. ' + item.text);
+          try {
+            Capacitor.Plugins.BackgroundAudio.startSocialRadio({ frases: frases });
+          } catch (e) {
+            status.textContent = '❌ No se pudo iniciar la voz: ' + e.message;
+            bsPlaying = false;
+          }
+        } else if ('speechSynthesis' in window) {
           bsSpeakNext();
           bsTimer = setInterval(() => { if (!speechSynthesis.speaking) bsSpeakNext(); }, 1000);
         } else {
