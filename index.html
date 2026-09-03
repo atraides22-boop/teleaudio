@@ -70,11 +70,19 @@
     <span class="data-note">📡 Solo audio · ahorro de datos</span>
   </footer>
 
-  <!-- Botón flotante play/pausa -->
-  <button id="power-fab" class="power-fab" title="Play / Pausa">
-    <svg class="fab-icon-play" width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-    <svg class="fab-icon-pause" width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-  </button>
+  <!-- Controles flotantes: anterior / play-pausa / siguiente -->
+  <div id="fab-controls" class="fab-controls">
+    <button id="prev-fab" class="fab-side" title="Canal anterior">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M7 6h2v12H7zM20 6l-9 6 9 6V6z"/></svg>
+    </button>
+    <button id="power-fab" class="power-fab" title="Play / Pausa">
+      <svg class="fab-icon-play" width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      <svg class="fab-icon-pause" width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+    </button>
+    <button id="next-fab" class="fab-side" title="Canal siguiente">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6h2v12h-2zM4 6l9 6-9 6V6z"/></svg>
+    </button>
+  </div>
 
   <!-- Modal ajustes -->
   <div id="settings-modal" class="modal" style="display:none;">

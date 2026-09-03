@@ -155,7 +155,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  padding: 14px 16px;
+  padding: 14px 16px 170px;
   flex: 1;
 }
 
@@ -511,23 +511,49 @@ body {
 }
 .bs-feed-item:last-child { border-bottom: none; }
 
-/* Botón flotante de apagar/encender (FAB) */
-.power-fab {
+/* Barra flotante de control: anterior / play-pausa / siguiente */
+.fab-controls {
   position: fixed;
-  right: 18px;
-  bottom: 72px;
-  width: 64px;
-  height: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 84px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  padding: 8px 14px;
+  z-index: 60;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+}
+.fab-side {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.fab-side:active { transform: scale(0.9); color: var(--accent); }
+.fab-side.has-item { color: var(--text); }
+.fab-side.has-item:active { color: var(--accent); }
+.power-fab {
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   border: 2px solid var(--accent);
-  background: var(--card);
+  background: transparent;
   color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 60;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
   transition: all 0.2s;
 }
 .power-fab.playing { background: var(--accent); color: var(--bg); }
@@ -537,4 +563,7 @@ body {
 .power-fab.playing .fab-icon-pause { display: block; }
 .power-fab:active { transform: scale(0.92); }
 
-main { padding-bottom: 100px; }
+
+/* Ocultar scrollbar lateral en móvil */
+main::-webkit-scrollbar, .channel-grid::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+main { scrollbar-width: none; }

@@ -576,6 +576,7 @@
     const algoPausado = (currentItem && !isPlaying) || bsPaused;
     powerBtn.classList.toggle('playing', algoSonando);
     powerBtn.classList.toggle('paused-state', algoPausado);
+    if (typeof updateFabSide === 'function') updateFabSide();
     if (currentItem) {
       nowPlaying.style.display = 'flex';
       npLogo.src = currentItem.logo;
@@ -612,7 +613,8 @@
 
   function changeChannel(dir) {
     if (!currentItem) return;
-    const list = currentTab === 'radio' ? RADIO_STATIONS : TV_CHANNELS;
+    // Buscar el canal en su lista real (TV o Radio), sin depender de la pestaña
+    const list = TV_CHANNELS.some(c => c.id === currentItem.id) ? TV_CHANNELS : RADIO_STATIONS;
     const idx = list.findIndex(c => c.id === currentItem.id);
     if (idx === -1) return;
     const next = list[(idx + dir + list.length) % list.length];
@@ -733,6 +735,27 @@
     } else {
       showToast('Selecciona un canal o emisora');
     }
+  });
+
+  // Botones anterior/siguiente de la barra flotante
+  const prevFab = $('prev-fab');
+  const nextFab = $('next-fab');
+  function updateFabSide() {
+    const hasChannel = !!currentItem;
+    prevFab.classList.toggle('has-item', hasChannel);
+    nextFab.classList.toggle('has-item', hasChannel);
+  }
+  prevFab.addEventListener('click', () => {
+    if (!currentItem) { showToast('Primero elige un canal'); return; }
+    if (currentItem && (bsPlaying || bsPaused)) bsStop();
+    changeChannel(-1);
+    showToast('◀ ' + currentItem.name);
+  });
+  nextFab.addEventListener('click', () => {
+    if (!currentItem) { showToast('Primero elige un canal'); return; }
+    if (currentItem && (bsPlaying || bsPaused)) bsStop();
+    changeChannel(+1);
+    showToast(currentItem.name + ' ▶');
   });
 
   search.addEventListener('input', renderChannels);
