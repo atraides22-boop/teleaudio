@@ -907,42 +907,50 @@
     }
 
     // --- Conectado: controles ---
+    const btnRow = document.createElement('div');
+    btnRow.className = 'btn-row';
+
     const playBtn = document.createElement('button');
-    playBtn.className = 'song-play-btn';
+    playBtn.className = 'btn btn-primary';
+    playBtn.style.flex = '1';
     playBtn.textContent = bsPlaying ? '⏹ Parar radio' : '▶ Escuchar mi timeline';
+
+    const refreshBtn = document.createElement('button');
+    refreshBtn.className = 'btn';
+    refreshBtn.title = 'Traer los posts más recientes';
+    refreshBtn.textContent = '🔄 Actualizar';
 
     const feedBox = document.createElement('div');
     feedBox.className = 'bs-feed-box';
     feedBox.textContent = 'Cargando tu timeline…';
 
-    playBtn.addEventListener('click', async () => {
-      if (bsPlaying) {
-        bsStop();
-        playBtn.textContent = '▶ Escuchar mi timeline';
-        return;
+    async function bsCargarYActualizar(autoplay) {
+      if (!bsToken) {
+        status.textContent = '⏳ Conectando…';
+        await bsLogin(creds.identifier, creds.password);
       }
-      try {
-        if (!bsToken) {
-          status.textContent = '⏳ Conectando…';
-          await bsLogin(creds.identifier, creds.password);
+      status.textContent = '⏳ Leyendo tu timeline…';
+      bsFeed = await bsFetchTimeline();
+      if (!bsFeed.length) { status.textContent = '😴 Tu timeline está vacío por ahora'; return; }
+      feedBox.innerHTML = '';
+      bsFeed.slice(0, 8).forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'bs-feed-item';
+        row.innerHTML = '<b>' + item.author + '</b> · ' + item.text.slice(0, 90) + '…';
+        feedBox.appendChild(row);
+      });
+      if (autoplay) {
+        if (!isNative) {
+          // En web: cortar la voz y arrancar de nuevo con la lista nueva
+          bsStop();
         }
-        status.textContent = '⏳ Leyendo tu timeline…';
-        bsFeed = await bsFetchTimeline();
-        if (!bsFeed.length) { status.textContent = '😴 Tu timeline está vacío por ahora'; return; }
-        feedBox.innerHTML = '';
-        bsFeed.slice(0, 8).forEach(item => {
-          const row = document.createElement('div');
-          row.className = 'bs-feed-item';
-          row.innerHTML = '<b>' + item.author + '</b> · ' + item.text.slice(0, 90) + '…';
-          feedBox.appendChild(row);
-        });
         bsPlaying = true;
         bsCurrent = -1;
         playBtn.textContent = '⏹ Parar radio';
         status.textContent = '🔊 Leyendo ' + bsFeed.length + ' mensajes en bucle';
 
         if (isNative) {
-          // Voz nativa de Android: funciona con pantalla apagada
+          // En nativo: el servicio corta la voz vieja y reinicia solo
           const frases = bsFeed.map(item => 'De ' + item.author + '. ' + item.text);
           try {
             Capacitor.Plugins.BackgroundAudio.startSocialRadio({ frases: frases });
@@ -956,12 +964,40 @@
         } else {
           status.textContent = '❌ Tu navegador no tiene voz. Usa la app de Android.';
         }
+      } else {
+        status.textContent = '✅ Timeline actualizado: ' + bsFeed.length + ' mensajes';
+      }
+    }
+
+    // Actualizar (sin cortar si no está sonando; si suena, reinicia con lo último)
+    refreshBtn.addEventListener('click', async () => {
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = '⏳…';
+      try {
+        await bsCargarYActualizar(bsPlaying);
+      } catch (e) {
+        status.textContent = '❌ ' + e.message;
+      }
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = '🔄 Actualizar';
+    });
+
+    playBtn.addEventListener('click', async () => {
+      if (bsPlaying) {
+        bsStop();
+        playBtn.textContent = '▶ Escuchar mi timeline';
+        return;
+      }
+      try {
+        await bsCargarYActualizar(true);
       } catch (e) {
         status.textContent = '❌ ' + e.message;
       }
     });
 
-    card.appendChild(playBtn);
+    btnRow.appendChild(playBtn);
+    btnRow.appendChild(refreshBtn);
+    card.appendChild(btnRow);
     card.appendChild(feedBox);
     card.appendChild(status);
     grid.appendChild(card);
