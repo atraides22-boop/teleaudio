@@ -385,31 +385,96 @@ body {
 .song-mini-btn.sp { background: #1db954; }
 .song-nolink { color: var(--muted); font-size: 0.8rem; }
 
-/* Filas del historial */
-.song-history-row {
+/* Lista de canciones del día (compacta, título/artista completos) */
+.song-day-card {
   grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 12px 14px;
   background: var(--card);
   border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.song-day-card.today {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset, 0 0 22px rgba(34, 211, 238, 0.18);
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.07), var(--card) 70%);
+}
+.song-day-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.song-day-thumb {
+  width: 56px;
+  height: 56px;
   border-radius: 14px;
+  background: radial-gradient(circle at 30% 30%, #1e293b, #0f172a);
+  border: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.2);
 }
-.song-history-info { min-width: 0; }
-.song-history-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 46vw;
+.song-day-info {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: left;
 }
-.song-history-date {
-  font-size: 0.75rem;
+.song-day-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.song-day-title {
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.25;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+.song-day-artist {
+  font-size: 0.88rem;
+  color: var(--muted);
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+.song-day-date {
+  font-size: 0.72rem;
   color: var(--muted);
   text-transform: capitalize;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+.song-day-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.song-day-actions .song-links {
+  gap: 6px;
+  justify-content: flex-start;
+  margin-left: auto;
+}
+.song-day-card .like-btn {
+  padding: 6px 13px;
+  font-size: 0.8rem;
+}
+.song-day-card .song-mini-btn {
+  padding: 7px 14px;
+  font-size: 0.8rem;
 }
 
 /* Formulario de comentarios */
@@ -454,12 +519,11 @@ body {
   border-color: #ef4444;
   color: #ef4444;
 }
-.song-history-row .like-btn {
+.song-day-card .like-btn, .song-history-row .like-btn {
   padding: 8px 14px;
   font-size: 0.8rem;
   white-space: nowrap;
 }
-
 /* Social Radio (Bluesky) */
 /* Social Radio: cuadrícula compacta de emisoras */
 .social-emisoras {

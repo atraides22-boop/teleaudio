@@ -266,6 +266,53 @@
     return wrap;
   }
 
+  function songDayCard(s, today) {
+    const card = document.createElement('div');
+    card.className = 'song-day-card' + (today ? ' today' : '');
+
+    // Cabeza: disco pequeño + título/artista/fecha
+    const head = document.createElement('div');
+    head.className = 'song-day-head';
+
+    const thumb = document.createElement('div');
+    thumb.className = 'song-day-thumb';
+    thumb.textContent = '🎵';
+
+    const info = document.createElement('div');
+    info.className = 'song-day-info';
+
+    if (today) {
+      const badge = document.createElement('div');
+      badge.className = 'song-day-badge';
+      badge.textContent = '🎵 La canción de hoy';
+      info.appendChild(badge);
+    }
+    const title = document.createElement('div');
+    title.className = 'song-day-title';
+    title.textContent = s.titulo;
+    const artist = document.createElement('div');
+    artist.className = 'song-day-artist';
+    artist.textContent = s.artista || '';
+    const date = document.createElement('div');
+    date.className = 'song-day-date';
+    date.textContent = fmtFecha(s.fecha || new Date().toISOString().slice(0, 10));
+    info.appendChild(title);
+    if (artist.textContent) info.appendChild(artist);
+    info.appendChild(date);
+
+    head.appendChild(thumb);
+    head.appendChild(info);
+    card.appendChild(head);
+
+    // Acciones: like + enlaces mini
+    const actions = document.createElement('div');
+    actions.className = 'song-day-actions';
+    actions.appendChild(likeButton(s));
+    actions.appendChild(songLinks(s, false));
+    card.appendChild(actions);
+    return card;
+  }
+
   function renderSongOfDay() {
     grid.innerHTML = '';
     const song = getSongOfDay();
@@ -274,28 +321,8 @@
       return;
     }
 
-    // --- Canción de hoy (grande) ---
-    const card = document.createElement('div');
-    card.className = 'song-card';
-    const disc = document.createElement('div');
-    disc.className = 'song-disc';
-    disc.innerHTML = '🎵';
-    const title = document.createElement('div');
-    title.className = 'song-title';
-    title.textContent = song.titulo;
-    const artist = document.createElement('div');
-    artist.className = 'song-artist';
-    artist.textContent = song.artista || '';
-    const date = document.createElement('div');
-    date.className = 'song-date';
-    date.textContent = '🎵 La canción de hoy — ' + fmtFecha(song.fecha || new Date().toISOString().slice(0, 10));
-    card.appendChild(date);
-    card.appendChild(disc);
-    card.appendChild(title);
-    card.appendChild(artist);
-    card.appendChild(likeButton(song));
-    card.appendChild(songLinks(song, true));
-    grid.appendChild(card);
+    // --- Canción de hoy ---
+    grid.appendChild(songDayCard(song, true));
 
     // --- Historial de canciones anteriores ---
     const rest = songHistory.filter(s => s.fecha !== (song.fecha || ''));
@@ -304,25 +331,7 @@
       header.className = 'section-header';
       header.textContent = '📜 Canciones anteriores';
       grid.appendChild(header);
-
-      rest.forEach(s => {
-        const row = document.createElement('div');
-        row.className = 'song-history-row';
-        const info = document.createElement('div');
-        info.className = 'song-history-info';
-        const t = document.createElement('div');
-        t.className = 'song-history-title';
-        t.textContent = s.titulo + (s.artista ? ' — ' + s.artista : '');
-        const f = document.createElement('div');
-        f.className = 'song-history-date';
-        f.textContent = fmtFecha(s.fecha);
-        info.appendChild(t);
-        info.appendChild(f);
-        row.appendChild(info);
-        row.appendChild(likeButton(s));
-        row.appendChild(songLinks(s, false));
-        grid.appendChild(row);
-      });
+      rest.forEach(s => grid.appendChild(songDayCard(s, false)));
     }
   }
 
