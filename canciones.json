@@ -1,6 +1,14 @@
 {
   "canciones": [
     {
+      "fecha": "2026-09-04",
+      "titulo": "LAPSUS",
+      "artista": "Ultraligera",
+      "youtube": "https://www.youtube.com/watch?v=ojShHLUv_WY",
+      "spotify": "https://open.spotify.com/track/5gaHUShVDYB2kn5s0xzIAi",
+      "likes": 0
+    },
+    {
       "fecha": "2026-09-03",
       "titulo": "Flamenca con lunares",
       "artista": "Miguel Campello",
