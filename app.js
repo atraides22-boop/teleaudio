@@ -485,6 +485,26 @@
   }
 
   // ================= REPRODUCCIÓN =================
+
+  // Pausa la reproducción pero RECUERDA el canal para poder reanudar
+  function pausePlayback() {
+    if (isNative) {
+      // En nativo: paramos el servicio pero conservamos currentItem
+      try { Capacitor.Plugins.BackgroundAudio.pause(); } catch (e) {}
+      try { Capacitor.Plugins.BackgroundAudio.stopSocialRadio(); } catch (e) {}
+      if (hls) { try { hls.destroy(); } catch (e) {} hls = null; }
+    } else {
+      // En web: pausar el audio sin soltar la fuente
+      if (hls) { try { hls.destroy(); } catch (e) {} hls = null; }
+      audio.pause();
+    }
+    isPlaying = false;
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+    updateUI();
+    statusText.textContent = '⏸ Pausado: ' + (currentItem ? currentItem.name : '');
+    showToast('⏸ Pausado');
+  }
+
   function playItem(ch) {
     errorBanner.style.display = 'none';
     currentItem = ch;
@@ -551,12 +571,13 @@
   // ================= UI =================
   function updateUI() {
     powerBtn.classList.toggle('playing', isPlaying);
-    if (isPlaying && currentItem) {
+    powerBtn.classList.toggle('paused-state', !!currentItem && !isPlaying);
+    if (currentItem) {
       nowPlaying.style.display = 'flex';
       npLogo.src = currentItem.logo;
       npName.textContent = currentItem.name;
-      npEq.classList.remove('paused');
-      statusText.textContent = 'Reproduciendo ' + currentItem.name;
+      npEq.classList.toggle('paused', !isPlaying);
+      statusText.textContent = isPlaying ? 'Reproduciendo ' + currentItem.name : '⏸ Pausado: ' + currentItem.name;
     } else {
       nowPlaying.style.display = 'none';
       npEq.classList.add('paused');
@@ -580,7 +601,7 @@
       album: 'En directo'
     });
     navigator.mediaSession.setActionHandler('play', () => { if (currentItem) playItem(currentItem); });
-    navigator.mediaSession.setActionHandler('pause', stopPlayback);
+    navigator.mediaSession.setActionHandler('pause', pausePlayback);
     navigator.mediaSession.setActionHandler('previoustrack', () => changeChannel(-1));
     navigator.mediaSession.setActionHandler('nexttrack', () => changeChannel(+1));
   }
@@ -690,9 +711,22 @@
 
   // ================= EVENTOS =================
   powerBtn.addEventListener('click', () => {
-    if (isPlaying) { stopPlayback(); showToast('⏹ Parado'); }
-    else if (currentItem) playItem(currentItem);
-    else showToast('Selecciona un canal primero');
+    if (isPlaying) {
+      // Sonando → pausa (recordando el canal)
+      pausePlayback();
+    } else if (currentItem) {
+      // Pausado → reanudar el mismo canal
+      playItem(currentItem);
+      showToast('▶ ' + currentItem.name);
+    } else {
+      // Nada → si la Social Radio suena, la paramos; si no, aviso
+      if (bsPlaying) {
+        bsStop();
+        showToast('⏹ Social Radio parada');
+      } else {
+        showToast('Selecciona un canal primero');
+      }
+    }
   });
 
   search.addEventListener('input', renderChannels);

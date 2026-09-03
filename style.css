@@ -499,6 +499,10 @@ body {
   transition: all 0.2s;
 }
 .power-fab.playing { background: var(--accent); color: var(--bg); }
+.power-fab.paused-state { background: var(--card); color: var(--accent); border-style: dashed; }
+.power-fab .fab-icon-pause { display: none; }
+.power-fab.playing .fab-icon-play { display: none; }
+.power-fab.playing .fab-icon-pause { display: block; }
 .power-fab:active { transform: scale(0.92); }
 
 main { padding-bottom: 100px; }
