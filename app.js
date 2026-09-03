@@ -1088,6 +1088,18 @@
 
   // Arranca la lectura de un feed (común a emisoras y timeline)
   function arrancarFeed(feed, label, playBtnRef) {
+    // Exclusión mutua con TV/radio: si sonaba un canal, lo paramos y limpiamos
+    // currentItem. Si no, el FAB ⏮/⏭ sigue priorizando el canal y "salta la
+    // radio" en vez de cambiar de emisora Social.
+    if (currentItem) {
+      if (isNative) {
+        try { Capacitor.Plugins.BackgroundAudio.pause(); } catch (e) {}
+      }
+      stopStream();
+      isPlaying = false;
+      currentItem = null;
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+    }
     // En nativo NO paramos el servicio antes de arrancar: ACTION_START ya corta la
     // voz anterior y reinicia solo. Parar (STOP) y arrancar (START) como dos intents
     // separados provoca una carrera que deja el servicio muerto y la radio "pillada
