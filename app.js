@@ -929,10 +929,22 @@
     grid.innerHTML = '';
     const creds = getBsCreds();
 
+    // Contenedor único que ocupa todo el ancho del grid (3 columnas)
+    const wrap = document.createElement('div');
+    wrap.style.gridColumn = '1 / -1';
+    wrap.style.display = 'flex';
+    wrap.style.flexDirection = 'column';
+    wrap.style.alignItems = 'center';
+    wrap.style.gap = '6px';
+    wrap.style.width = '100%';
+    grid.appendChild(wrap);
+
     // ---------- Cabecera ----------
     const card = document.createElement('div');
     card.className = 'song-card';
     card.style.textAlign = 'center';
+    card.style.width = '100%';
+    card.style.boxSizing = 'border-box';
 
     const icon = document.createElement('div');
     icon.className = 'song-disc';
@@ -954,7 +966,7 @@
     card.appendChild(icon);
     card.appendChild(t);
     card.appendChild(sub);
-    grid.appendChild(card);
+    wrap.appendChild(card);
 
     // ---------- Función común de arranque ----------
     // Muestra el feed en caja, y si autoplay, empieza a leer en bucle
@@ -992,16 +1004,17 @@
     // ---------- Emisoras generales (sin cuenta) ----------
     const gTitle = document.createElement('div');
     gTitle.className = 'song-artist';
-    gTitle.style.margin = '18px 0 8px';
+    gTitle.style.margin = '14px 0 8px';
     gTitle.style.fontWeight = '700';
     gTitle.style.fontSize = '0.95rem';
     gTitle.textContent = '📻 Emisoras · sin necesidad de cuenta';
-    grid.appendChild(gTitle);
+    wrap.appendChild(gTitle);
 
     const feedBox = document.createElement('div');
     feedBox.className = 'bs-feed-box';
     feedBox.style.display = 'none';
-    grid.appendChild(feedBox);
+    feedBox.style.width = '100%';
+    wrap.appendChild(feedBox);
 
     const emisoraGrid = document.createElement('div');
     emisoraGrid.className = 'social-emisoras';
@@ -1033,21 +1046,22 @@
       });
       emisoraGrid.appendChild(btn);
     });
-    grid.appendChild(emisoraGrid);
+    wrap.appendChild(emisoraGrid);
 
     // ---------- Timeline personal (con cuenta) ----------
     const pTitle = document.createElement('div');
     pTitle.className = 'song-artist';
-    pTitle.style.margin = '22px 0 4px';
+    pTitle.style.margin = '20px 0 4px';
     pTitle.style.fontWeight = '700';
     pTitle.style.fontSize = '0.95rem';
     pTitle.textContent = '🦋 Tu timeline (con tu cuenta de Bluesky)';
-    grid.appendChild(pTitle);
+    wrap.appendChild(pTitle);
 
     if (creds && creds.password) {
       // --- Conectado: controles ---
       const btnRow = document.createElement('div');
       btnRow.className = 'btn-row';
+      btnRow.style.width = '100%';
 
       const playBtn = document.createElement('button');
       playBtn.className = 'btn btn-primary';
@@ -1100,14 +1114,22 @@
 
       btnRow.appendChild(playBtn);
       btnRow.appendChild(refreshBtn);
-      grid.appendChild(btnRow);
+      wrap.appendChild(btnRow);
     } else {
-      // --- Sin conectar: formulario de conexión ---
+      // --- Sin conectar: formulario de conexión (compacto, a ancho completo) ---
+      const formCard = document.createElement('div');
+      formCard.className = 'song-card';
+      formCard.style.width = '100%';
+      formCard.style.boxSizing = 'border-box';
+      formCard.style.alignItems = 'stretch';
+
       const userIn = document.createElement('input');
       userIn.className = 'comment-input';
+      userIn.style.width = '100%';
       userIn.placeholder = 'Tu usuario de Bluesky (manruca.bsky.social)';
       const passIn = document.createElement('input');
       passIn.className = 'comment-input';
+      passIn.style.width = '100%';
       passIn.type = 'password';
       passIn.placeholder = 'Contraseña de aplicación (xxxx-xxxx-xxxx-xxxx)';
       const hint = document.createElement('div');
@@ -1132,13 +1154,14 @@
         }
       });
 
-      grid.appendChild(userIn);
-      grid.appendChild(passIn);
-      grid.appendChild(hint);
-      grid.appendChild(connectBtn);
+      formCard.appendChild(userIn);
+      formCard.appendChild(passIn);
+      formCard.appendChild(hint);
+      formCard.appendChild(connectBtn);
+      wrap.appendChild(formCard);
     }
 
-    grid.appendChild(status);
+    wrap.appendChild(status);
   }
 
   // ================= INICIO =================
