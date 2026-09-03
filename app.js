@@ -806,7 +806,8 @@
     { id: 'tiempo', icon: '🌡️', name: 'El Tiempo', desc: 'AEMET: avisos y temperaturas al momento', handles: ['aemet.es'] },
     { id: 'ciencia', icon: '🔬', name: 'Ciencia', desc: 'Muy Interesante, El País Ciencia, Apuntes de ciencia', handles: ['muyinteresante.com', 'elpaiscyt.bsky.social', 'apuntesciencia.bsky.social'] },
     { id: 'cultura', icon: '🎨', name: 'Cultura', desc: 'elDiario Cultura, Ministerio de Cultura', handles: ['eldiariocultura.bsky.social', 'culturagob.bsky.social'] },
-    { id: 'musica', icon: '🎸', name: 'Historias de música', desc: 'Anécdotas y leyendas de la música', handles: ['lahistorieta.bsky.social'] }
+    { id: 'musica', icon: '🎸', name: 'Historias de música', desc: 'Anécdotas y leyendas de la música', handles: ['lahistorieta.bsky.social'] },
+    { id: 'tecnologia', icon: '💻', name: 'Tecnología y juegos', desc: 'Xataka, IA, ordenadores y videojuegos', handles: ['xataka.bsky.social', 'revistaia.bsky.social', 'vidaextracom.bsky.social', 'nintenderos.com', 'genbeta.bsky.social', '3djuegos.bsky.social'] }
   ];
 
   // Cargar credenciales guardadas
