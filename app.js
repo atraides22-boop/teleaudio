@@ -995,13 +995,19 @@
   }
 
   function bsStop() {
+    bsResetLocal();
+    if (isNative) {
+      try { Capacitor.Plugins.BackgroundAudio.stopSocialRadio(); } catch (e) {}
+    }
+  }
+
+  // Limpia SOLO el estado visual/UI (sin tocar el servicio nativo).
+  // Útil cuando el usuario apaga la Social desde la notificación.
+  function bsResetLocal() {
     bsPlaying = false;
     bsPaused = false;
     bsCurrent = -1;
     clearInterval(bsTimer);
-    if (isNative) {
-      try { Capacitor.Plugins.BackgroundAudio.stopSocialRadio(); } catch (e) {}
-    }
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     const st = document.getElementById('bs-status');
     if (st) st.textContent = '';
@@ -1218,6 +1224,24 @@
         try { setMediaSession(ch); } catch (e) {}
         updateUI();
         showToast('▶ ' + ch.name);
+      });
+      // Pulsaron ⏻ Apagar en la notificación del reproductor TV/radio
+      Capacitor.Plugins.BackgroundAudio.addListener('playbackStopped', () => {
+        if (isPlaying || currentItem) {
+          isPlaying = false;
+          currentItem = null;
+          stopStream();
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+          updateUI();
+          statusText.textContent = 'Toca un canal para escucharlo';
+        }
+      });
+      // Pulsaron ⏻ Apagar en la notificación de la Social Radio
+      Capacitor.Plugins.BackgroundAudio.addListener('socialStopped', () => {
+        if (bsPlaying || bsPaused) {
+          bsResetLocal();
+          showToast('🦋 Social Radio apagada');
+        }
       });
     } catch (e) {
       // plugin sin listeners en versiones viejas
