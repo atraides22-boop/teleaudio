@@ -191,7 +191,7 @@
   const $ = (id) => document.getElementById(id);
   const grid = $('channel-grid');
   const search = $('search');
-  const powerBtn = $('power-btn');
+  const powerBtn = $('power-fab') || $('power-btn');
   const nowPlaying = $('now-playing');
   const npLogo = $('np-logo');
   const npName = $('np-name');

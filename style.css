@@ -478,3 +478,27 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .bs-feed-item:last-child { border-bottom: none; }
+
+/* Botón flotante de apagar/encender (FAB) */
+.power-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 72px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--card);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 60;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  transition: all 0.2s;
+}
+.power-fab.playing { background: var(--accent); color: var(--bg); }
+.power-fab:active { transform: scale(0.92); }
+
+main { padding-bottom: 100px; }
