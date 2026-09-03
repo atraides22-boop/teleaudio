@@ -741,21 +741,48 @@
   const prevFab = $('prev-fab');
   const nextFab = $('next-fab');
   function updateFabSide() {
-    const hasChannel = !!currentItem;
-    prevFab.classList.toggle('has-item', hasChannel);
-    nextFab.classList.toggle('has-item', hasChannel);
+    // Botones laterales activos si hay canal O social radio sonando/pausada
+    const activo = !!currentItem || bsPlaying || bsPaused;
+    prevFab.classList.toggle('has-item', activo);
+    nextFab.classList.toggle('has-item', activo);
   }
   prevFab.addEventListener('click', () => {
-    if (!currentItem) { showToast('Primero elige un canal'); return; }
-    if (currentItem && (bsPlaying || bsPaused)) bsStop();
-    changeChannel(-1);
-    showToast('◀ ' + currentItem.name);
+    if (currentItem) {
+      // Canal de TV/Radio sonando → canal anterior
+      if (bsPlaying || bsPaused) bsStop();
+      changeChannel(-1);
+      showToast('◀ ' + currentItem.name);
+      return;
+    }
+    // Social Radio: cambiar de emisora (o post anterior en el timeline nativo)
+    if (bsPlaying || bsPaused) {
+      if (isNative && bsSource === 'timeline') {
+        try { Capacitor.Plugins.BackgroundAudio.prevSocialRadio(); } catch (e) {}
+        return;
+      }
+      bsCambiarEmisora(-1);
+      return;
+    }
+    showToast('Primero elige un canal o emisora');
   });
   nextFab.addEventListener('click', () => {
-    if (!currentItem) { showToast('Primero elige un canal'); return; }
-    if (currentItem && (bsPlaying || bsPaused)) bsStop();
-    changeChannel(+1);
-    showToast(currentItem.name + ' ▶');
+    if (currentItem) {
+      // Canal de TV/Radio sonando → canal siguiente
+      if (bsPlaying || bsPaused) bsStop();
+      changeChannel(+1);
+      showToast(currentItem.name + ' ▶');
+      return;
+    }
+    // Social Radio: cambiar de emisora (o post siguiente en el timeline nativo)
+    if (bsPlaying || bsPaused) {
+      if (isNative && bsSource === 'timeline') {
+        try { Capacitor.Plugins.BackgroundAudio.nextSocialRadio(); } catch (e) {}
+        return;
+      }
+      bsCambiarEmisora(+1);
+      return;
+    }
+    showToast('Primero elige un canal o emisora');
   });
 
   search.addEventListener('input', renderChannels);
@@ -826,6 +853,9 @@
   let bsTimer = null;
   let bsSource = null; // 'timeline' o id de emisora
   let bsPaused = false; // Social Radio en pausa (se puede reanudar)
+  let bsEmisoraIdx = -1; // índice de la emisora actual en BS_EMISORAS (-1 = timeline)
+  let bsRenderCb = null; // callback de renderSocial para refrescar botones al cambiar de emisora
+  let bsFeedBox = null; // caja de feed visible (creada por renderSocial)
 
   // Emisoras generales: cuentas públicas que cualquiera puede escuchar SIN cuenta
   // name corto para la cuadrícula; handles = cuentas; desc = tooltip
@@ -927,6 +957,8 @@
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     const st = document.getElementById('bs-status');
     if (st) st.textContent = '';
+    bsMarcaEmisoras();
+    updateUI();
   }
 
   // Pausa la Social Radio (guarda el feed para poder reanudar)
@@ -934,7 +966,7 @@
     if (!bsPlaying) return;
     clearInterval(bsTimer);
     if (isNative) {
-      try { Capacitor.Plugins.BackgroundAudio.stopSocialRadio(); } catch (e) {}
+      try { Capacitor.Plugins.BackgroundAudio.pauseSocialRadio(); } catch (e) {}
     }
     if ('speechSynthesis' in window) {
       // Pausa real: conserva la posición exacta de la voz
@@ -957,11 +989,16 @@
     bsPaused = false;
     bsPlaying = true;
     if (isNative) {
-      // El TTS nativo no guarda posición: relanzamos el feed actual
-      const frases = bsFeed.map(item => 'De ' + item.author + '. ' + item.text);
+      // El servicio nativo guarda el post actual y reanuda desde ahí
       try {
-        Capacitor.Plugins.BackgroundAudio.startSocialRadio({ frases: frases });
-      } catch (e) { bsPlaying = false; bsPaused = true; }
+        Capacitor.Plugins.BackgroundAudio.resumeSocialRadio();
+      } catch (e) {
+        // Si el servicio se había cerrado, relanzamos el feed
+        const frases = bsFeed.map(item => 'De ' + item.author + '. ' + item.text);
+        try {
+          Capacitor.Plugins.BackgroundAudio.startSocialRadio({ frases: frases });
+        } catch (e2) { bsPlaying = false; bsPaused = true; }
+      }
       return;
     }
     if ('speechSynthesis' in window) {
@@ -997,7 +1034,99 @@
       const es = voices.find(v => v.lang.startsWith('es'));
       if (es) u.voice = es;
       u.onend = () => setTimeout(bsSpeakNext, 4000); // pausa entre posts
-      u.onerror = () => setTimeout(bsSpeakNext, 2000);
+      u.onerror = () => 
+  // Refresca qué botón de emisora se ve activo (si la cuadrícula está visible)
+  function bsMarcaEmisoras() {
+    const es = bsSource === 'timeline' ? null : BS_EMISORAS.find(e => e.id === bsSource);
+    document.querySelectorAll('.social-emisora').forEach(b => {
+      b.classList.toggle('playing', !!(es && b.dataset.emId === es.id && bsPlaying));
+    });
+  }
+
+  // Arranca la lectura de un feed (común a emisoras y timeline)
+  function arrancarFeed(feed, label, playBtnRef) {
+    if (bsPlaying) bsStop();
+    bsFeed = feed;
+    bsPlaying = true;
+    bsPaused = false;
+    bsCurrent = -1;
+    if (playBtnRef) playBtnRef.textContent = '⏹ Parar radio';
+    if (bsFeedBox) {
+      bsFeedBox.style.display = 'block';
+      bsFeedBox.innerHTML = '';
+      feed.slice(0, 8).forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'bs-feed-item';
+        row.innerHTML = '<b>' + item.author + '</b> · ' + item.text.slice(0, 90) + '…';
+        bsFeedBox.appendChild(row);
+      });
+    }
+    const st = document.getElementById('bs-status');
+    if (st) st.textContent = '🔊 ' + label + ' · ' + feed.length + ' mensajes en bucle';
+    updateUI();
+
+    if (isNative) {
+      const frases = feed.map(item => 'De ' + item.author + '. ' + item.text);
+      try {
+        Capacitor.Plugins.BackgroundAudio.startSocialRadio({ frases: frases });
+      } catch (e) {
+        if (st) st.textContent = '❌ No se pudo iniciar la voz: ' + e.message;
+        bsPlaying = false;
+      }
+    } else if ('speechSynthesis' in window) {
+      bsSpeakNext();
+      bsTimer = setInterval(() => { if (!speechSynthesis.speaking) bsSpeakNext(); }, 1000);
+    } else {
+      if (st) st.textContent = '❌ Tu navegador no tiene voz. Usa la app de Android.';
+    }
+  }
+
+  // Reproduce (o para/reanuda) una emisora por su id. Usado por la cuadrícula y por los FAB ⏮⏭
+  async function bsPlayEmisoraById(id, btnRef) {
+    const em = BS_EMISORAS.find(e => e.id === id);
+    if (!em) return;
+    const st = document.getElementById('bs-status');
+
+    // Misma emisora sonando → parar
+    if (bsPlaying && bsSource === em.id) {
+      bsStop();
+      bsMarcaEmisoras();
+      if (bsFeedBox) bsFeedBox.style.display = 'none';
+      return;
+    }
+    // Misma emisora en pausa → reanudar
+    if (bsPaused && bsSource === em.id) {
+      bsResume();
+      bsMarcaEmisoras();
+      return;
+    }
+    if (st) st.textContent = '⏳ Buscando lo último de ' + em.name + '…';
+    try {
+      const feed = await bsFetchPublic(em.handles);
+      if (!feed.length) { if (st) st.textContent = '😴 Ahora mismo no hay mensajes'; return; }
+      bsSource = em.id;
+      bsEmisoraIdx = BS_EMISORAS.indexOf(em);
+      arrancarFeed(feed, em.name, null);
+      bsMarcaEmisoras();
+    } catch (e) {
+      if (st) st.textContent = '❌ ' + e.message;
+    }
+  }
+
+  // Salta a la emisora anterior/siguiente (para los botones ⏮⏭ del reproductor)
+  function bsCambiarEmisora(dir) {
+    if (bsSource === 'timeline') {
+      showToast('En tu timeline los posts van solos 😄');
+      return;
+    }
+    let i = BS_EMISORAS.findIndex(e => e.id === bsSource);
+    if (i === -1) i = 0;
+    const next = BS_EMISORAS[(i + dir + BS_EMISORAS.length) % BS_EMISORAS.length];
+    showToast(next.icon + ' ' + next.name);
+    bsPlayEmisoraById(next.id);
+  }
+
+setTimeout(bsSpeakNext, 2000);
       speechSynthesis.speak(u);
     }
   }
@@ -1045,41 +1174,6 @@
     card.appendChild(sub);
     wrap.appendChild(card);
 
-    // ---------- Función común de arranque ----------
-    // Muestra el feed en caja, y si autoplay, empieza a leer en bucle
-    function arrancarFeed(feed, label, playBtnRef) {
-      feedBox.innerHTML = '';
-      feed.slice(0, 8).forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'bs-feed-item';
-        row.innerHTML = '<b>' + item.author + '</b> · ' + item.text.slice(0, 90) + '…';
-        feedBox.appendChild(row);
-      });
-      if (bsPlaying) bsStop();
-      bsFeed = feed;
-      bsPlaying = true;
-      bsPaused = false;
-      bsCurrent = -1;
-      if (playBtnRef) playBtnRef.textContent = '⏹ Parar radio';
-      status.textContent = '🔊 ' + label + ' · ' + feed.length + ' mensajes en bucle';
-      updateUI();
-
-      if (isNative) {
-        const frases = feed.map(item => 'De ' + item.author + '. ' + item.text);
-        try {
-          Capacitor.Plugins.BackgroundAudio.startSocialRadio({ frases: frases });
-        } catch (e) {
-          status.textContent = '❌ No se pudo iniciar la voz: ' + e.message;
-          bsPlaying = false;
-        }
-      } else if ('speechSynthesis' in window) {
-        bsSpeakNext();
-        bsTimer = setInterval(() => { if (!speechSynthesis.speaking) bsSpeakNext(); }, 1000);
-      } else {
-        status.textContent = '❌ Tu navegador no tiene voz. Usa la app de Android.';
-      }
-    }
-
     // ---------- Emisoras generales (sin cuenta) ----------
     const gTitle = document.createElement('div');
     gTitle.className = 'song-artist';
@@ -1089,11 +1183,11 @@
     gTitle.textContent = '📻 Emisoras · sin necesidad de cuenta';
     wrap.appendChild(gTitle);
 
-    const feedBox = document.createElement('div');
-    feedBox.className = 'bs-feed-box';
-    feedBox.style.display = 'none';
-    feedBox.style.width = '100%';
-    wrap.appendChild(feedBox);
+    bsFeedBox = document.createElement('div');
+    bsFeedBox.className = 'bs-feed-box';
+    bsFeedBox.style.display = 'none';
+    bsFeedBox.style.width = '100%';
+    wrap.appendChild(bsFeedBox);
 
     const emisoraGrid = document.createElement('div');
     emisoraGrid.className = 'social-emisoras';
@@ -1101,37 +1195,10 @@
     BS_EMISORAS.forEach(em => {
       const btn = document.createElement('button');
       btn.className = 'social-emisora' + (bsPlaying && bsSource === em.id ? ' playing' : '');
+      btn.dataset.emId = em.id;
       btn.title = em.icon + ' ' + em.name + ' — ' + em.desc;
       btn.innerHTML = '<span class="em-icon">' + em.icon + '</span><span class="em-name">' + em.name + '</span>';
-      btn.addEventListener('click', async () => {
-        if (bsPlaying && bsSource === em.id) {
-          bsStop();
-          btn.classList.remove('playing');
-          feedBox.style.display = 'none';
-          updateUI();
-          return;
-        }
-        if (bsPaused && bsSource === em.id) {
-          // Estaba en pausa: reanudar la misma emisora
-          document.querySelectorAll('.social-emisora').forEach(b => b.classList.remove('playing'));
-          btn.classList.add('playing');
-          feedBox.style.display = 'block';
-          bsResume();
-          return;
-        }
-        status.textContent = '⏳ Buscando lo último de ' + em.name + '…';
-        try {
-          const feed = await bsFetchPublic(em.handles);
-          if (!feed.length) { status.textContent = '😴 Ahora mismo no hay mensajes'; return; }
-          bsSource = em.id;
-          feedBox.style.display = 'block';
-          document.querySelectorAll('.social-emisora').forEach(b => b.classList.remove('playing'));
-          btn.classList.add('playing');
-          arrancarFeed(feed, em.name, null);
-        } catch (e) {
-          status.textContent = '❌ ' + e.message;
-        }
-      });
+      btn.addEventListener('click', () => bsPlayEmisoraById(em.id, btn));
       emisoraGrid.appendChild(btn);
     });
     wrap.appendChild(emisoraGrid);
@@ -1170,7 +1237,7 @@
         const feed = await bsFetchTimeline();
         if (!feed.length) { status.textContent = '😴 Tu timeline está vacío por ahora'; return; }
         bsSource = 'timeline';
-        feedBox.style.display = 'block';
+        bsFeedBox.style.display = 'block';
         arrancarFeed(feed, 'Tu timeline', autoplay ? playBtn : null);
         if (!autoplay) status.textContent = '✅ Timeline actualizado: ' + feed.length + ' mensajes';
       }
