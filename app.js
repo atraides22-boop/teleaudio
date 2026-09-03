@@ -1117,6 +1117,24 @@
     }
   }
 
+  // Cuando el usuario pulsa ⏮/⏭ en la notificación / pantalla de bloqueo / reloj
+  // (pantalla apagada), el servicio nativo avisa y aquí cambiamos de emisora.
+  function setupSocialNavListener() {
+    if (!isNative || !window.Capacitor || !Capacitor.Plugins.BackgroundAudio) return;
+    try {
+      Capacitor.Plugins.BackgroundAudio.addListener('socialNav', (data) => {
+        const dir = data && data.dir ? data.dir : 0;
+        if (dir === 0) return;
+        // Solo actuar si estamos en una emisora (no en el timeline personal)
+        if (bsSource && bsSource !== 'timeline' && (bsPlaying || bsPaused)) {
+          bsCambiarEmisora(dir);
+        }
+      });
+    } catch (e) {
+      // el plugin puede no soportar listeners en versiones viejas
+    }
+  }
+
   // Salta a la emisora anterior/siguiente (para los botones ⏮⏭ del reproductor)
   function bsCambiarEmisora(dir) {
     if (bsSource === 'timeline') {
@@ -1322,5 +1340,6 @@
   setTheme(localStorage.getItem('teleaudio_theme') || 'dark');
   setupAlarm();
   loadSongs();
+  setupSocialNavListener();
   renderChannels();
 })();
