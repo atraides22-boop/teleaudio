@@ -518,7 +518,16 @@
 
     if (isNative) {
       try {
-        Capacitor.Plugins.BackgroundAudio.play({ url: ch.url, title: ch.name, subtitle: 'TeleAudio' });
+        // Pasamos la lista completa (TV o Radio) para que el reproductor del sistema
+        // (notificación / pantalla bloqueo) pueda saltar de canal con ⏮/⏭.
+        const enTv = TV_CHANNELS.some(c => c.id === ch.id);
+        const lista = enTv ? TV_CHANNELS : (RADIO_STATIONS.some(c => c.id === ch.id) ? RADIO_STATIONS : null);
+        const payload = { url: ch.url, title: ch.name, subtitle: 'TeleAudio' };
+        if (lista && lista.length > 1) {
+          payload.lista = lista.map(c => ({ url: c.url, title: c.name }));
+          payload.idx = Math.max(0, lista.findIndex(c => c.id === ch.id));
+        }
+        Capacitor.Plugins.BackgroundAudio.play(payload);
         isPlaying = true;
         updateUI();
         showToast('▶ ' + ch.name);
@@ -1079,7 +1088,16 @@
 
   // Arranca la lectura de un feed (común a emisoras y timeline)
   function arrancarFeed(feed, label, playBtnRef) {
-    if (bsPlaying) bsStop();
+    // En nativo NO paramos el servicio antes de arrancar: ACTION_START ya corta la
+    // voz anterior y reinicia solo. Parar (STOP) y arrancar (START) como dos intents
+    // separados provoca una carrera que deja el servicio muerto y la radio "pillada
+    // en pausa" al cambiar de emisora. En web sí paramos la voz previa.
+    if (!isNative) {
+      if (bsPlaying || bsPaused) bsStop();
+    } else {
+      clearInterval(bsTimer);
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+    }
     bsFeed = feed;
     bsPlaying = true;
     bsPaused = false;
@@ -1162,6 +1180,26 @@
       });
     } catch (e) {
       // el plugin puede no soportar listeners en versiones viejas
+    }
+  }
+
+  // El reproductor del sistema (notificación / reloj / pantalla bloqueo) cambió de
+  // canal TV/radio por su cuenta (playlist nativa). Sincronizamos la interfaz.
+  function setupPlaybackChangedListener() {
+    if (!isNative || !window.Capacitor || !Capacitor.Plugins.BackgroundAudio) return;
+    try {
+      Capacitor.Plugins.BackgroundAudio.addListener('playbackChanged', (data) => {
+        if (!data || !data.url) return;
+        const ch = ALL.find(c => c.url === data.url);
+        if (!ch || (currentItem && currentItem.id === ch.id)) return;
+        currentItem = ch;
+        isPlaying = true;
+        try { setMediaSession(ch); } catch (e) {}
+        updateUI();
+        showToast('▶ ' + ch.name);
+      });
+    } catch (e) {
+      // plugin sin listeners en versiones viejas
     }
   }
 
@@ -1371,5 +1409,6 @@
   setupAlarm();
   loadSongs();
   setupSocialNavListener();
+  setupPlaybackChangedListener();
   renderChannels();
 })();
