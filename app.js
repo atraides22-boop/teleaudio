@@ -1015,6 +1015,13 @@
     updateUI();
   }
 
+  // Nombre legible de lo que suena en la Social Radio (para estados y toasts)
+  function bsLabelActual() {
+    if (bsSource === 'timeline') return 'tu timeline';
+    const em = BS_EMISORAS.find(e => e.id === bsSource);
+    return em ? em.name : 'Social Radio';
+  }
+
   // Pausa la Social Radio (guarda el feed para poder reanudar)
   function bsPause() {
     if (!bsPlaying) return;
@@ -1033,7 +1040,7 @@
     bsPlaying = false;
     bsPaused = true;
     const st = document.getElementById('bs-status');
-    if (st) st.textContent = '⏸ Pausado · ' + (bsSource === 'timeline' ? 'tu timeline' : (BS_EMISORAS.find(e => e.id === bsSource) || {}).name || 'Social Radio');
+    if (st) st.textContent = '⏸ Pausado · ' + bsLabelActual();
     updateUI();
   }
 
@@ -1103,6 +1110,11 @@
 
   // Arranca la lectura de un feed (común a emisoras y timeline)
   function arrancarFeed(feed, label, playBtnRef) {
+    // Recordamos la fuente para poder restaurarla si Android recrea la vista
+    try {
+      localStorage.setItem('teleaudio_bs_last_source', bsSource || '');
+      localStorage.setItem('teleaudio_bs_last_label', label || '');
+    } catch (e) {}
     // Exclusión mutua con TV/radio: si sonaba un canal, lo paramos y limpiamos
     // currentItem. Si no, el FAB ⏮/⏭ sigue priorizando el canal y "salta la
     // radio" en vez de cambiar de emisora Social.
@@ -1211,13 +1223,26 @@
   }
 
   // El reproductor del sistema (notificación / reloj / pantalla bloqueo) cambió de
-  // canal TV/radio por su cuenta (playlist nativa). Sincronizamos la interfaz.
+  // canal TV/radio por su cuenta (playlist nativa) o cambió play/pausa.
+  // Sincronizamos la interfaz.
   function setupPlaybackChangedListener() {
     if (!isNative || !window.Capacitor || !Capacitor.Plugins.BackgroundAudio) return;
     try {
       Capacitor.Plugins.BackgroundAudio.addListener('playbackChanged', (data) => {
         if (!data || !data.url) return;
         const ch = ALL.find(c => c.url === data.url);
+        // Mismo canal que ya mostramos → solo refrescar play/pausa (viene del reloj
+        // o de la notificación: pausaron/reanudaron fuera de la app).
+        if (ch && currentItem && currentItem.id === ch.id) {
+          const sonando = typeof data.sonando === 'boolean' ? data.sonando : true;
+          if (isPlaying !== sonando) {
+            isPlaying = sonando;
+            if (!sonando && 'mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+            updateUI();
+          }
+          return;
+        }
+        // Canal distinto (⏭/⏮ del reloj / notificación): cambiar de canal.
         if (!ch || (currentItem && currentItem.id === ch.id)) return;
         currentItem = ch;
         isPlaying = true;
@@ -1225,9 +1250,11 @@
         updateUI();
         showToast('▶ ' + ch.name);
       });
-      // Pulsaron ⏻ Apagar en la notificación del reproductor TV/radio
+      // Pulsaron ⏻ Apagar en la notificación del reproductor TV/radio.
+      // OJO: solo actuamos si según la web había algo SONANDO. Si la web pausó
+      // (conservando el canal para reanudar), no borramos el recuerdo.
       Capacitor.Plugins.BackgroundAudio.addListener('playbackStopped', () => {
-        if (isPlaying || currentItem) {
+        if (isPlaying) {
           isPlaying = false;
           currentItem = null;
           stopStream();
@@ -1241,6 +1268,29 @@
         if (bsPlaying || bsPaused) {
           bsResetLocal();
           showToast('🦋 Social Radio apagada');
+        }
+      });
+      // La Social Radio cambió de estado (pausa/reanuda) desde la notificación o el reloj
+      Capacitor.Plugins.BackgroundAudio.addListener('socialState', (data) => {
+        if (!data) return;
+        const leyendo = !!data.leyendo;
+        const iniciado = !!data.iniciado;
+        if (!iniciado) {
+          if (bsPlaying || bsPaused) { bsResetLocal(); }
+          return;
+        }
+        if (leyendo && !bsPlaying && bsPaused) {
+          // Reanudada desde el sistema
+          bsPaused = false;
+          bsPlaying = true;
+          updateUI();
+        } else if (!leyendo && bsPlaying && !bsPaused) {
+          // Pausada desde el sistema
+          bsPlaying = false;
+          bsPaused = true;
+          const st = document.getElementById('bs-status');
+          if (st) st.textContent = '⏸ Pausado · ' + bsLabelActual();
+          updateUI();
         }
       });
     } catch (e) {
@@ -1449,6 +1499,76 @@
     wrap.appendChild(status);
   }
 
+  // ================= SÍNCRONO CON EL NATIVO =================
+  // Si Android recrea la vista (bloqueo + tiempo en segundo plano) la web
+  // arranca de cero pero el audio nativo sigue sonando. Preguntamos al
+  // servicio qué está sonando y restauramos la interfaz para poder pausar
+  // desde la app (bug reportado: "no me deja pausar, me pide elegir canal").
+  async function sincronizarConNativo() {
+    if (!isNative || !window.Capacitor || !Capacitor.Plugins.BackgroundAudio) return;
+    try {
+      const est = await Capacitor.Plugins.BackgroundAudio.getEstado();
+      if (!est) return;
+
+      // --- TV / Radio ---
+      if (est.tvUrl) {
+        const ch = ALL.find(c => c.url === est.tvUrl);
+        if (ch && !currentItem) {
+          currentItem = ch;
+          isPlaying = !!est.tvSonando;
+          try { setMediaSession(ch); } catch (e) {}
+          if (!isPlaying && 'mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+          // Activar la pestaña del canal para que se vea la tarjeta activa
+          const enTv = TV_CHANNELS.some(c => c.id === ch.id);
+          const pest = enTv ? 'tv' : 'radio';
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          const tab = document.querySelector('.tab[data-tab="' + pest + '"]');
+          if (tab) tab.classList.add('active');
+          currentTab = pest;
+          renderChannels();
+          updateUI();
+          showToast('▶ Continúa: ' + ch.name);
+        } else if (ch && currentItem && currentItem.id === ch.id) {
+          // Mismo canal: solo refrescar play/pausa
+          const sonando = !!est.tvSonando;
+          if (isPlaying !== sonando) {
+            isPlaying = sonando;
+            updateUI();
+          }
+        }
+      }
+
+      // --- Social Radio ---
+      if (est.socialIniciado && !bsPlaying && !bsPaused) {
+        // El servicio sigue leyendo (o en pausa). La web no tiene el feed en
+        // memoria (lo pidió a Bluesky la sesión anterior), así que restauramos
+        // un estado "en marcha" genérico: los controles (⏸ / ⏹) funcionan
+        // porque hablan con el servicio nativo.
+        bsPlaying = !!est.socialLeyendo;
+        bsPaused = !est.socialLeyendo;
+        // Intentar recuperar qué emisora/timeline era
+        try {
+          const src = localStorage.getItem('teleaudio_bs_last_source') || '';
+          if (src) {
+            bsSource = src;
+            bsEmisoraIdx = BS_EMISORAS.findIndex(e => e.id === src);
+          }
+        } catch (e) {}
+        updateUI();
+        // Si estamos en la pestaña Social, repintar (renderSocial recrea
+        // #bs-status, por eso el texto se pone DESPUÉS).
+        if (currentTab === 'social') renderSocial();
+        const st = document.getElementById('bs-status');
+        const lbl = bsSource ? bsLabelActual() : 'Social Radio';
+        if (st) st.textContent = bsPlaying ? '🔊 ' + lbl + ' en marcha' : '⏸ ' + lbl + ' en pausa';
+        bsMarcaEmisoras();
+        showToast('🦋 ' + (bsPlaying ? 'Sigue sonando' : 'En pausa') + ': ' + lbl);
+      }
+    } catch (e) {
+      // si el plugin no soporta getEstado, seguimos como siempre
+    }
+  }
+
   // ================= INICIO =================
   setTheme(localStorage.getItem('teleaudio_theme') || 'dark');
   setupAlarm();
@@ -1456,4 +1576,10 @@
   setupSocialNavListener();
   setupPlaybackChangedListener();
   renderChannels();
+  sincronizarConNativo();
+  // Al volver a primer plano (sin recarga), re-sincronizar por si pausaron,
+  // reanudaron o apagaron desde la notificación/reloj mientras estaba detrás.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) sincronizarConNativo();
+  });
 })();
