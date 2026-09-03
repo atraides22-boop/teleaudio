@@ -223,7 +223,7 @@
     let list;
     if (tab === 'tv') list = TV_CHANNELS;
     else if (tab === 'radio') list = RADIO_STATIONS;
-    else if (tab === 'cancion' || tab === 'comentarios') return [];
+    else if (tab === 'cancion' || tab === 'comentarios' || tab === 'social') return [];
     else list = ALL.filter(c => favs.has(c.id));
     return list.filter(c => !q || c.name.toLowerCase().includes(q));
   }
@@ -404,6 +404,10 @@
 
   function renderChannels() {
     grid.innerHTML = '';
+    if (currentTab === 'social') {
+      renderSocial();
+      return;
+    }
     if (currentTab === 'comentarios') {
       renderComments();
       return;
@@ -745,6 +749,207 @@
   // ================= PWA =================
   if (!isNative && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+  // ================= SOCIAL RADIO (BLUESKY) =================
+  const BS_URL = 'https://bsky.social';
+  let bsToken = null;
+  let bsFeed = [];
+  let bsPlaying = false;
+  let bsCurrent = -1;
+  let bsTimer = null;
+
+  // Cargar credenciales guardadas
+  function getBsCreds() {
+    try {
+      return JSON.parse(localStorage.getItem('teleaudio_bs_creds') || 'null');
+    } catch (e) { return null; }
+  }
+
+  async function bsLogin(identifier, password) {
+    const res = await fetch(BS_URL + '/xrpc/com.atproto.server.createSession', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: identifier, password: password })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.accessJwt) throw new Error(data.message || data.error || 'Error al conectar');
+    bsToken = data.accessJwt;
+    return data.handle;
+  }
+
+  async function bsFetchTimeline() {
+    if (!bsToken) return [];
+    const res = await fetch(BS_URL + '/xrpc/app.bsky.feed.getTimeline?limit=15', {
+      headers: { 'Authorization': 'Bearer ' + bsToken }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Error al leer el timeline');
+    return (data.feed || []).map(item => {
+      const p = item.post || {};
+      const rec = p.record || {};
+      // Quitar URLs y emojis raros para que la voz lea mejor
+      let text = (rec.text || '').replace(/https?:\/\/\S+/g, '').replace(/@\S+/g, '');
+      const author = (p.author && (p.author.displayName || p.author.handle)) || 'Alguien';
+      return { author: author, text: text.trim(), time: (rec.createdAt || '').slice(0, 10) };
+    }).filter(s => s.text.length > 0);
+  }
+
+  function bsStop() {
+    bsPlaying = false;
+    bsCurrent = -1;
+    clearInterval(bsTimer);
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    const st = document.getElementById('bs-status');
+    if (st) st.textContent = '';
+  }
+
+  function bsSpeakNext() {
+    if (!bsPlaying) return;
+    if ('speechSynthesis' in window && speechSynthesis.speaking) return;
+
+    bsCurrent++;
+    if (bsCurrent >= bsFeed.length) {
+      // Bucle: empieza de nuevo (como una radio)
+      bsCurrent = 0;
+    }
+    const item = bsFeed[bsCurrent];
+    const st = document.getElementById('bs-status');
+    if (st) st.textContent = '🎙️ ' + item.author;
+
+    const frase = 'De ' + item.author + '. ' + item.text;
+    if ('speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance(frase);
+      u.lang = 'es-ES';
+      u.rate = 1.05;
+      const voices = speechSynthesis.getVoices();
+      const es = voices.find(v => v.lang.startsWith('es'));
+      if (es) u.voice = es;
+      u.onend = () => setTimeout(bsSpeakNext, 4000); // pausa entre posts
+      u.onerror = () => setTimeout(bsSpeakNext, 2000);
+      speechSynthesis.speak(u);
+    }
+  }
+
+  function renderSocial() {
+    grid.innerHTML = '';
+    const creds = getBsCreds();
+
+    const card = document.createElement('div');
+    card.className = 'song-card';
+    card.style.textAlign = 'center';
+
+    const icon = document.createElement('div');
+    icon.className = 'song-disc';
+    icon.innerHTML = '🦋';
+    icon.style.animation = 'none';
+
+    const t = document.createElement('div');
+    t.className = 'song-title';
+    t.textContent = 'Social Radio';
+
+    const sub = document.createElement('div');
+    sub.className = 'song-artist';
+    sub.textContent = 'Tu timeline de Bluesky, leído en voz como una radio.';
+
+    const status = document.createElement('div');
+    status.id = 'bs-status';
+    status.className = 'comment-status';
+
+    card.appendChild(icon);
+    card.appendChild(t);
+    card.appendChild(sub);
+
+    if (!creds || !creds.password) {
+      // --- Formulario de conexión ---
+      const userIn = document.createElement('input');
+      userIn.className = 'comment-input';
+      userIn.placeholder = 'Tu usuario de Bluesky (manruca.bsky.social)';
+      userIn.value = creds ? creds.identifier : '';
+      const passIn = document.createElement('input');
+      passIn.className = 'comment-input';
+      passIn.type = 'password';
+      passIn.placeholder = 'Contraseña de aplicación (xxxx-xxxx-xxxx-xxxx)';
+      const hint = document.createElement('div');
+      hint.className = 'comment-status';
+      hint.textContent = 'Crea una contraseña de app en Bluesky → Ajustes → Privacidad y seguridad → Contraseñas de aplicación';
+      const connectBtn = document.createElement('button');
+      connectBtn.className = 'song-play-btn';
+      connectBtn.textContent = '🔗 Conectar Bluesky';
+
+      connectBtn.addEventListener('click', async () => {
+        const id = userIn.value.trim();
+        const pw = passIn.value.trim();
+        if (!id || !pw) { status.textContent = '✏️ Rellena usuario y contraseña'; return; }
+        status.textContent = '⏳ Conectando…';
+        try {
+          const handle = await bsLogin(id, pw);
+          localStorage.setItem('teleaudio_bs_creds', JSON.stringify({ identifier: id, password: pw }));
+          status.textContent = '✅ Conectado como ' + handle;
+          renderSocial();
+        } catch (e) {
+          status.textContent = '❌ ' + e.message;
+        }
+      });
+
+      card.appendChild(userIn);
+      card.appendChild(passIn);
+      card.appendChild(hint);
+      card.appendChild(connectBtn);
+      card.appendChild(status);
+      grid.appendChild(card);
+      return;
+    }
+
+    // --- Conectado: controles ---
+    const playBtn = document.createElement('button');
+    playBtn.className = 'song-play-btn';
+    playBtn.textContent = bsPlaying ? '⏹ Parar radio' : '▶ Escuchar mi timeline';
+
+    const feedBox = document.createElement('div');
+    feedBox.className = 'bs-feed-box';
+    feedBox.textContent = 'Cargando tu timeline…';
+
+    playBtn.addEventListener('click', async () => {
+      if (bsPlaying) {
+        bsStop();
+        playBtn.textContent = '▶ Escuchar mi timeline';
+        return;
+      }
+      try {
+        if (!bsToken) {
+          status.textContent = '⏳ Conectando…';
+          await bsLogin(creds.identifier, creds.password);
+        }
+        status.textContent = '⏳ Leyendo tu timeline…';
+        bsFeed = await bsFetchTimeline();
+        if (!bsFeed.length) { status.textContent = '😴 Tu timeline está vacío por ahora'; return; }
+        feedBox.innerHTML = '';
+        bsFeed.slice(0, 8).forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'bs-feed-item';
+          row.innerHTML = '<b>' + item.author + '</b> · ' + item.text.slice(0, 90) + '…';
+          feedBox.appendChild(row);
+        });
+        bsPlaying = true;
+        bsCurrent = -1;
+        playBtn.textContent = '⏹ Parar radio';
+        status.textContent = '🔊 Leyendo ' + bsFeed.length + ' mensajes en bucle';
+        if ('speechSynthesis' in window) {
+          bsSpeakNext();
+          bsTimer = setInterval(() => { if (!speechSynthesis.speaking) bsSpeakNext(); }, 1000);
+        } else {
+          status.textContent = '❌ Tu navegador no tiene voz. Usa la app de Android.';
+        }
+      } catch (e) {
+        status.textContent = '❌ ' + e.message;
+      }
+    });
+
+    card.appendChild(playBtn);
+    card.appendChild(feedBox);
+    card.appendChild(status);
+    grid.appendChild(card);
   }
 
   // ================= INICIO =================
