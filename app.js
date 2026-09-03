@@ -203,6 +203,11 @@
 
   // ================= ESTADO =================
   const isNative = typeof window !== 'undefined' && window.Capacitor && Capacitor.isNativePlatform();
+  // El botón de salir solo tiene sentido en la app Android
+  if (!isNative) {
+    const ex = document.getElementById('exit-btn');
+    if (ex) ex.style.display = 'none';
+  }
   const audio = new Audio();
   audio.preload = 'none';
   let hls = null;
@@ -797,6 +802,31 @@
       renderChannels();
     });
   });
+
+  // Botón salir: cierra la app del todo (solo app nativa; en web avisa)
+  const exitBtn = $('exit-btn');
+  if (exitBtn) {
+    exitBtn.addEventListener('click', () => {
+      try { stopPlayback(); } catch (e) {}
+      if (isNative && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
+        try {
+          Capacitor.Plugins.BackgroundAudio.exitApp().then(() => {
+            // si no se ha cerrado solo, forzar el cierre
+            setTimeout(() => {
+              try { Capacitor.Plugins.BackgroundAudio.exitApp(); } catch (e2) {}
+            }, 800);
+          }).catch(() => {
+            try { Capacitor.Plugins.BackgroundAudio.exitApp(); } catch (e2) {}
+          });
+        } catch (e) {
+          // último recurso: que el sistema lo gestione
+        }
+      } else {
+        if (window.close) window.close();
+        showToast('👋 ¡Hasta luego!');
+      }
+    });
+  }
 
   $('settings-btn').addEventListener('click', () => openModal('settings-modal'));
   document.querySelectorAll('[data-close]').forEach(btn => {
