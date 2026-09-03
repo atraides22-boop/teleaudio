@@ -508,6 +508,7 @@
   function playItem(ch) {
     errorBanner.style.display = 'none';
     currentItem = ch;
+    if (bsPlaying || bsPaused) bsStop();
     stopStream();
 
     if (isNative) {
@@ -570,8 +571,11 @@
 
   // ================= UI =================
   function updateUI() {
-    powerBtn.classList.toggle('playing', isPlaying);
-    powerBtn.classList.toggle('paused-state', !!currentItem && !isPlaying);
+    // El FAB muestra ⏸ si suena algo (canal o Social Radio) y ▶ si está pausado
+    const algoSonando = isPlaying || bsPlaying;
+    const algoPausado = (currentItem && !isPlaying) || bsPaused;
+    powerBtn.classList.toggle('playing', algoSonando);
+    powerBtn.classList.toggle('paused-state', algoPausado);
     if (currentItem) {
       nowPlaying.style.display = 'flex';
       npLogo.src = currentItem.logo;
@@ -712,20 +716,22 @@
   // ================= EVENTOS =================
   powerBtn.addEventListener('click', () => {
     if (isPlaying) {
-      // Sonando → pausa (recordando el canal)
+      // Canal sonando → pausa (recordando el canal)
       pausePlayback();
     } else if (currentItem) {
-      // Pausado → reanudar el mismo canal
+      // Canal pausado → reanudar el mismo canal
       playItem(currentItem);
       showToast('▶ ' + currentItem.name);
+    } else if (bsPlaying) {
+      // Social Radio sonando → pausa (se puede reanudar)
+      bsPause();
+      showToast('⏸ Social Radio en pausa');
+    } else if (bsPaused) {
+      // Social Radio pausada → reanudar
+      bsResume();
+      showToast('▶ Social Radio reanudada');
     } else {
-      // Nada → si la Social Radio suena, la paramos; si no, aviso
-      if (bsPlaying) {
-        bsStop();
-        showToast('⏹ Social Radio parada');
-      } else {
-        showToast('Selecciona un canal primero');
-      }
+      showToast('Selecciona un canal o emisora');
     }
   });
 
@@ -796,6 +802,7 @@
   let bsCurrent = -1;
   let bsTimer = null;
   let bsSource = null; // 'timeline' o id de emisora
+  let bsPaused = false; // Social Radio en pausa (se puede reanudar)
 
   // Emisoras generales: cuentas públicas que cualquiera puede escuchar SIN cuenta
   // name corto para la cuadrícula; handles = cuentas; desc = tooltip
@@ -888,6 +895,7 @@
 
   function bsStop() {
     bsPlaying = false;
+    bsPaused = false;
     bsCurrent = -1;
     clearInterval(bsTimer);
     if (isNative) {
@@ -896,6 +904,52 @@
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     const st = document.getElementById('bs-status');
     if (st) st.textContent = '';
+  }
+
+  // Pausa la Social Radio (guarda el feed para poder reanudar)
+  function bsPause() {
+    if (!bsPlaying) return;
+    clearInterval(bsTimer);
+    if (isNative) {
+      try { Capacitor.Plugins.BackgroundAudio.stopSocialRadio(); } catch (e) {}
+    }
+    if ('speechSynthesis' in window) {
+      // Pausa real: conserva la posición exacta de la voz
+      if (speechSynthesis.speaking) {
+        speechSynthesis.pause();
+      } else {
+        speechSynthesis.cancel();
+      }
+    }
+    bsPlaying = false;
+    bsPaused = true;
+    const st = document.getElementById('bs-status');
+    if (st) st.textContent = '⏸ Pausado · ' + (bsSource === 'timeline' ? 'tu timeline' : (BS_EMISORAS.find(e => e.id === bsSource) || {}).name || 'Social Radio');
+    updateUI();
+  }
+
+  // Reanuda la Social Radio desde donde se quedó
+  function bsResume() {
+    if (!bsPaused) return;
+    bsPaused = false;
+    bsPlaying = true;
+    if (isNative) {
+      // El TTS nativo no guarda posición: relanzamos el feed actual
+      const frases = bsFeed.map(item => 'De ' + item.author + '. ' + item.text);
+      try {
+        Capacitor.Plugins.BackgroundAudio.startSocialRadio({ frases: frases });
+      } catch (e) { bsPlaying = false; bsPaused = true; }
+      return;
+    }
+    if ('speechSynthesis' in window) {
+      if (speechSynthesis.paused) {
+        speechSynthesis.resume(); // sigue en la misma palabra
+      } else {
+        bsSpeakNext();
+        bsTimer = setInterval(() => { if (!speechSynthesis.speaking) bsSpeakNext(); }, 1000);
+      }
+    }
+    updateUI();
   }
 
   function bsSpeakNext() {
@@ -981,9 +1035,11 @@
       if (bsPlaying) bsStop();
       bsFeed = feed;
       bsPlaying = true;
+      bsPaused = false;
       bsCurrent = -1;
       if (playBtnRef) playBtnRef.textContent = '⏹ Parar radio';
       status.textContent = '🔊 ' + label + ' · ' + feed.length + ' mensajes en bucle';
+      updateUI();
 
       if (isNative) {
         const frases = feed.map(item => 'De ' + item.author + '. ' + item.text);
@@ -1029,6 +1085,15 @@
           bsStop();
           btn.classList.remove('playing');
           feedBox.style.display = 'none';
+          updateUI();
+          return;
+        }
+        if (bsPaused && bsSource === em.id) {
+          // Estaba en pausa: reanudar la misma emisora
+          document.querySelectorAll('.social-emisora').forEach(b => b.classList.remove('playing'));
+          btn.classList.add('playing');
+          feedBox.style.display = 'block';
+          bsResume();
           return;
         }
         status.textContent = '⏳ Buscando lo último de ' + em.name + '…';
