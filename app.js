@@ -547,6 +547,21 @@
       bar.appendChild(input);
       bar.appendChild(times);
       let dragging = false;
+      let seekAlSoltar = 0; // v4.3.6: evita doble seek al soltar
+      function hacerSeek() {
+        const frac = Number(input.value) / 1000;
+        if (currentItem && currentItem.esYoutube && currentItem._durMs > 0 && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
+          const ms = Math.floor(frac * currentItem._durMs);
+          Capacitor.Plugins.BackgroundAudio.seekTo({ posMs: ms }).catch(() => {});
+        }
+      }
+      function alSoltar() {
+        dragging = false;
+        const ahora = Date.now();
+        if (ahora - seekAlSoltar < 400) return; // ya se hizo (change + pointerup)
+        seekAlSoltar = ahora;
+        hacerSeek();
+      }
       input.addEventListener('pointerdown', () => { dragging = true; });
       input.addEventListener('input', () => {
         if (currentItem && currentItem.esYoutube && currentItem._durMs > 0) {
@@ -554,14 +569,12 @@
           tAct.textContent = fmtSeg(Math.floor(frac * (currentItem._durMs / 1000)));
         }
       });
-      input.addEventListener('change', () => {
-        dragging = false;
-        const frac = Number(input.value) / 1000;
-        if (currentItem && currentItem.esYoutube && currentItem._durMs > 0 && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
-          const ms = Math.floor(frac * currentItem._durMs);
-          Capacitor.Plugins.BackgroundAudio.seekTo({ posMs: ms }).catch(() => {});
-        }
-      });
+      // v4.3.6: el seek se dispara al soltar el dedo, con doble red de seguridad:
+      // 'change' (evento estándar al soltar) y 'pointerup' (por si el WebView no
+      // lanza change con gesto táctil). El guard de 400 ms evita duplicados.
+      input.addEventListener('change', alSoltar);
+      input.addEventListener('pointerup', alSoltar);
+      input.addEventListener('touchend', alSoltar);
       const btnStop = document.createElement('button');
       btnStop.className = 'song-play-btn';
       btnStop.textContent = '⏹ Parar';
@@ -587,12 +600,16 @@
           Capacitor.Plugins.BackgroundAudio.getEstado().then((est) => {
             const dur = Number(est.durMs) || 0;
             const pos = Number(est.posMs) || 0;
-            currentItem._durMs = dur;
-            if (dur > 0) {
+            // v4.3.6: SOLO actualizar la duración si ExoPlayer ya la conoce
+            // (dur > 0). Antes se machacaba con 0 mientras el reproductor
+            // arrancaba → la barra se ocultaba y el seek quedaba desactivado.
+            if (dur > 0) currentItem._durMs = dur;
+            const durRef = currentItem._durMs || 0;
+            if (durRef > 0) {
               bar.style.display = 'block';
-              tDur.textContent = fmtSeg(Math.floor(dur / 1000));
+              tDur.textContent = fmtSeg(Math.floor(durRef / 1000));
               if (!dragging) {
-                const frac = Math.min(1, pos / dur);
+                const frac = Math.min(1, pos / durRef);
                 input.value = String(Math.round(frac * 1000));
                 tAct.textContent = fmtSeg(Math.floor(pos / 1000));
               }
@@ -941,8 +958,15 @@
   // Pausa la reproducción pero RECUERDA el canal para poder reanudar
   function pausePlayback() {
     if (isNative) {
-      // En nativo: paramos el servicio pero conservamos currentItem
-      try { Capacitor.Plugins.BackgroundAudio.pause(); } catch (e) {}
+      // v4.3.6: YouTube → PAUSA REAL (servicio vivo, posición conservada).
+      // TV/Radio en directo → se para el servicio (al reanudar se relanza el
+      // directo actual; pausar un stream en vivo y reanudar el buffer viejo
+      // dejaría la emisora "atrasada").
+      if (currentItem && currentItem.esYoutube) {
+        try { Capacitor.Plugins.BackgroundAudio.pause(); } catch (e) {}
+      } else {
+        try { Capacitor.Plugins.BackgroundAudio.stop(); } catch (e) {}
+      }
       try { Capacitor.Plugins.BackgroundAudio.stopSocialRadio(); } catch (e) {}
       if (hls) { try { hls.destroy(); } catch (e) {} hls = null; }
     } else {
@@ -1020,7 +1044,8 @@
 
   function stopPlayback() {
     if (isNative) {
-      try { Capacitor.Plugins.BackgroundAudio.pause(); } catch (e) {}
+      // v4.3.6: parar del todo (destruye el servicio) → método stop()
+      try { Capacitor.Plugins.BackgroundAudio.stop(); } catch (e) {}
       try { Capacitor.Plugins.BackgroundAudio.stopSocialRadio(); } catch (e) {}
     }
     bsStop();
@@ -1190,6 +1215,21 @@
       // Canal sonando → pausa (recordando el canal)
       pausePlayback();
     } else if (currentItem) {
+      // v4.3.6: si es un YouTube que el servicio aún tiene cargado (pausado),
+      // reanudar EN EL SITIO (resume) en vez de re-resolver el vídeo desde 0.
+      if (currentItem.esYoutube && window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.BackgroundAudio && Capacitor.Plugins.BackgroundAudio.resume) {
+        Capacitor.Plugins.BackgroundAudio.getEstado().then((est) => {
+          if (est && est.tvUrl && est.tvUrl === currentItem.url && !est.tvSonando) {
+            Capacitor.Plugins.BackgroundAudio.resume();
+            isPlaying = true;
+            updateUI();
+            showToast('▶ ' + currentItem.name);
+          } else {
+            playItem(currentItem);
+          }
+        }).catch(() => playItem(currentItem));
+        return;
+      }
       // Canal pausado → reanudar el mismo canal
       playItem(currentItem);
       showToast('▶ ' + currentItem.name);
@@ -1574,7 +1614,8 @@
     // radio" en vez de cambiar de emisora Social.
     if (currentItem) {
       if (isNative) {
-        try { Capacitor.Plugins.BackgroundAudio.pause(); } catch (e) {}
+        // v4.3.6: parar el canal del todo antes de la radio social
+        try { Capacitor.Plugins.BackgroundAudio.stop(); } catch (e) {}
       }
       stopStream();
       isPlaying = false;
