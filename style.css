@@ -130,19 +130,16 @@ body {
 /* Tabs */
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  padding: 10px 16px 0;
+  padding: 10px 16px 6px;
   background: var(--bg);
-  position: sticky;
-  top: 128px;
   z-index: 9;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
-.tabs::-webkit-scrollbar { display: none; }
 .tab {
-  flex: 0 0 auto;
-  padding: 9px 12px;
+  flex: 1 1 auto;
+  text-align: center;
+  padding: 9px 8px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--card);
@@ -151,6 +148,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  min-width: 0;
 }
 .tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
