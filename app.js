@@ -2,6 +2,16 @@
 (function () {
   'use strict';
 
+  // Servicio intermedio de YouTube (v4.3.5): el Mac resuelve el audio con la
+  // firma anti-bot (n=/ns=) que YouTube exige y la app no puede generar.
+  // Se auto-detecta al reproducir: si no responde, se usa la resolución
+  // interna antigua (que fallará si YouTube bloquea la IP).
+  const YT_PROXY_CANDIDATOS = [
+    'http://192.168.1.88:8787',  // Mac en la red de casa
+    'http://manuel-macmini.local:8787' // por si cambia la IP
+  ];
+  let ytProxyActivo = null; // se rellena al primer health check OK
+
   // Limpieza automática al arrancar (app nativa): elimina cachés y service
   // workers viejos que puedan servir versiones antiguas de la app.
   (function limpiarCaches() {
@@ -695,6 +705,32 @@
   }
 
   // Lanza la reproducción de solo-audio de un enlace de YouTube
+
+  // Comprueba qué servicio intermedio responde (nativo: evita bloqueos de
+  // mixed-content del WebView con HTTP local).
+  function detectarProxyYt() {
+    if (ytProxyActivo) return Promise.resolve(ytProxyActivo);
+    const comprobar = (base) => {
+      return Capacitor.Plugins.BackgroundAudio.proxyHealth({ proxy: base })
+        .then(r => (r && r.ok) ? base : null)
+        .catch(() => null);
+    };
+    return comprobar(YT_PROXY_CANDIDATOS[0]).then(ok1 => {
+      if (ok1) { ytProxyActivo = ok1; return ok1; }
+      return comprobar(YT_PROXY_CANDIDATOS[1]).then(ok2 => {
+        if (ok2) { ytProxyActivo = ok2; return ok2; }
+        return null;
+      });
+    });
+  }
+
+  // Pide título/duración/miniatura al servicio (nativo)
+  function infoProxyYt(proxy, videoId) {
+    return Capacitor.Plugins.BackgroundAudio.proxyInfo({ proxy: proxy, videoId: videoId })
+      .then(r => r || null)
+      .catch(() => null);
+  }
+
   function playYoutubeLink(enlace, statusEl, btnEl) {
     errorBanner.style.display = 'none';
     const setSt = (txt) => { if (statusEl) statusEl.textContent = txt; };
@@ -704,42 +740,97 @@
     }
     if (btnEl) btnEl.disabled = true;
     setSt('⏳ Buscando el audio del video…');
-    try {
-      Capacitor.Plugins.BackgroundAudio.playYoutube({ url: enlace })
-        .then((res) => {
-          if (btnEl) btnEl.disabled = false;
-          if (!res || !res.videoId) { setSt('❌ No se pudo obtener el audio'); return; }
-          const videoId = res.videoId;
-          const nombre = res.title || 'Video de YouTube';
-          // Parar cualquier Social Radio o canal anterior y marcar como item actual
-          if (bsPlaying || bsPaused) bsStop();
-          stopStream();
-          currentItem = {
-            id: 'yt:' + videoId,
-            esYoutube: true,
-            ytVideoId: videoId,
-            ytLink: enlace,
-            name: nombre,
-            logo: thumbYt(videoId),
-            url: res.audioUrl || ''
-          };
-          isPlaying = true;
-          ytAddHistory({ videoId: videoId, title: nombre, thumb: thumbYt(videoId), link: enlace });
-          if (currentTab === 'youtube') renderYoutube();
-          updateUI();
-          setSt('✅ Sonando: ' + nombre);
-          showToast('▶ ' + nombre);
-        })
-        .catch((err) => {
+
+    // 1) Intentar con el servicio intermedio (recomendado: trae la firma anti-bot)
+    detectarProxyYt().then(function (proxy) {
+      if (proxy) {
+        setSt('⏳ Pidiendo el audio al servicio…');
+        const videoId = extraerIdWeb(enlace);
+        // Pedir título real al servicio (nativo; no bloquea si falla)
+        const promInfo = (videoId ? infoProxyYt(proxy, videoId) : Promise.resolve(null));
+        const promPlay = Capacitor.Plugins.BackgroundAudio.playYoutubeProxy({ url: enlace, proxy: proxy });
+        return promInfo.then(info => {
+          return promPlay.then(res => {
+            if (btnEl) btnEl.disabled = false;
+            if (!res || !res.videoId) { setSt('❌ No se pudo obtener el audio'); return; }
+            const videoId2 = res.videoId;
+            const nombre = (info && info.title) ? info.title : (res.title || 'Video de YouTube');
+            const dur = (info && info.duration) ? info.duration : 0;
+            // Parar cualquier Social Radio o canal anterior y marcar como item actual
+            if (bsPlaying || bsPaused) bsStop();
+            stopStream();
+            currentItem = {
+              id: 'yt:' + videoId2,
+              esYoutube: true,
+              ytVideoId: videoId2,
+              ytLink: enlace,
+              name: nombre,
+              logo: (info && info.thumbnail) ? info.thumbnail : thumbYt(videoId2),
+              url: res.audioUrl || '',
+              _durMs: dur ? dur * 1000 : 0
+            };
+            isPlaying = true;
+            ytAddHistory({ videoId: videoId2, title: nombre, thumb: thumbYt(videoId2), link: enlace });
+            if (currentTab === 'youtube') renderYoutube();
+            updateUI();
+            setSt('✅ Sonando: ' + nombre);
+            showToast('▶ ' + nombre);
+          });
+        }).catch((err) => {
           if (btnEl) btnEl.disabled = false;
           const msg = (err && err.message) ? err.message : '';
-          setSt('❌ No se pudo reproducir. Comprueba el enlace y tu conexión.' + (msg ? ' (' + msg + ')' : ''));
+          setSt('❌ No se pudo reproducir (servicio). ' + msg);
           showToast('❌ Error al reproducir YouTube');
         });
-    } catch (e) {
-      if (btnEl) btnEl.disabled = false;
-      setSt('❌ Fallo interno al reproducir');
-    }
+      }
+      // 2) Sin servicio: método antiguo de resolución directa
+      try {
+        Capacitor.Plugins.BackgroundAudio.playYoutube({ url: enlace })
+          .then((res) => {
+            if (btnEl) btnEl.disabled = false;
+            if (!res || !res.videoId) { setSt('❌ No se pudo obtener el audio'); return; }
+            const videoId = res.videoId;
+            const nombre = res.title || 'Video de YouTube';
+            // Parar cualquier Social Radio o canal anterior y marcar como item actual
+            if (bsPlaying || bsPaused) bsStop();
+            stopStream();
+            currentItem = {
+              id: 'yt:' + videoId,
+              esYoutube: true,
+              ytVideoId: videoId,
+              ytLink: enlace,
+              name: nombre,
+              logo: thumbYt(videoId),
+              url: res.audioUrl || ''
+            };
+            isPlaying = true;
+            ytAddHistory({ videoId: videoId, title: nombre, thumb: thumbYt(videoId), link: enlace });
+            if (currentTab === 'youtube') renderYoutube();
+            updateUI();
+            setSt('✅ Sonando: ' + nombre);
+            showToast('▶ ' + nombre);
+          })
+          .catch((err) => {
+            if (btnEl) btnEl.disabled = false;
+            const msg = (err && err.message) ? err.message : '';
+            setSt('❌ No se pudo reproducir. Comprueba el enlace y tu conexión.' + (msg ? ' (' + msg + ')' : ''));
+            showToast('❌ Error al reproducir YouTube');
+          });
+      } catch (e) {
+        if (btnEl) btnEl.disabled = false;
+        setSt('❌ Fallo interno al reproducir');
+      }
+    });
+  }
+
+  // Extrae el ID de YouTube en la web (sin depender del plugin)
+  function extraerIdWeb(enlace) {
+    try {
+      const m = String(enlace).match(/(?:youtube\.com|youtu\.be)\/(?:watch\?v=|shorts\/|embed\/|live\/|v\/)?([A-Za-z0-9_-]{11})/);
+      if (m) return m[1];
+      if (/^[A-Za-z0-9_-]{11}$/.test(String(enlace).trim())) return enlace.trim();
+    } catch (e) { /* no */ }
+    return null;
   }
 
   function sendComment(name, text) {    if (isNative) {
