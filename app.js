@@ -541,10 +541,19 @@
     const status = document.createElement('div');
     status.className = 'comment-status';
     status.style.width = '100%';
+    status.id = 'yt-status';
+    const errDiv = document.createElement('div');
+    errDiv.id = 'yt-error';
+    errDiv.style.display = 'none';
+    errDiv.style.width = '100%';
+    errDiv.style.color = '#ff6b6b';
+    errDiv.style.fontSize = '0.8rem';
+    errDiv.style.marginTop = '4px';
 
     function lanzar() {
       const v = input.value.trim();
       if (!v) { status.textContent = '✏️ Pega primero el enlace'; return; }
+      errDiv.style.display = 'none';
       playYoutubeLink(v, status, btn);
     }
     btn.addEventListener('click', lanzar);
@@ -552,6 +561,7 @@
     row.appendChild(input);
     row.appendChild(btn);
     wrap.appendChild(row);
+    wrap.appendChild(errDiv);
     wrap.appendChild(status);
 
     // ---------- Recientes ----------
@@ -1551,6 +1561,28 @@
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
           updateUI();
           statusText.textContent = 'Toca un canal para escucharlo';
+        }
+      });
+      // v4.3.3: el reproductor nativo no pudo abrir/reproducir la URL (p. ej.
+      // YouTube devuelve 403, red cortada, formato no soportado). Mostramos el
+      // mensaje REAL en pantalla en vez de quedarnos en silencio.
+      Capacitor.Plugins.BackgroundAudio.addListener('playbackError', (data) => {
+        const msg = (data && data.message) ? String(data.message) : 'Error de reproducción';
+        if (currentItem && currentItem.esYoutube) {
+          // YouTube: dejar de "sonando" y pintar el error en la propia pestaña
+          isPlaying = false;
+          const st = document.getElementById('yt-status');
+          const err = document.getElementById('yt-error');
+          if (err) {
+            err.textContent = '❌ ' + msg;
+            err.style.display = 'block';
+          }
+          if (st) st.textContent = '❌ No se pudo reproducir';
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+          updateUI();
+          showToast('❌ ' + msg);
+        } else {
+          showToast('❌ Error: ' + msg);
         }
       });
       // Pulsaron ⏻ Apagar en la notificación de la Social Radio
