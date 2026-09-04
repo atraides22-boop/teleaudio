@@ -228,7 +228,7 @@
     let list;
     if (tab === 'tv') list = TV_CHANNELS;
     else if (tab === 'radio') list = RADIO_STATIONS;
-    else if (tab === 'cancion' || tab === 'comentarios' || tab === 'social') return [];
+    else if (tab === 'cancion' || tab === 'comentarios' || tab === 'social' || tab === 'youtube') return [];
     else list = ALL.filter(c => favs.has(c.id));
     return list.filter(c => !q || c.name.toLowerCase().includes(q));
   }
@@ -398,8 +398,267 @@
   }
 
   // Envío: en la app nativa lo hace el plugin (sin CORS); en web, intento directo
-  function sendComment(name, text) {
-    if (isNative) {
+  // ================= YOUTUBE (SOLO AUDIO) =================
+  // Pestaña donde Manuel pega un enlace de YouTube y la app reproduce
+  // únicamente el audio (pantalla apagada, notificación, sin datos de video).
+  // En la app nativa lo resuelve el plugin (InnerTube, como yt-dlp); en web
+  // no es posible (CORS), así que se avisa y se abre el video en YouTube.
+
+  function thumbYt(videoId) {
+    return 'https://i.ytimg.com/vi/' + videoId + '/hqdefault.jpg';
+  }
+
+  function ytHistory() {
+    try { return JSON.parse(localStorage.getItem('teleaudio_yt_history') || '[]'); }
+    catch (e) { return []; }
+  }
+  function ytAddHistory(item) {
+    try {
+      const h = ytHistory().filter(x => x.videoId !== item.videoId);
+      h.unshift(item);
+      localStorage.setItem('teleaudio_yt_history', JSON.stringify(h.slice(0, 8)));
+    } catch (e) {}
+  }
+
+  function renderYoutube() {
+    grid.innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.style.gridColumn = '1 / -1';
+    wrap.style.display = 'flex';
+    wrap.style.flexDirection = 'column';
+    wrap.style.alignItems = 'center';
+    wrap.style.gap = '6px';
+    wrap.style.width = '100%';
+    grid.appendChild(wrap);
+
+    // ---------- Cabecera ----------
+    const card = document.createElement('div');
+    card.className = 'song-card';
+    card.style.textAlign = 'center';
+    card.style.width = '100%';
+    card.style.boxSizing = 'border-box';
+
+    const icon = document.createElement('div');
+    icon.className = 'song-disc';
+    icon.innerHTML = '▶️';
+    icon.style.animation = 'none';
+
+    const t = document.createElement('div');
+    t.className = 'song-title';
+    t.textContent = 'YouTube solo audio';
+
+    const sub = document.createElement('div');
+    sub.className = 'song-artist';
+    sub.textContent = isNative
+      ? 'Pega un enlace y escucha SOLO el audio, con pantalla apagada y sin gastar datos de video. Funciona como un canal más: pausa, notificación y deslizar para apagar.'
+      : 'Esto solo funciona dentro de la app de TeleAudio para Android (por las restricciones de YouTube en navegadores). En la web se abre el video normal.';
+
+    card.appendChild(icon);
+    card.appendChild(t);
+    card.appendChild(sub);
+    wrap.appendChild(card);
+
+    if (!isNative) {
+      // ---------- Web: no se puede extraer audio, abrir YouTube ----------
+      const row = document.createElement('div');
+      row.className = 'alarm-row';
+      row.style.justifyContent = 'center';
+      row.style.width = '100%';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Pega aquí el enlace de YouTube…';
+      input.style.flex = '1';
+      input.minWidth = '0';
+      const btn = document.createElement('button');
+      btn.className = 'song-play-btn';
+      btn.textContent = 'Abrir';
+      btn.addEventListener('click', () => {
+        const v = input.value.trim();
+        if (v) {
+          try { window.open(v, '_blank'); } catch (e) {}
+        }
+      });
+      row.appendChild(input);
+      row.appendChild(btn);
+      wrap.appendChild(row);
+      const aviso = document.createElement('div');
+      aviso.className = 'comment-status';
+      aviso.textContent = '📲 Descarga la app de TeleAudio (Android) para escuchar solo el audio.';
+      wrap.appendChild(aviso);
+      return;
+    }
+
+    // ---------- Si suena un video ahora: tarjeta activa ----------
+    if (currentItem && currentItem.esYoutube) {
+      const np = document.createElement('div');
+      np.className = 'song-card';
+      np.style.width = '100%';
+      np.style.boxSizing = 'border-box';
+      np.style.textAlign = 'center';
+      const img = document.createElement('img');
+      img.src = currentItem.logo || thumbYt(currentItem.ytVideoId || '');
+      img.alt = '';
+      img.style.width = '100%';
+      img.style.maxWidth = '260px';
+      img.style.borderRadius = '10px';
+      img.style.margin = '0 auto 8px';
+      img.style.display = 'block';
+      const nt = document.createElement('div');
+      nt.className = 'song-title';
+      nt.textContent = currentItem.name;
+      nt.style.fontSize = '0.95rem';
+      const st = document.createElement('div');
+      st.className = 'comment-status';
+      st.textContent = isPlaying ? '🔊 Sonando…' : '⏸ En pausa';
+      const btnStop = document.createElement('button');
+      btnStop.className = 'song-play-btn';
+      btnStop.textContent = '⏹ Parar';
+      btnStop.addEventListener('click', () => {
+        if (currentItem && currentItem.esYoutube) {
+          stopPlayback();
+          if (currentTab === 'youtube') renderYoutube();
+        }
+      });
+      np.appendChild(img);
+      np.appendChild(nt);
+      np.appendChild(st);
+      np.appendChild(btnStop);
+      wrap.appendChild(np);
+    }
+
+    // ---------- Pegar enlace ----------
+    const row = document.createElement('div');
+    row.className = 'alarm-row';
+    row.style.width = '100%';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Pega aquí el enlace de YouTube…';
+    input.style.flex = '1';
+    input.minWidth = '0';
+    const btn = document.createElement('button');
+    btn.className = 'song-play-btn';
+    btn.textContent = '▶ Escuchar audio';
+    const status = document.createElement('div');
+    status.className = 'comment-status';
+    status.style.width = '100%';
+
+    function lanzar() {
+      const v = input.value.trim();
+      if (!v) { status.textContent = '✏️ Pega primero el enlace'; return; }
+      playYoutubeLink(v, status, btn);
+    }
+    btn.addEventListener('click', lanzar);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') lanzar(); });
+    row.appendChild(input);
+    row.appendChild(btn);
+    wrap.appendChild(row);
+    wrap.appendChild(status);
+
+    // ---------- Recientes ----------
+    const hist = ytHistory();
+    if (hist.length) {
+      const hTitle = document.createElement('div');
+      hTitle.className = 'song-artist';
+      hTitle.style.margin = '12px 0 6px';
+      hTitle.style.fontWeight = '700';
+      hTitle.style.fontSize = '0.9rem';
+      hTitle.textContent = '🕘 Recientes (toca para volver a escuchar)';
+      wrap.appendChild(hTitle);
+      hist.forEach(h => {
+        const c = document.createElement('div');
+        c.className = 'song-card';
+        c.style.width = '100%';
+        c.style.boxSizing = 'border-box';
+        c.style.display = 'flex';
+        c.style.alignItems = 'center';
+        c.style.gap = '10px';
+        c.style.cursor = 'pointer';
+        c.style.textAlign = 'left';
+        const im = document.createElement('img');
+        im.src = h.thumb || thumbYt(h.videoId);
+        im.alt = '';
+        im.style.width = '64px';
+        im.style.height = '36px';
+        im.style.objectFit = 'cover';
+        im.style.borderRadius = '6px';
+        im.style.flex = '0 0 auto';
+        const nm = document.createElement('div');
+        nm.style.flex = '1';
+        nm.style.minWidth = '0';
+        const tt = document.createElement('div');
+        tt.className = 'song-title';
+        tt.textContent = h.title || 'Video';
+        tt.style.fontSize = '0.85rem';
+        tt.style.overflow = 'hidden';
+        tt.style.textOverflow = 'ellipsis';
+        tt.style.whiteSpace = 'nowrap';
+        nm.appendChild(tt);
+        const pl = document.createElement('button');
+        pl.className = 'song-play-btn';
+        pl.textContent = '▶';
+        c.appendChild(im);
+        c.appendChild(nm);
+        c.appendChild(pl);
+        c.addEventListener('click', () => {
+          playYoutubeLink(h.link || ('https://www.youtube.com/watch?v=' + h.videoId), status, btn);
+          const pest = document.querySelector('.tab[data-tab="youtube"]');
+          if (pest) pest.scrollIntoView({ block: 'nearest' });
+        });
+        pl.addEventListener('click', (e) => e.stopPropagation());
+        wrap.appendChild(c);
+      });
+    }
+  }
+
+  // Lanza la reproducción de solo-audio de un enlace de YouTube
+  function playYoutubeLink(enlace, statusEl, btnEl) {
+    errorBanner.style.display = 'none';
+    const setSt = (txt) => { if (statusEl) statusEl.textContent = txt; };
+    if (!isNative || !window.Capacitor || !Capacitor.Plugins.BackgroundAudio) {
+      setSt('❌ Esto solo funciona en la app de Android');
+      return;
+    }
+    if (btnEl) btnEl.disabled = true;
+    setSt('⏳ Buscando el audio del video…');
+    try {
+      Capacitor.Plugins.BackgroundAudio.playYoutube({ url: enlace })
+        .then((res) => {
+          if (btnEl) btnEl.disabled = false;
+          if (!res || !res.videoId) { setSt('❌ No se pudo obtener el audio'); return; }
+          const videoId = res.videoId;
+          const nombre = res.title || 'Video de YouTube';
+          // Parar cualquier Social Radio o canal anterior y marcar como item actual
+          if (bsPlaying || bsPaused) bsStop();
+          stopStream();
+          currentItem = {
+            id: 'yt:' + videoId,
+            esYoutube: true,
+            ytVideoId: videoId,
+            ytLink: enlace,
+            name: nombre,
+            logo: thumbYt(videoId),
+            url: res.audioUrl || ''
+          };
+          isPlaying = true;
+          ytAddHistory({ videoId: videoId, title: nombre, thumb: thumbYt(videoId), link: enlace });
+          if (currentTab === 'youtube') renderYoutube();
+          updateUI();
+          setSt('✅ Sonando: ' + nombre);
+          showToast('▶ ' + nombre);
+        })
+        .catch((err) => {
+          if (btnEl) btnEl.disabled = false;
+          const msg = (err && err.message) ? err.message : '';
+          setSt('❌ No se pudo reproducir. Comprueba el enlace y tu conexión.' + (msg ? ' (' + msg + ')' : ''));
+          showToast('❌ Error al reproducir YouTube');
+        });
+    } catch (e) {
+      if (btnEl) btnEl.disabled = false;
+      setSt('❌ Fallo interno al reproducir');
+    }
+  }
+
+  function sendComment(name, text) {    if (isNative) {
       return new Promise(resolve => {
         try {
           Capacitor.Plugins.BackgroundAudio.sendComment({ name: name, text: text })
@@ -420,6 +679,10 @@
     grid.innerHTML = '';
     if (currentTab === 'social') {
       renderSocial();
+      return;
+    }
+    if (currentTab === 'youtube') {
+      renderYoutube();
       return;
     }
     if (currentTab === 'comentarios') {
@@ -517,10 +780,18 @@
     updateUI();
     statusText.textContent = '⏸ Pausado: ' + (currentItem ? currentItem.name : '');
     showToast('⏸ Pausado');
+    // Refrescar la tarjeta de la pestaña YouTube si es un video
+    if (currentTab === 'youtube' && currentItem && currentItem.esYoutube) renderYoutube();
   }
 
   function playItem(ch) {
     errorBanner.style.display = 'none';
+    // Item de YouTube: se re-resuelve el audio (la URL caduca a las ~6 h)
+    if (ch && ch.esYoutube) {
+      const statusEl = document.querySelector('#yt-status');
+      playYoutubeLink(ch.ytLink || ch.url, statusEl, null);
+      return;
+    }
     currentItem = ch;
     if (bsPlaying || bsPaused) bsStop();
     stopStream();
@@ -770,6 +1041,10 @@
     nextFab.classList.toggle('has-item', activo);
   }
   prevFab.addEventListener('click', () => {
+    if (currentItem && currentItem.esYoutube) {
+      showToast('▶️ YouTube: sin canales anterior/siguiente');
+      return;
+    }
     if (currentItem) {
       // Canal de TV/Radio sonando → canal anterior
       if (bsPlaying || bsPaused) bsStop();
@@ -789,6 +1064,10 @@
     showToast('Primero elige un canal o emisora');
   });
   nextFab.addEventListener('click', () => {
+    if (currentItem && currentItem.esYoutube) {
+      showToast('▶️ YouTube: sin canales anterior/siguiente');
+      return;
+    }
     if (currentItem) {
       // Canal de TV/Radio sonando → canal siguiente
       if (bsPlaying || bsPaused) bsStop();
@@ -1231,6 +1510,17 @@
       Capacitor.Plugins.BackgroundAudio.addListener('playbackChanged', (data) => {
         if (!data || !data.url) return;
         const ch = ALL.find(c => c.url === data.url);
+        // Video de YouTube sonando y el reloj/notificación cambió play/pausa
+        if (!ch && currentItem && currentItem.esYoutube && data.url === currentItem.url) {
+          const sonando = typeof data.sonando === 'boolean' ? data.sonando : true;
+          if (isPlaying !== sonando) {
+            isPlaying = sonando;
+            if (!sonando && 'mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+            updateUI();
+            if (currentTab === 'youtube') renderYoutube();
+          }
+          return;
+        }
         // Mismo canal que ya mostramos → solo refrescar play/pausa (viene del reloj
         // o de la notificación: pausaron/reanudaron fuera de la app).
         if (ch && currentItem && currentItem.id === ch.id) {
@@ -1510,10 +1800,46 @@
       const est = await Capacitor.Plugins.BackgroundAudio.getEstado();
       if (!est) return;
 
-      // --- TV / Radio ---
+      // --- TV / Radio / YouTube (solo audio) ---
       if (est.tvUrl) {
         const ch = ALL.find(c => c.url === est.tvUrl);
-        if (ch && !currentItem) {
+        // ¿Es un video de YouTube que sigue sonando? (su URL no está en ALL)
+        const esYt = !ch && est.ytVideoId;
+        if (esYt) {
+          // El plugin guarda el último video lanzado; recuperamos su info
+          const hist = ytHistory().find(h => h.videoId === est.ytVideoId);
+          const vid = est.ytVideoId;
+          if (!currentItem) {
+            currentItem = {
+              id: 'yt:' + vid,
+              esYoutube: true,
+              ytVideoId: vid,
+              ytLink: hist ? hist.link : null,
+              name: est.tvTitulo || (hist ? hist.title : 'Video de YouTube'),
+              logo: hist ? hist.thumb : thumbYt(vid),
+              url: est.tvUrl
+            };
+            isPlaying = !!est.tvSonando;
+            if (!isPlaying && 'mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+            try { setMediaSession({ name: currentItem.name, esYoutube: true }); } catch (e) {}
+            const pest = 'youtube';
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const tab = document.querySelector('.tab[data-tab="' + pest + '"]');
+            if (tab) tab.classList.add('active');
+            currentTab = pest;
+            renderChannels();
+            updateUI();
+            showToast('▶ Continúa: ' + currentItem.name);
+          } else if (currentItem.esYoutube && currentItem.ytVideoId === vid) {
+            const sonando = !!est.tvSonando;
+            if (isPlaying !== sonando) {
+              isPlaying = sonando;
+              if (!sonando && 'mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+              updateUI();
+              if (currentTab === 'youtube') renderYoutube();
+            }
+          }
+        } else if (ch && !currentItem) {
           currentItem = ch;
           isPlaying = !!est.tvSonando;
           try { setMediaSession(ch); } catch (e) {}

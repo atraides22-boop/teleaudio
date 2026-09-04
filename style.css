@@ -136,17 +136,21 @@ body {
   position: sticky;
   top: 128px;
   z-index: 9;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.tabs::-webkit-scrollbar { display: none; }
 .tab {
-  flex: 1;
-  padding: 9px 0;
+  flex: 0 0 auto;
+  padding: 9px 12px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 .tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
