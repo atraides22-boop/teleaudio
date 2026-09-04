@@ -1,6 +1,14 @@
 {
   "canciones": [
     {
+      "fecha": "2026-09-05",
+      "titulo": "Rizo de gitana",
+      "artista": "Parquesvr",
+      "youtube": "https://www.youtube.com/watch?v=-cA701ltAMA",
+      "spotify": "https://open.spotify.com/track/16Ny3kGr6nFlJLROWCOYki",
+      "likes": 0
+    },
+    {
       "fecha": "2026-09-04",
       "titulo": "LAPSUS",
       "artista": "Ultraligera",
