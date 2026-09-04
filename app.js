@@ -547,7 +547,8 @@
       bar.appendChild(input);
       bar.appendChild(times);
       let dragging = false;
-      let seekAlSoltar = 0; // v4.3.6: evita doble seek al soltar
+      let seekAlSoltar = 0; // v4.3.7: evita doble seek (en vivo + al soltar)
+      let ultimoSeekEnVivo = 0;
       function hacerSeek() {
         const frac = Number(input.value) / 1000;
         if (currentItem && currentItem.esYoutube && currentItem._durMs > 0 && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
@@ -555,10 +556,16 @@
           Capacitor.Plugins.BackgroundAudio.seekTo({ posMs: ms }).catch(() => {});
         }
       }
+      // v4.3.7: el seek se dispara MIENTRAS se arrastra (con throttle) y además
+      // al soltar. Motivo (vídeo de Manuel): el WebView de Android NO lanza
+      // change/pointerup/touchend de forma fiable al soltar un input range
+      // táctil → la barra se movía pero el audio nunca saltaba. Con el seek en
+      // vivo cada ~300 ms el salto ocurre aunque no llegue ningún evento de
+      // soltar.
       function alSoltar() {
         dragging = false;
         const ahora = Date.now();
-        if (ahora - seekAlSoltar < 400) return; // ya se hizo (change + pointerup)
+        if (ahora - seekAlSoltar < 400) return; // ya se hizo (input en vivo + soltar)
         seekAlSoltar = ahora;
         hacerSeek();
       }
@@ -567,14 +574,20 @@
         if (currentItem && currentItem.esYoutube && currentItem._durMs > 0) {
           const frac = Number(input.value) / 1000;
           tAct.textContent = fmtSeg(Math.floor(frac * (currentItem._durMs / 1000)));
+          const ahora = Date.now();
+          if (ahora - ultimoSeekEnVivo >= 300) {
+            ultimoSeekEnVivo = ahora;
+            hacerSeek();
+          }
         }
       });
-      // v4.3.6: el seek se dispara al soltar el dedo, con doble red de seguridad:
-      // 'change' (evento estándar al soltar) y 'pointerup' (por si el WebView no
-      // lanza change con gesto táctil). El guard de 400 ms evita duplicados.
+      // Red de seguridad al soltar (si el WebView sí los lanza):
       input.addEventListener('change', alSoltar);
       input.addEventListener('pointerup', alSoltar);
       input.addEventListener('touchend', alSoltar);
+      // Y por si el gesto se cancela a mitad (scroll/notificación):
+      input.addEventListener('pointercancel', alSoltar);
+      input.addEventListener('touchcancel', alSoltar);
       const btnStop = document.createElement('button');
       btnStop.className = 'song-play-btn';
       btnStop.textContent = '⏹ Parar';
