@@ -233,6 +233,13 @@
     return list.filter(c => !q || c.name.toLowerCase().includes(q));
   }
 
+  function fmtSeg(totalSeg) {
+    if (!isFinite(totalSeg) || totalSeg < 0) totalSeg = 0;
+    const m = Math.floor(totalSeg / 60);
+    const s = Math.floor(totalSeg % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
   function fmtFecha(fecha) {
     try {
       const d = new Date(fecha + 'T12:00:00');
@@ -510,6 +517,41 @@
       const st = document.createElement('div');
       st.className = 'comment-status';
       st.textContent = isPlaying ? '🔊 Sonando…' : '⏸ En pausa';
+      // v4.3.4: barra de progreso (adelantar/atrasar + ver cuánto queda)
+      const bar = document.createElement('div');
+      bar.style.cssText = 'width:100%;box-sizing:border-box;margin:6px 0 2px;display:none;';
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.min = '0';
+      input.max = '1000';
+      input.value = '0';
+      input.style.cssText = 'width:100%;accent-color:#f00;height:26px;';
+      const times = document.createElement('div');
+      times.style.cssText = 'display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted,#999);';
+      const tAct = document.createElement('span');
+      tAct.textContent = '0:00';
+      const tDur = document.createElement('span');
+      tDur.textContent = '';
+      times.appendChild(tAct);
+      times.appendChild(tDur);
+      bar.appendChild(input);
+      bar.appendChild(times);
+      let dragging = false;
+      input.addEventListener('pointerdown', () => { dragging = true; });
+      input.addEventListener('input', () => {
+        if (currentItem && currentItem.esYoutube && currentItem._durMs > 0) {
+          const frac = Number(input.value) / 1000;
+          tAct.textContent = fmtSeg(Math.floor(frac * (currentItem._durMs / 1000)));
+        }
+      });
+      input.addEventListener('change', () => {
+        dragging = false;
+        const frac = Number(input.value) / 1000;
+        if (currentItem && currentItem.esYoutube && currentItem._durMs > 0 && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
+          const ms = Math.floor(frac * currentItem._durMs);
+          Capacitor.Plugins.BackgroundAudio.seekTo({ posMs: ms }).catch(() => {});
+        }
+      });
       const btnStop = document.createElement('button');
       btnStop.className = 'song-play-btn';
       btnStop.textContent = '⏹ Parar';
@@ -522,8 +564,40 @@
       np.appendChild(img);
       np.appendChild(nt);
       np.appendChild(st);
+      np.appendChild(bar);
       np.appendChild(btnStop);
       wrap.appendChild(np);
+      // Ticker suave: refresca barra mientras suena este vídeo (solo si la
+      // pestaña YouTube está a la vista) — además sirve de diagnóstico: si la
+      // barra avanza pero no se oye → el audio llega; si se queda en 0:00 → no.
+      const vId = currentItem.ytVideoId || '';
+      if (currentTab === 'youtube' && vId && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
+        (function pollYt() {
+          if (currentTab !== 'youtube' || !currentItem || !currentItem.esYoutube || currentItem.ytVideoId !== vId) return;
+          Capacitor.Plugins.BackgroundAudio.getEstado().then((est) => {
+            const dur = Number(est.durMs) || 0;
+            const pos = Number(est.posMs) || 0;
+            currentItem._durMs = dur;
+            if (dur > 0) {
+              bar.style.display = 'block';
+              tDur.textContent = fmtSeg(Math.floor(dur / 1000));
+              if (!dragging) {
+                const frac = Math.min(1, pos / dur);
+                input.value = String(Math.round(frac * 1000));
+                tAct.textContent = fmtSeg(Math.floor(pos / 1000));
+              }
+              // Diagnóstico visible: lleva X de Y aunque "no se oiga"
+              if (pos > 2000 && !st.textContent.includes('✅') && st.textContent.includes('Sonando')) {
+                st.textContent = '🔊 Sonando…';
+              }
+            } else {
+              bar.style.display = 'none';
+            }
+          }).catch(() => {});
+          setTimeout(pollYt, 1000);
+        })();
+      }
+      return;
     }
 
     // ---------- Pegar enlace ----------
