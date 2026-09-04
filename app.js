@@ -547,47 +547,80 @@
       bar.appendChild(input);
       bar.appendChild(times);
       let dragging = false;
-      let seekAlSoltar = 0; // v4.3.7: evita doble seek (en vivo + al soltar)
-      let ultimoSeekEnVivo = 0;
-      function hacerSeek() {
+      let ultimoSeekMs = 0; // v4.3.8: evita seeks duplicados (arrastre + soltar)
+      let barRect = null;   // v4.3.8: rect de la barra para calcular por coordenadas
+      function fracDesdeX(clientX) {
+        if (!barRect || barRect.width <= 0) return null;
+        return Math.min(1, Math.max(0, (clientX - barRect.left) / barRect.width));
+      }
+      function hacerSeek(force) {
+        // Throttle: durante el arrastre se salta ~cada 200 ms; al soltar se
+        // fuerza (force=true) para que el último salto llegue siempre.
+        const ahora = Date.now();
+        if (!force && ahora - ultimoSeekMs < 200) return;
+        ultimoSeekMs = ahora;
         const frac = Number(input.value) / 1000;
         if (currentItem && currentItem.esYoutube && currentItem._durMs > 0 && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
           const ms = Math.floor(frac * currentItem._durMs);
           Capacitor.Plugins.BackgroundAudio.seekTo({ posMs: ms }).catch(() => {});
         }
       }
-      // v4.3.7: el seek se dispara MIENTRAS se arrastra (con throttle) y además
-      // al soltar. Motivo (vídeo de Manuel): el WebView de Android NO lanza
-      // change/pointerup/touchend de forma fiable al soltar un input range
-      // táctil → la barra se movía pero el audio nunca saltaba. Con el seek en
-      // vivo cada ~300 ms el salto ocurre aunque no llegue ningún evento de
-      // soltar.
-      function alSoltar() {
-        dragging = false;
-        const ahora = Date.now();
-        if (ahora - seekAlSoltar < 400) return; // ya se hizo (input en vivo + soltar)
-        seekAlSoltar = ahora;
-        hacerSeek();
+      function pintarPos(frac) {
+        input.value = String(Math.round(frac * 1000));
+        tAct.textContent = fmtSeg(Math.floor(frac * (currentItem._durMs / 1000)));
       }
-      input.addEventListener('pointerdown', () => { dragging = true; });
+      // v4.3.8: la barra se maneja “a mano” por coordenadas del dedo, con
+      // touch-action:none, para que funcione aunque el WebView de Android no
+      // mueva el cursor del input range ni dispare input/change al arrastrar
+      // o al tocar la pista (causa del fallo: “le doy a la barra y vuelve”).
+      input.style.touchAction = 'none';
+      input.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        barRect = input.getBoundingClientRect();
+        try { e.preventDefault(); } catch (err) {}
+      });
+      input.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const frac = fracDesdeX(e.clientX);
+        if (frac === null) return;
+        pintarPos(frac);
+        hacerSeek(false);
+      });
+      // Refuerzo: si el WebView sí mueve el cursor nativo y lanza input
       input.addEventListener('input', () => {
-        if (currentItem && currentItem.esYoutube && currentItem._durMs > 0) {
+        if (currentItem && currentItem.esYoutube && currentItem._durMs > 0 && dragging) {
           const frac = Number(input.value) / 1000;
-          tAct.textContent = fmtSeg(Math.floor(frac * (currentItem._durMs / 1000)));
-          const ahora = Date.now();
-          if (ahora - ultimoSeekEnVivo >= 300) {
-            ultimoSeekEnVivo = ahora;
-            hacerSeek();
-          }
+          pintarPos(frac);
+          hacerSeek(false);
         }
       });
-      // Red de seguridad al soltar (si el WebView sí los lanza):
+      function alSoltar(e) {
+        // Ajuste final con la posición exacta del dedo (el último salto SIEMPRE
+        // se envía; los eventos duplicados change/pointerup/touchend que llegan
+        // juntos se filtran por el throttle de hacerSeek).
+        if (e && typeof e.clientX === 'number' && currentItem && currentItem.esYoutube && currentItem._durMs > 0) {
+          const frac = fracDesdeX(e.clientX);
+          if (frac !== null) pintarPos(frac);
+        }
+        dragging = false;
+        barRect = null;
+        hacerSeek(true);
+      }
       input.addEventListener('change', alSoltar);
       input.addEventListener('pointerup', alSoltar);
-      input.addEventListener('touchend', alSoltar);
-      // Y por si el gesto se cancela a mitad (scroll/notificación):
+      input.addEventListener('touchend', (e) => {
+        const t = e.changedTouches && e.changedTouches[0];
+        alSoltar(t || e);
+      });
       input.addEventListener('pointercancel', alSoltar);
       input.addEventListener('touchcancel', alSoltar);
+      // v4.3.8: un simple toque (tap) sobre la pista también salta
+      input.addEventListener('click', (e) => {
+        if (currentItem && currentItem.esYoutube && currentItem._durMs > 0) {
+          const frac = fracDesdeX(e.clientX);
+          if (frac !== null) { pintarPos(frac); hacerSeek(true); }
+        }
+      });
       const btnStop = document.createElement('button');
       btnStop.className = 'song-play-btn';
       btnStop.textContent = '⏹ Parar';
@@ -678,60 +711,9 @@
     wrap.appendChild(errDiv);
     wrap.appendChild(status);
 
-    // ---------- Recientes ----------
-    const hist = ytHistory();
-    if (hist.length) {
-      const hTitle = document.createElement('div');
-      hTitle.className = 'song-artist';
-      hTitle.style.margin = '12px 0 6px';
-      hTitle.style.fontWeight = '700';
-      hTitle.style.fontSize = '0.9rem';
-      hTitle.textContent = '🕘 Recientes (toca para volver a escuchar)';
-      wrap.appendChild(hTitle);
-      hist.forEach(h => {
-        const c = document.createElement('div');
-        c.className = 'song-card';
-        c.style.width = '100%';
-        c.style.boxSizing = 'border-box';
-        c.style.display = 'flex';
-        c.style.alignItems = 'center';
-        c.style.gap = '10px';
-        c.style.cursor = 'pointer';
-        c.style.textAlign = 'left';
-        const im = document.createElement('img');
-        im.src = h.thumb || thumbYt(h.videoId);
-        im.alt = '';
-        im.style.width = '64px';
-        im.style.height = '36px';
-        im.style.objectFit = 'cover';
-        im.style.borderRadius = '6px';
-        im.style.flex = '0 0 auto';
-        const nm = document.createElement('div');
-        nm.style.flex = '1';
-        nm.style.minWidth = '0';
-        const tt = document.createElement('div');
-        tt.className = 'song-title';
-        tt.textContent = h.title || 'Video';
-        tt.style.fontSize = '0.85rem';
-        tt.style.overflow = 'hidden';
-        tt.style.textOverflow = 'ellipsis';
-        tt.style.whiteSpace = 'nowrap';
-        nm.appendChild(tt);
-        const pl = document.createElement('button');
-        pl.className = 'song-play-btn';
-        pl.textContent = '▶';
-        c.appendChild(im);
-        c.appendChild(nm);
-        c.appendChild(pl);
-        c.addEventListener('click', () => {
-          playYoutubeLink(h.link || ('https://www.youtube.com/watch?v=' + h.videoId), status, btn);
-          const pest = document.querySelector('.tab[data-tab="youtube"]');
-          if (pest) pest.scrollIntoView({ block: 'nearest' });
-        });
-        pl.addEventListener('click', (e) => e.stopPropagation());
-        wrap.appendChild(c);
-      });
-    }
+    // v4.3.8: sección de Recientes quitada (Manuel no quiere ver los audios
+    // anteriores bajo el buscador). El historial sigue guardándose en local
+    // pero ya no se muestra.
   }
 
   // Lanza la reproducción de solo-audio de un enlace de YouTube
@@ -800,7 +782,6 @@
               _durMs: dur ? dur * 1000 : 0
             };
             isPlaying = true;
-            ytAddHistory({ videoId: videoId2, title: nombre, thumb: thumbYt(videoId2), link: enlace });
             if (currentTab === 'youtube') renderYoutube();
             updateUI();
             setSt('✅ Sonando: ' + nombre);
@@ -834,7 +815,6 @@
               url: res.audioUrl || ''
             };
             isPlaying = true;
-            ytAddHistory({ videoId: videoId, title: nombre, thumb: thumbYt(videoId), link: enlace });
             if (currentTab === 'youtube') renderYoutube();
             updateUI();
             setSt('✅ Sonando: ' + nombre);
