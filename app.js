@@ -851,15 +851,16 @@
           showToast('❌ Error al reproducir YouTube');
         });
       }
-      // 2) Sin servicio: método antiguo de resolución directa
-      try {
-        Capacitor.Plugins.BackgroundAudio.playYoutube({ url: enlace })
+      // 2) Sin servicio: intentar con el yt-dlp EMBEBIDO (spike v4.6.0, estilo
+      // Seal: resuelve en el propio móvil, sin Mac ni servidores).
+      if (window.Capacitor && Capacitor.Plugins.BackgroundAudio && Capacitor.Plugins.BackgroundAudio.ytdlResolve) {
+        setSt('⏳ Resolviendo con yt-dlp local…');
+        Capacitor.Plugins.BackgroundAudio.ytdlResolve({ url: enlace })
           .then((res) => {
             if (btnEl) btnEl.disabled = false;
-            if (!res || !res.videoId) { setSt('❌ No se pudo obtener el audio'); return; }
-            const videoId = res.videoId;
+            if (!res || !res.audioUrl) { setSt('❌ No se pudo obtener el audio'); return; }
+            const videoId = extraerIdWeb(enlace) || '';
             const nombre = res.title || 'Video de YouTube';
-            // Parar cualquier Social Radio o canal anterior y marcar como item actual
             if (bsPlaying || bsPaused) bsStop();
             stopStream();
             currentItem = {
@@ -874,18 +875,84 @@
             isPlaying = true;
             if (currentTab === 'youtube') renderYoutube();
             updateUI();
-            setSt('✅ Sonando: ' + nombre);
+            setSt('✅ Sonando (local): ' + nombre);
             showToast('▶ ' + nombre);
           })
           .catch((err) => {
-            if (btnEl) btnEl.disabled = false;
-            const msg = (err && err.message) ? err.message : '';
-            setSt('❌ No se pudo reproducir. Comprueba el enlace y tu conexión.' + (msg ? ' (' + msg + ')' : ''));
-            showToast('❌ Error al reproducir YouTube');
+            // 2b) Último recurso: método antiguo de resolución directa
+            const msgL = (err && err.message) ? err.message : '';
+            try {
+              Capacitor.Plugins.BackgroundAudio.playYoutube({ url: enlace })
+                .then((res) => {
+                  if (btnEl) btnEl.disabled = false;
+                  if (!res || !res.videoId) { setSt('❌ No se pudo obtener el audio' + (msgL ? ' (' + msgL + ')' : '')); return; }
+                  const videoId = res.videoId;
+                  const nombre = res.title || 'Video de YouTube';
+                  if (bsPlaying || bsPaused) bsStop();
+                  stopStream();
+                  currentItem = {
+                    id: 'yt:' + videoId,
+                    esYoutube: true,
+                    ytVideoId: videoId,
+                    ytLink: enlace,
+                    name: nombre,
+                    logo: thumbYt(videoId),
+                    url: res.audioUrl || ''
+                  };
+                  isPlaying = true;
+                  if (currentTab === 'youtube') renderYoutube();
+                  updateUI();
+                  setSt('✅ Sonando: ' + nombre);
+                  showToast('▶ ' + nombre);
+                })
+                .catch((err2) => {
+                  if (btnEl) btnEl.disabled = false;
+                  const msg = (err2 && err2.message) ? err2.message : '';
+                  setSt('❌ No se pudo reproducir. Comprueba el enlace y tu conexión.' + (msg ? ' (' + msg + ')' : ''));
+                  showToast('❌ Error al reproducir YouTube');
+                });
+            } catch (e) {
+              if (btnEl) btnEl.disabled = false;
+              setSt('❌ Fallo interno al reproducir');
+            }
           });
-      } catch (e) {
-        if (btnEl) btnEl.disabled = false;
-        setSt('❌ Fallo interno al reproducir');
+      } else {
+        // 2b) Sin yt-dlp local: método antiguo de resolución directa
+        try {
+          Capacitor.Plugins.BackgroundAudio.playYoutube({ url: enlace })
+            .then((res) => {
+              if (btnEl) btnEl.disabled = false;
+              if (!res || !res.videoId) { setSt('❌ No se pudo obtener el audio'); return; }
+              const videoId = res.videoId;
+              const nombre = res.title || 'Video de YouTube';
+              // Parar cualquier Social Radio o canal anterior y marcar como item actual
+              if (bsPlaying || bsPaused) bsStop();
+              stopStream();
+              currentItem = {
+                id: 'yt:' + videoId,
+                esYoutube: true,
+                ytVideoId: videoId,
+                ytLink: enlace,
+                name: nombre,
+                logo: thumbYt(videoId),
+                url: res.audioUrl || ''
+              };
+              isPlaying = true;
+              if (currentTab === 'youtube') renderYoutube();
+              updateUI();
+              setSt('✅ Sonando: ' + nombre);
+              showToast('▶ ' + nombre);
+            })
+            .catch((err) => {
+              if (btnEl) btnEl.disabled = false;
+              const msg = (err && err.message) ? err.message : '';
+              setSt('❌ No se pudo reproducir. Comprueba el enlace y tu conexión.' + (msg ? ' (' + msg + ')' : ''));
+              showToast('❌ Error al reproducir YouTube');
+            });
+        } catch (e) {
+          if (btnEl) btnEl.disabled = false;
+          setSt('❌ Fallo interno al reproducir');
+        }
       }
     });
   }
