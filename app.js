@@ -2005,32 +2005,46 @@
       if (ep.enlace) { try { window.open(ep.enlace, '_blank'); } catch (e) {} }
       return;
     }
+    // v4.5.0: primero intento DIRECTO (resuelve el audio en el propio móvil,
+    // sin el Mac → funciona en cualquier WiFi/datos, también fuera de casa).
     showToast('⏳ Buscando el audio del episodio…');
-    detectarProxyYt().then(proxy => {
-      if (!proxy) { showToast('❌ Servicio de audio no disponible (¿encendido el Mac?)'); return; }
-      Capacitor.Plugins.BackgroundAudio.playRtveProxy({ id: ep.id, proxy: proxy, title: ep.titulo })
-        .then(res => {
-          if (!res || !res.audioUrl) { showToast('❌ No se pudo obtener el audio'); return; }
-          if (bsPlaying || bsPaused) bsStop();
-          stopStream();
-          currentItem = {
-            id: 'rtve:' + ep.id,
-            esVod: true, // bajo demanda: pausa real (no como directo)
-            name: ep.titulo,
-            logo: ep.img || 'icon.svg',
-            url: res.audioUrl,
-            _durMs: ep.durMs || 0
-          };
-          isPlaying = true;
-          updateUI();
-          if (currentTab === 'audioprogramas' && rtveProg) pintarEpisodios();
-          showToast('▶ ' + ep.titulo);
-        })
-        .catch(err => {
-          const msg = (err && err.message) ? err.message : '';
-          showToast('❌ No se pudo reproducir el episodio' + (msg ? ': ' + msg : ''));
+    const lanzarDirecto = () => {
+      Capacitor.Plugins.BackgroundAudio.playRtveDirect({ id: ep.id, title: ep.titulo })
+        .then(res => marcarReproducido(ep, res))
+        .catch(() => {
+          // Plan B: servicio del Mac (si está en la misma red)
+          detectarProxyYt().then(proxy => {
+            if (!proxy) {
+              showToast('❌ No se pudo obtener el audio (revisa tu conexión)');
+              return;
+            }
+            Capacitor.Plugins.BackgroundAudio.playRtveProxy({ id: ep.id, proxy: proxy, title: ep.titulo })
+              .then(res => marcarReproducido(ep, res))
+              .catch(err => {
+                const msg = (err && err.message) ? err.message : '';
+                showToast('❌ No se pudo reproducir el episodio' + (msg ? ': ' + msg : ''));
+              });
+          }).catch(() => showToast('❌ No se pudo obtener el audio'));
         });
-    }).catch(() => showToast('❌ Servicio de audio no disponible'));
+    };
+    const marcarReproducido = (episodio, res) => {
+      if (!res || !res.audioUrl) { showToast('❌ No se pudo obtener el audio'); return; }
+      if (bsPlaying || bsPaused) bsStop();
+      stopStream();
+      currentItem = {
+        id: 'rtve:' + episodio.id,
+        esVod: true, // bajo demanda: pausa real (no como directo)
+        name: episodio.titulo,
+        logo: episodio.img || 'icon.svg',
+        url: res.audioUrl,
+        _durMs: episodio.durMs || 0
+      };
+      isPlaying = true;
+      updateUI();
+      if (currentTab === 'audioprogramas' && rtveProg) pintarEpisodios();
+      showToast('▶ ' + episodio.titulo);
+    };
+    lanzarDirecto();
   }
 
 
