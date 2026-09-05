@@ -883,6 +883,36 @@
     } catch (e) { return Promise.resolve(false); }
   }
 
+  // ================= RECIENTES (escuchado recientemente) =================
+  // Guarda los últimos canales/emisoras reproducidos (por id + timestamp)
+  // para ofrecerlos en una sección "🕘 Escuchado recientemente" al inicio
+  // de las listas de TV y Radio. Máximo 15.
+  function getRecientes() {
+    try {
+      const arr = JSON.parse(localStorage.getItem('teleaudio_recientes')) || [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+
+  function guardarReciente(ch) {
+    if (!ch || !ch.id) return;
+    let recs = getRecientes();
+    recs = recs.filter(r => r && r.id !== ch.id);
+    recs.unshift({ id: ch.id, ts: Date.now() });
+    if (recs.length > 15) recs = recs.slice(0, 15);
+    try { localStorage.setItem('teleaudio_recientes', JSON.stringify(recs)); } catch (e) {}
+  }
+
+  // Devuelve los canales recientes que pertenecen a la lista actual (TV o Radio)
+  function recientesDeLista(lista) {
+    const recs = getRecientes();
+    const porId = {};
+    lista.forEach(c => { porId[c.id] = c; });
+    const out = [];
+    recs.forEach(r => { if (porId[r.id]) out.push(porId[r.id]); });
+    return out;
+  }
+
   function renderChannels() {
     grid.innerHTML = '';
     if (currentTab === 'social') {
@@ -917,6 +947,18 @@
     if (hasQuery) {
       list.forEach(ch => renderCard(ch));
       return;
+    }
+
+    // Sección "🕘 Escuchado recientemente" al inicio de TV y Radio
+    if (currentTab === 'tv' || currentTab === 'radio') {
+      const recs = recientesDeLista(list);
+      if (recs.length) {
+        const header = document.createElement('div');
+        header.className = 'section-header';
+        header.textContent = '🕘 Escuchado recientemente';
+        grid.appendChild(header);
+        recs.forEach(ch => renderCard(ch));
+      }
     }
 
     // Agrupar por categoría manteniendo el orden de definición
@@ -1082,6 +1124,7 @@
       return;
     }
     currentItem = ch;
+    if (ch && ch.id && !ch.esYoutube) guardarReciente(ch);
     if (bsPlaying || bsPaused) bsStop();
     stopStream();
 
