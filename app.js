@@ -1042,7 +1042,8 @@
     { uid: '1030536', nombre: 'El Perro Andaluz', canal: 'La 1', img: 'https://img.rtve.es/imagenes/miguel-rellan-vuelve-mirar-tetuan-perro-andaluz/01788448276526.jpg' },
     { uid: '1000646', nombre: 'La Revuelta', canal: 'La 1', img: 'https://img.rtve.es/imagenes/revuelta-vuelve-7-septiembre-nuevo-teatro/01788378371065.jpg' },
     { uid: '129646', nombre: 'El Cazador', canal: 'La 2', img: 'https://img.rtve.es/imagenes/cazador-especial-5/01767741580083.jpg' },
-    { uid: '67990', nombre: 'Cachitos de hierro y cromo', canal: 'La 2', img: 'https://img.rtve.es/imagenes/cachitos-hierro-cromo-bis-2/1767478025404.jpg' }
+    { uid: '67990', nombre: 'Cachitos de hierro y cromo', canal: 'La 2', img: 'https://img.rtve.es/imagenes/cachitos-hierro-cromo-bis-2/1767478025404.jpg' },
+    { uid: '1029008', nombre: 'La Casa de la Música', canal: 'La 1', img: 'https://img.rtve.es/imagenes/la-casa-de-la-musica/01778746719260.png' }
   ];
   let rtveProg = null;      // programa abierto (vista episodios)
   let rtveEpis = [];        // episodios cargados del programa
