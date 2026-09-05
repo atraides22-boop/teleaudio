@@ -124,7 +124,13 @@
     { id: 'salud', label: 'Salud y bienestar', icon: '🧘' },
     { id: 'infantil', label: 'Infantil', icon: '🧸' }
   ];
-  const PODCASTS = [];
+  // v5.2.0: podcasts reales. Los 24/7 son streams continuos (cat '247').
+  // Radio Red = Canal Red 24h en audio (radio.co, mp3 128k, estable).
+  const PODCASTS = [
+    { id: 'radiored', name: 'Radio Red', logo: 'logos/radiored.png',
+      url: 'https://streams.radio.co/s450f67578/listen',
+      cat: '247', desc: 'Canal Red 24 horas en audio: actualidad, análisis y entrevistas.' },
+  ];
 
   // ================= LA CANCIÓN DEL DÍA (historial) =================
   const CANCIONES_URL = 'https://atraides22-boop.github.io/teleaudio/canciones.json';
