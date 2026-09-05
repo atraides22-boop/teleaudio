@@ -2852,6 +2852,33 @@
       abrirOverlay();
     });
   }
+  // Gesto táctil: deslizar hacia ARRIBA en el miniplayer abre el reproductor
+  // completo (como en las apps de audio modernas)
+  let miniTouchY = null;
+  if (nowPlaying) {
+    nowPlaying.addEventListener('touchstart', (e) => {
+      miniTouchY = e.touches[0].clientY;
+    }, { passive: true });
+    nowPlaying.addEventListener('touchend', (e) => {
+      if (miniTouchY === null) return;
+      const dy = e.changedTouches[0].clientY - miniTouchY;
+      if (dy < -48) abrirOverlay(); // arriba
+      miniTouchY = null;
+    }, { passive: true });
+  }
+  // Gesto: deslizar hacia ABAJO en el reproductor completo lo cierra
+  let ovTouchY = null;
+  if (playerOverlay) {
+    playerOverlay.addEventListener('touchstart', (e) => {
+      ovTouchY = e.touches[0].clientY;
+    }, { passive: true });
+    playerOverlay.addEventListener('touchend', (e) => {
+      if (ovTouchY === null) return;
+      const dy = e.changedTouches[0].clientY - ovTouchY;
+      if (dy > 60 && ovAbierto()) cerrarOverlay(); // abajo
+      ovTouchY = null;
+    }, { passive: true });
+  }
   const ovCloseBtn = $('ov-close');
   if (ovCloseBtn) ovCloseBtn.addEventListener('click', cerrarOverlay);
   // Controles grandes: delegan en los del miniplayer (una sola lógica)

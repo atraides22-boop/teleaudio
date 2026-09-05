@@ -1135,3 +1135,8 @@ body.player-active .app-footer { display: none; }
   font-size: var(--fs-small);
 }
 .recents-hint svg { color: var(--muted); opacity: 0.8; }
+
+/* Affordance de expansión del mini-player (chevron) */
+.np-expand { color: var(--muted); display: grid; place-items: center; padding: 2px; }
+.mini-info:hover .np-name { color: var(--accent-text); }
+.mini-player.dragging { opacity: 0.92; }
