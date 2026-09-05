@@ -774,12 +774,22 @@
         .then(r => (r && r.ok) ? base : null)
         .catch(() => null);
     };
-    return comprobar(YT_PROXY_CANDIDATOS[0]).then(ok1 => {
-      if (ok1) { ytProxyActivo = ok1; return ok1; }
-      return comprobar(YT_PROXY_CANDIDATOS[1]).then(ok2 => {
-        if (ok2) { ytProxyActivo = ok2; return ok2; }
-        return null;
-      });
+    // v4.5.3: descubrir la URL pública del túnel de Cloudflare (tunel.json en
+    // GitHub Pages) y probarla primero; luego las de la red local. Así YouTube
+    // funciona también fuera de casa (con el Mac encendido).
+    const descubrirTunel = fetch('https://atraides22-boop.github.io/teleaudio/tunel.json?ts=' + Date.now(), { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(j => (j && j.url) ? String(j.url).replace(/\/+$/, '') : null)
+      .catch(() => null);
+    return descubrirTunel.then(publica => {
+      const candidatos = [];
+      if (publica) candidatos.push(publica);
+      YT_PROXY_CANDIDATOS.forEach(c => { if (candidatos.indexOf(c) === -1) candidatos.push(c); });
+      const probar = (i) => {
+        if (i >= candidatos.length) return Promise.resolve(null);
+        return comprobar(candidatos[i]).then(ok => ok ? ok : probar(i + 1));
+      };
+      return probar(0).then(ok => { if (ok) ytProxyActivo = ok; return ok; });
     });
   }
 
