@@ -872,11 +872,21 @@
               logo: thumbYt(videoId),
               url: res.audioUrl || ''
             };
-            isPlaying = true;
-            if (currentTab === 'youtube') renderYoutube();
-            updateUI();
-            setSt('✅ Sonando (local): ' + nombre);
-            showToast('▶ ' + nombre);
+            // Arrancar la reproducción nativa con la URL resuelta por yt-dlp
+            return Capacitor.Plugins.BackgroundAudio.play({ url: res.audioUrl, title: nombre, subtitle: 'YouTube · solo audio' })
+              .then(() => {
+                if (btnEl) btnEl.disabled = false;
+                isPlaying = true;
+                if (currentTab === 'youtube') renderYoutube();
+                updateUI();
+                setSt('✅ Sonando (local): ' + nombre);
+                showToast('▶ ' + nombre);
+              })
+              .catch(() => {
+                if (btnEl) btnEl.disabled = false;
+                setSt('❌ No se pudo reproducir el audio local');
+                showToast('❌ Error al reproducir (yt-dlp local)');
+              });
           })
           .catch((err) => {
             // 2b) Último recurso: método antiguo de resolución directa
