@@ -1299,7 +1299,7 @@
     { uid: '1000646', nombre: 'La Revuelta', canal: 'La 1', img: 'https://img.rtve.es/imagenes/revuelta-vuelve-7-septiembre-nuevo-teatro/01788378371065.jpg' },
     { uid: '129646', nombre: 'El Cazador', canal: 'La 2', img: 'https://img.rtve.es/imagenes/cazador-especial-5/01767741580083.jpg' },
     { uid: '67990', nombre: 'Cachitos de hierro y cromo', canal: 'La 2', img: 'https://img.rtve.es/imagenes/cachitos-hierro-cromo-bis-2/1767478025404.jpg' },
-    { uid: '1029008', nombre: 'La Casa de la Música', canal: 'La 1', img: 'https://img.rtve.es/imagenes/la-casa-de-la-musica/01778746719260.png' },
+    { uid: '1029008', nombre: 'La Casa de la Música', canal: 'La 1', img: 'https://img.rtve.es/imagenes/la-casa-de-la-musica/01778746804555.jpg' },
     { uid: '174712', nombre: 'Grand Prix', canal: 'La 1', img: 'https://img.rtve.es/imagenes/grand-prix/01783430260063.jpg' },
     { uid: '1030975', nombre: 'Malas Lenguas Noche', canal: 'La 2', img: 'https://img.rtve.es/imagenes/malas-lenguas-noche/01787312208122.jpg' },
     { uid: '11332', nombre: 'Comando Actualidad', canal: 'La 2', img: 'https://img.rtve.es/imagenes/comando-actualidad/01718631050863.jpg' },
