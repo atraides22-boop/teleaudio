@@ -1,44 +1,52 @@
 {
-  "canciones": [
-    {
-      "fecha": "2026-09-05",
-      "titulo": "Rizo de gitana",
-      "artista": "Parquesvr",
-      "youtube": "https://www.youtube.com/watch?v=-cA701ltAMA",
-      "spotify": "https://open.spotify.com/track/16Ny3kGr6nFlJLROWCOYki",
-      "likes": 1
-    },
-    {
-      "fecha": "2026-09-04",
-      "titulo": "LAPSUS",
-      "artista": "Ultraligera",
-      "youtube": "https://www.youtube.com/watch?v=ojShHLUv_WY",
-      "spotify": "https://open.spotify.com/track/5gaHUShVDYB2kn5s0xzIAi",
-      "likes": 0
-    },
-    {
-      "fecha": "2026-09-03",
-      "titulo": "Flamenca con lunares",
-      "artista": "Miguel Campello",
-      "youtube": "https://www.youtube.com/watch?v=f-7UOONvzo8",
-      "spotify": "https://open.spotify.com/track/5UF5sOght0zFuv6WpigALB",
-      "likes": 0
-    },
-    {
-      "fecha": "2026-09-02",
-      "titulo": "La mujer de verde",
-      "artista": "IZAL",
-      "youtube": "https://www.youtube.com/watch?v=guzh1l71iAE",
-      "spotify": "https://open.spotify.com/track/5sXPNCkjikRUHKKlaRsFJY",
-      "likes": 1
-    },
-    {
-      "fecha": "2026-09-01",
-      "titulo": "Rocíos",
-      "artista": "Carlos Ares",
-      "youtube": "https://www.youtube.com/watch?v=10cehml3YWk",
-      "spotify": "https://open.spotify.com/track/55UO1q8075ervSjdAd1OpG",
-      "likes": 1
-    }
-  ]
+    "canciones": [
+        {
+            "fecha": "2026-09-06",
+            "titulo": "Calaveras y Estrellas",
+            "artista": "Rebeca Jiménez",
+            "youtube": "https://www.youtube.com/watch?v=BvIPRmqsrTQ",
+            "spotify": "https://open.spotify.com/track/1LcAztCMrEDMBXJXJnyH3a",
+            "likes": 0
+        },
+        {
+            "fecha": "2026-09-05",
+            "titulo": "Rizo de gitana",
+            "artista": "Parquesvr",
+            "youtube": "https://www.youtube.com/watch?v=-cA701ltAMA",
+            "spotify": "https://open.spotify.com/track/16Ny3kGr6nFlJLROWCOYki",
+            "likes": 1
+        },
+        {
+            "fecha": "2026-09-04",
+            "titulo": "LAPSUS",
+            "artista": "Ultraligera",
+            "youtube": "https://www.youtube.com/watch?v=ojShHLUv_WY",
+            "spotify": "https://open.spotify.com/track/5gaHUShVDYB2kn5s0xzIAi",
+            "likes": 0
+        },
+        {
+            "fecha": "2026-09-03",
+            "titulo": "Flamenca con lunares",
+            "artista": "Miguel Campello",
+            "youtube": "https://www.youtube.com/watch?v=f-7UOONvzo8",
+            "spotify": "https://open.spotify.com/track/5UF5sOght0zFuv6WpigALB",
+            "likes": 0
+        },
+        {
+            "fecha": "2026-09-02",
+            "titulo": "La mujer de verde",
+            "artista": "IZAL",
+            "youtube": "https://www.youtube.com/watch?v=guzh1l71iAE",
+            "spotify": "https://open.spotify.com/track/5sXPNCkjikRUHKKlaRsFJY",
+            "likes": 1
+        },
+        {
+            "fecha": "2026-09-01",
+            "titulo": "Rocíos",
+            "artista": "Carlos Ares",
+            "youtube": "https://www.youtube.com/watch?v=10cehml3YWk",
+            "spotify": "https://open.spotify.com/track/55UO1q8075ervSjdAd1OpG",
+            "likes": 1
+        }
+    ]
 }
