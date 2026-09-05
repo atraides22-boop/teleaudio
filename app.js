@@ -106,6 +106,26 @@
 
   const ALL = [...TV_CHANNELS, ...RADIO_STATIONS];
 
+  // ================= PODCAST (sección nueva; estructura vacía) =================
+  // Categorías creadas: se irán rellenando con podcasts REALES que Manuel vaya
+  // pidiendo. Formato de cada podcast: { id, name, logo, url, cat } donde
+  // cat = id de PODCAST_CATS. NO inventar streams.
+  const PODCAST_CATS = [
+    { id: '247', label: 'Podcast 24/7', icon: '📻' },
+    { id: 'noticias', label: 'Noticias y actualidad', icon: '🗞️' },
+    { id: 'deportes', label: 'Deportes', icon: '⚽' },
+    { id: 'musica', label: 'Música', icon: '🎵' },
+    { id: 'humor', label: 'Humor y entretenimiento', icon: '😄' },
+    { id: 'historia', label: 'Historia y cultura', icon: '📖' },
+    { id: 'ciencia', label: 'Ciencia y tecnología', icon: '🔬' },
+    { id: 'entrevistas', label: 'Entrevistas y sociedad', icon: '🎙️' },
+    { id: 'misterio', label: 'Misterio y true crime', icon: '🕵️' },
+    { id: 'economia', label: 'Economía', icon: '💰' },
+    { id: 'salud', label: 'Salud y bienestar', icon: '🧘' },
+    { id: 'infantil', label: 'Infantil', icon: '🧸' }
+  ];
+  const PODCASTS = [];
+
   // ================= LA CANCIÓN DEL DÍA (historial) =================
   const CANCIONES_URL = 'https://atraides22-boop.github.io/teleaudio/canciones.json';
   let songHistory = [];
@@ -217,6 +237,8 @@
   if (!isNative) {
     const ex = document.getElementById('exit-btn');
     if (ex) ex.style.display = 'none';
+    const ch = document.getElementById('cuenta-hint');
+    if (ch) ch.style.display = 'none';
   }
   const audio = new Audio();
   audio.preload = 'none';
@@ -238,6 +260,7 @@
     let list;
     if (tab === 'tv') list = TV_CHANNELS;
     else if (tab === 'radio') list = RADIO_STATIONS;
+    else if (tab === 'podcast') list = PODCASTS;
     else if (tab === 'cancion' || tab === 'comentarios' || tab === 'social' || tab === 'youtube') return [];
     else list = ALL.filter(c => favs.has(c.id));
     return list.filter(c => !q || c.name.toLowerCase().includes(q));
@@ -878,6 +901,10 @@
       renderSongOfDay();
       return;
     }
+    if (currentTab === 'podcast') {
+      renderPodcast();
+      return;
+    }
     const list = getVisibleList(currentTab, search.value);
     const hasQuery = (search.value || '').trim().length > 0;
 
@@ -945,6 +972,76 @@
     localStorage.setItem('teleaudio_favs', JSON.stringify([...favs]));
     renderChannels();
   }
+
+  // ================= PODCAST =================
+  // Sección nueva (estructura): categorías fijas + podcasts que se irán
+  // añadiendo. Mientras no haya podcasts REALES, se muestra un estado
+  // "próximamente" con las categorías, nunca se inventan streams.
+  function renderPodcast() {
+    grid.innerHTML = '';
+
+    if (!PODCASTS.length) {
+      // --- Aún sin contenido: presentación + categorías previstas ---
+      const card = document.createElement('div');
+      card.className = 'song-card';
+      card.style.textAlign = 'center';
+      card.style.marginTop = '10px';
+      const icon = document.createElement('div');
+      icon.className = 'song-disc';
+      icon.textContent = '🎙️';
+      const t = document.createElement('div');
+      t.className = 'song-title';
+      t.textContent = 'Podcasts';
+      const sub = document.createElement('div');
+      sub.className = 'song-artist';
+      sub.textContent = 'Próximamente iremos añadiendo podcasts reales por categorías. Si tienes alguno en mente, dímelo y lo añadimos.';
+      card.appendChild(icon);
+      card.appendChild(t);
+      card.appendChild(sub);
+      grid.appendChild(card);
+
+      const cats = document.createElement('div');
+      cats.style.cssText = 'grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:4px 0 20px;';
+      PODCAST_CATS.forEach(c => {
+        const chip = document.createElement('span');
+        chip.style.cssText = 'padding:7px 12px;border-radius:999px;border:1px dashed var(--border);color:var(--muted);font-size:0.75rem;background:var(--card);';
+        chip.textContent = c.icon + ' ' + c.label;
+        cats.appendChild(chip);
+      });
+      grid.appendChild(cats);
+      return;
+    }
+
+    // --- Con contenido: agrupar por categoría (solo las que tengan algo) ---
+    const hasQuery = (search.value || '').trim().length > 0;
+    const seen = {};
+    PODCASTS.forEach(p => {
+      if (hasQuery && !p.name.toLowerCase().includes((search.value || '').trim().toLowerCase())) return;
+      const cat = p.cat || '247';
+      if (!seen[cat]) seen[cat] = [];
+      seen[cat].push(p);
+    });
+
+    if (!Object.keys(seen).length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:30px;">Nada por aquí</div>';
+      return;
+    }
+
+    if (hasQuery) {
+      Object.values(seen).flat().forEach(p => renderCard(p));
+      return;
+    }
+
+    Object.keys(seen).forEach(cat => {
+      const meta = PODCAST_CATS.find(c => c.id === cat);
+      const header = document.createElement('div');
+      header.className = 'section-header';
+      header.textContent = meta ? meta.icon + ' ' + meta.label : cat;
+      grid.appendChild(header);
+      seen[cat].forEach(p => renderCard(p));
+    });
+  }
+
 
   // ================= REPRODUCCIÓN =================
 
