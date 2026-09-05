@@ -940,6 +940,10 @@
       renderComments();
       return;
     }
+    if (currentTab === 'audioprogramas') {
+      renderAudioProgramas();
+      return;
+    }
     if (currentTab === 'cancion') {
       renderSongOfDay();
       return;
@@ -1028,16 +1032,15 @@
     renderChannels();
   }
 
-  // ================= PODCAST =================
-  // F6 (v4.4.4): programas de TV de RTVE con sus episodios en audio bajo
-  // demanda (mismo espíritu que la app de RTVE). Catálogo fijo de programas
+  // ================= AUDIOPROGRAMAS TV =================
+  // F6 (v4.4.5): programas de TV de RTVE en audio bajo demanda, en su propia
+  // pestaña (Manuel: no mezclar con Podcast). Catálogo fijo de programas
   // (uid oficial de RTVE); los episodios se listan desde su API pública
   // (videos.json, con CORS abierto) y el audio (MPD DASH solo-audio) lo
   // resuelve el servicio del Mac (/rtve?id=) porque la API no expone la URL.
   const RTVE_PROGRAMAS = [
     { uid: '1030536', nombre: 'El Perro Andaluz', canal: 'La 1', img: 'https://img.rtve.es/imagenes/miguel-rellan-vuelve-mirar-tetuan-perro-andaluz/01788448276526.jpg' },
     { uid: '1000646', nombre: 'La Revuelta', canal: 'La 1', img: 'https://img.rtve.es/imagenes/revuelta-vuelve-7-septiembre-nuevo-teatro/01788378371065.jpg' },
-    { uid: '169690', nombre: 'La Promesa', canal: 'La 1', img: 'https://img.rtve.es/imagenes/promesa-temporada-5-episodio-899/01788270479151.jpg' },
     { uid: '129646', nombre: 'El Cazador', canal: 'La 2', img: 'https://img.rtve.es/imagenes/cazador-especial-5/01767741580083.jpg' },
     { uid: '67990', nombre: 'Cachitos de hierro y cromo', canal: 'La 2', img: 'https://img.rtve.es/imagenes/cachitos-hierro-cromo-bis-2/1767478025404.jpg' }
   ];
@@ -1051,12 +1054,6 @@
   // "próximamente" con las categorías, nunca se inventan streams.
   function renderPodcast() {
     grid.innerHTML = '';
-
-    // Un programa de TV abierto → vista de sus episodios
-    if (rtveProg) {
-      pintarEpisodios();
-      return;
-    }
 
     if (!PODCASTS.length) {
       // --- Aún sin contenido: presentación + categorías previstas ---
@@ -1087,7 +1084,6 @@
         cats.appendChild(chip);
       });
       grid.appendChild(cats);
-      agregarProgramasRTVE();
       return;
     }
 
@@ -1119,16 +1115,25 @@
       grid.appendChild(header);
       seen[cat].forEach(p => renderCard(p));
     });
-
-    // Los programas de TV de RTVE conviven con los podcasts de radio
-    if (!hasQuery) agregarProgramasRTVE();
   }
 
-  // ---------- Programas de TV de RTVE (F6) ----------
-  function agregarProgramasRTVE() {
+  // ---------- Audioprogramas TV (F6, v4.4.5): pestaña propia ----------
+  function renderAudioProgramas() {
+    grid.innerHTML = '';
+
+    // Un programa abierto → vista de sus episodios
+    if (rtveProg) {
+      pintarEpisodios();
+      return;
+    }
+
+    const intro = document.createElement('div');
+    intro.className = 'ep-sub';
+    intro.textContent = 'Programas de TV de RTVE para escuchar en audio · toca uno para ver sus episodios';
+    grid.appendChild(intro);
     const header = document.createElement('div');
     header.className = 'section-header';
-    header.textContent = '📺 Programas de TV · RTVE';
+    header.textContent = '🎬 Programas de TV · RTVE';
     grid.appendChild(header);
     RTVE_PROGRAMAS.forEach(p => {
       const card = document.createElement('div');
@@ -1169,7 +1174,7 @@
     rtveEpis = [];
     rtveErr = '';
     rtveCargando = false;
-    renderPodcast();
+    renderChannels(); // repinta la pestaña actual (AudioprogramasTV)
   }
 
   function cargarEpisodiosRTVE(uid) {
@@ -1310,7 +1315,7 @@
           };
           isPlaying = true;
           updateUI();
-          if (currentTab === 'podcast' && rtveProg) pintarEpisodios();
+          if (currentTab === 'audioprogramas' && rtveProg) pintarEpisodios();
           showToast('▶ ' + ep.titulo);
         })
         .catch(err => {
@@ -1870,7 +1875,7 @@
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       currentTab = tab.dataset.tab;
-      if (currentTab !== 'podcast') rtveProg = null; // salir de la vista de episodios
+      if (currentTab !== 'audioprogramas') rtveProg = null; // salir de la vista de episodios
       // Cada vez que se abre 'Canción del día', buscar la versión más nueva
       if (currentTab === 'cancion') loadSongs();
       renderChannels();
