@@ -1043,10 +1043,18 @@
     { uid: '1000646', nombre: 'La Revuelta', canal: 'La 1', img: 'https://img.rtve.es/imagenes/revuelta-vuelve-7-septiembre-nuevo-teatro/01788378371065.jpg' },
     { uid: '129646', nombre: 'El Cazador', canal: 'La 2', img: 'https://img.rtve.es/imagenes/cazador-especial-5/01767741580083.jpg' },
     { uid: '67990', nombre: 'Cachitos de hierro y cromo', canal: 'La 2', img: 'https://img.rtve.es/imagenes/cachitos-hierro-cromo-bis-2/1767478025404.jpg' },
-    { uid: '1029008', nombre: 'La Casa de la Música', canal: 'La 1', img: 'https://img.rtve.es/imagenes/la-casa-de-la-musica/01778746719260.png' }
+    { uid: '1029008', nombre: 'La Casa de la Música', canal: 'La 1', img: 'https://img.rtve.es/imagenes/la-casa-de-la-musica/01778746719260.png' },
+    { uid: '174712', nombre: 'Grand Prix', canal: 'La 1', img: 'https://img.rtve.es/imagenes/grand-prix/01783430260063.jpg' },
+    { uid: '1030975', nombre: 'Malas Lenguas Noche', canal: 'La 2', img: 'https://img.rtve.es/imagenes/malas-lenguas-noche/01787312208122.jpg' },
+    { uid: '11332', nombre: 'Comando Actualidad', canal: 'La 2', img: 'https://img.rtve.es/imagenes/comando-actualidad/01718631050863.jpg' },
+    { uid: '176290', nombre: 'Late Xou con Marc Giró', canal: 'La 1', img: 'https://img.rtve.es/imagenes/late-xou-con-marc-giro/01757575876849.jpg' },
+    { uid: '174711', nombre: 'José Mota Live Show', canal: 'La 1', img: 'https://img.rtve.es/imagenes/jose-mota-live-show/1689671229579.jpg' },
+    { uid: '1000191', nombre: 'Ovejas eléctricas', canal: 'La 2', img: 'https://img.rtve.es/imagenes/ovejas-electricas/01712573032490.jpg' },
+    { uid: '135710', nombre: 'Un país para reírlo', canal: 'La 2', img: 'https://img.rtve.es/imagenes/un-pais-para-reirlo/1649684732851.jpg' },
+    { uid: '1674', nombre: 'Muchachada Nui', canal: 'La 2', img: 'https://img.rtve.es/imagenes/muchachada-nui/1599474285307.jpg' }
   ];
-  // v4.4.8: TODOS los programas de TV de La 2 (catálogo RTVE, generado 05-09-2026).
-  // Categoría en 'cat' para agruparlos; sin logo (se usa la portada de la API por uid).
+  // v4.4.9: TODOS los programas de TV de La 2 (catálogo RTVE, generado 05-09-2026).
+  // Sin los ya elegidos en 'Tus programas' (para no duplicar). Categoría en 'cat'.
   const RTVE_PROGRAMAS_LA2 = [
     { uid: "113550", nombre: "Clásicos y Reverentes", cat: "Conciertos" },
     { uid: "67030", nombre: "El palco", cat: "Conciertos" },
@@ -1172,7 +1180,6 @@
     { uid: "76210", nombre: "Semana Santa en RTVE", cat: "Informativos Noticias" },
     { uid: "40450", nombre: "Sempre positius", cat: "Informativos Noticias" },
     { uid: "35150", nombre: "ZigaZaga", cat: "Informativos Noticias" },
-    { uid: "1000191", nombre: "Ovejas eléctricas", cat: "Late Night" },
     { uid: "48371", nombre: "25(...)50", cat: "Magacines" },
     { uid: "1530", nombre: "59 segundos", cat: "Magacines" },
     { uid: "94270", nombre: "A punto con La 2", cat: "Magacines" },
@@ -1251,7 +1258,6 @@
     { uid: "1589", nombre: "El escarabajo verde", cat: "Magacín semanal" },
     { uid: "37610", nombre: "El mundo se mueve contigo", cat: "Magacín semanal" },
     { uid: "56811", nombre: "Flash moda", cat: "Magacín semanal" },
-    { uid: "1030975", nombre: "Malas Lenguas Noche", cat: "Magacín semanal" },
     { uid: "95430", nombre: "Medina en TVE", cat: "Magacín semanal" },
     { uid: "46310", nombre: "Naturalmente", cat: "Magacín semanal" },
     { uid: "37410", nombre: "Para todos La 2", cat: "Magacín semanal" },
@@ -1286,7 +1292,6 @@
     { uid: "68671", nombre: "Ahora, también", cat: "Reportajes Factual" },
     { uid: "1000756", nombre: "Beatus Ille", cat: "Reportajes Factual" },
     { uid: "1000742", nombre: "Caravana educativa", cat: "Reportajes Factual" },
-    { uid: "11332", nombre: "Comando Actualidad", cat: "Reportajes Factual" },
     { uid: "89330", nombre: "Costa España", cat: "Reportajes Factual" },
     { uid: "1572", nombre: "Crónicas", cat: "Reportajes Factual" },
     { uid: "1000177", nombre: "De tapas por España", cat: "Reportajes Factual" },
@@ -1319,7 +1324,6 @@
     { uid: "144450", nombre: "Senderos del mundo", cat: "Reportajes Factual" },
     { uid: "111131", nombre: "Un país mágico", cat: "Reportajes Factual" },
     { uid: "122910", nombre: "Un país para escucharlo", cat: "Reportajes Factual" },
-    { uid: "135710", nombre: "Un país para reírlo", cat: "Reportajes Factual" },
     { uid: "88190", nombre: "Versión europea", cat: "Reportajes Factual" },
     { uid: "1000743", nombre: "Yo soy de Formación Profesional", cat: "Reportajes Factual" },
     { uid: "120170", nombre: "Zona indie", cat: "Reportajes Factual" },
@@ -1698,7 +1702,6 @@
     { uid: "113690", nombre: "Sabuesos", cat: "Series Prime Time" },
     { uid: "118210", nombre: "Les nits de la tieta Rosa", cat: "Series catalán" },
     { uid: "63030", nombre: "Anillos de oro", cat: "Series de Archivo" },
-    { uid: "1674", nombre: "Muchachada Nui", cat: "Series de Archivo" },
     { uid: "125470", nombre: "Terra d'escudella", cat: "Series de Archivo" },
   ];
 
