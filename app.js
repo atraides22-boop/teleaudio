@@ -1082,6 +1082,31 @@
     return c;
   }
   let vistaCategoria = null; // {titulo, lista} cuando se pulsa "Ver todos"
+  // Favoritos de programas de TV (AudioprogramasTV) — uid en localStorage
+  let progFavs = new Set(JSON.parse(localStorage.getItem('teleaudio_favs_programas') || '[]'));
+  function progToggleFav(uid, btnEl) {
+    if (!uid) return;
+    const era = progFavs.has(uid);
+    if (era) { progFavs.delete(uid); showToast('Quitado de programas favoritos'); }
+    else { progFavs.add(uid); showToast('❤️ Programa guardado en favoritos'); }
+    localStorage.setItem('teleaudio_favs_programas', JSON.stringify([...progFavs]));
+    if (btnEl) {
+      const ahora = progFavs.has(uid);
+      btnEl.classList.toggle('faved', ahora);
+      const uso = btnEl.querySelector('use');
+      if (uso) uso.setAttribute('href', ahora ? '#i-fav-filled' : '#i-fav');
+      btnEl.classList.remove('pop'); void btnEl.offsetWidth; btnEl.classList.add('pop');
+    }
+    if (currentTab === 'audioprogramas' && !rtveProg) renderAudioProgramas();
+  }
+  function botonFavPrograma(uid) {
+    const b = document.createElement('button');
+    b.className = 'fav-btn' + (progFavs.has(uid) ? ' faved' : '');
+    b.setAttribute('aria-label', progFavs.has(uid) ? 'Quitar de programas favoritos' : 'Guardar programa en favoritos');
+    b.innerHTML = '<svg width="18" height="18" aria-hidden="true"><use href="#' + (progFavs.has(uid) ? 'i-fav-filled' : 'i-fav') + '"/></svg>';
+    b.addEventListener('click', (e) => { e.stopPropagation(); progToggleFav(uid, b); });
+    return b;
+  }
 
   function renderChannels() {
     grid.innerHTML = '';
@@ -1162,6 +1187,43 @@
         '<svg width="24" height="24" aria-hidden="true"><use href="#i-radio"/></svg>',
         'Nada por aqu\u00ed', ''));
       return;
+    }
+
+    // Hero "Continuar escuchando": algo quedó en pausa (o restaurado) y el
+    // usuario vuelve a la app → un toque y sigue sonando
+    if (currentItem && !isPlaying && !bsPlaying && !bsPaused) {
+      const hero = document.createElement('div');
+      hero.className = 'resume-hero';
+      hero.setAttribute('role', 'button');
+      hero.setAttribute('tabindex', '0');
+      hero.setAttribute('aria-label', 'Continuar escuchando ' + currentItem.name);
+      const logo = document.createElement('img');
+      logo.className = 'rh-logo';
+      logo.src = currentItem.logo || 'icon.svg';
+      logo.alt = '';
+      const txt = document.createElement('div');
+      txt.className = 'rh-text';
+      const lab = document.createElement('div');
+      lab.className = 'rh-label';
+      lab.textContent = 'Continuar escuchando';
+      const nom = document.createElement('div');
+      nom.className = 'rh-name';
+      nom.textContent = currentItem.name;
+      const tip = document.createElement('div');
+      tip.className = 'rh-type';
+      tip.textContent = (tipoDe(currentItem) || 'Contenido') + ' \u00b7 en pausa';
+      txt.appendChild(lab); txt.appendChild(nom); txt.appendChild(tip);
+      const play = document.createElement('button');
+      play.className = 'rh-play';
+      play.setAttribute('aria-label', 'Reanudar');
+      play.innerHTML = '<svg width="22" height="22" aria-hidden="true"><use href="#i-play"/></svg>';
+      const reanudar = () => {
+        try { powerBtn.click(); } catch (e) { if (currentItem) playItem(currentItem); }
+      };
+      hero.addEventListener('click', reanudar);
+      play.addEventListener('click', (e) => { e.stopPropagation(); reanudar(); });
+      hero.appendChild(logo); hero.appendChild(txt); hero.appendChild(play);
+      grid.appendChild(hero);
     }
 
     // ---------- Recientes (carrusel horizontal) ----------
@@ -2079,6 +2141,16 @@
     grid.appendChild(h1);
     RTVE_PROGRAMAS.forEach(p => tarjetaProgramaRTVE(p));
 
+    // ❤️ Programas que el usuario marcó como favoritos (los que no estén ya arriba)
+    const misFavs = programasFavoritos().filter(f => !RTVE_PROGRAMAS.some(p => p.uid === f.uid));
+    if (misFavs.length) {
+      const hf = document.createElement('div');
+      hf.className = 'section-header';
+      hf.textContent = '❤️ Tus favoritos';
+      grid.appendChild(hf);
+      misFavs.forEach(p => tarjetaProgramaRTVE(p));
+    }
+
     // 🎬 La 2 completa, agrupada por tipo
     const h2 = document.createElement('div');
     h2.className = 'section-header';
@@ -2123,10 +2195,19 @@
     tipo.textContent = 'Audioprograma · ' + (p.canal || 'RTVE');
     body.appendChild(name);
     body.appendChild(tipo);
+    const favP = p.uid ? botonFavPrograma(p.uid) : null;
+    if (favP) card.appendChild(favP);
     card.appendChild(plate);
     card.appendChild(body);
     card.addEventListener('click', () => abrirProgramaRTVE(p));
     grid.appendChild(card);
+  }
+
+  // Programas favoritos del usuario (para mostrarlos arriba en AudioprogramasTV)
+  function programasFavoritos() {
+    const catalogo = {};
+    [...RTVE_PROGRAMAS, ...RTVE_PROGRAMAS_LA2].forEach(p => { catalogo[p.uid] = p; });
+    return [...progFavs].map(uid => catalogo[uid]).filter(Boolean);
   }
 
   function abrirProgramaRTVE(p) {
@@ -2189,19 +2270,44 @@
     grid.appendChild(top);
 
     if (rtveCargando) {
-      const av = document.createElement('div');
-      av.className = 'comment-status';
-      av.textContent = '⏳ Cargando episodios…';
-      grid.appendChild(av);
+      // Skeleton discreto (shimmer) mientras llegan los episodios
+      for (let i = 0; i < 5; i++) {
+        const row = document.createElement('div');
+        row.className = 'ep-row';
+        row.style.border = 'none';
+        row.style.background = 'transparent';
+        row.style.cursor = 'default';
+        const th = document.createElement('div');
+        th.className = 'skeleton sk-thumb';
+        const info = document.createElement('div');
+        info.className = 'ep-info';
+        const l1 = document.createElement('div');
+        l1.className = 'skeleton sk-line w60';
+        const l2 = document.createElement('div');
+        l2.className = 'skeleton sk-line w30';
+        info.appendChild(l1); info.appendChild(l2);
+        row.appendChild(th); row.appendChild(info);
+        grid.appendChild(row);
+      }
       return;
     }
     if (rtveErr) {
-      const av = document.createElement('div');
-      av.className = 'comment-status';
-      av.textContent = '❌ No se pudieron cargar los episodios (' + rtveErr + '). ¿Estás conectado?';
+      const sinConexion = typeof navigator !== 'undefined' && navigator.onLine === false;
+      const box = document.createElement('div');
+      box.className = 'conn-error';
+      const ic = document.createElement('div');
+      ic.className = 'ce-icon';
+      ic.innerHTML = sinConexion
+        ? '<svg width="26" height="26" aria-hidden="true"><use href="#i-wifi-off"/></svg>'
+        : '<svg width="26" height="26" aria-hidden="true"><use href="#i-info"/></svg>';
+      const t = document.createElement('strong');
+      t.textContent = sinConexion ? 'Sin conexión' : 'No se pudieron cargar los episodios';
+      const s = document.createElement('span');
+      s.textContent = sinConexion
+        ? 'Comprueba tu conexión a internet y vuelve a intentarlo.'
+        : 'Algo falló al contactar con RTVE. Inténtalo de nuevo.';
       const retry = document.createElement('button');
-      retry.className = 'back-chip';
-      retry.style.marginTop = '10px';
+      retry.className = 'btn btn-primary';
       retry.textContent = '↺ Reintentar';
       retry.addEventListener('click', () => {
         rtveCargando = true;
@@ -2209,9 +2315,8 @@
         pintarEpisodios();
         cargarEpisodiosRTVE(rtveProg.uid);
       });
-      av.appendChild(document.createElement('br'));
-      av.appendChild(retry);
-      grid.appendChild(av);
+      box.appendChild(ic); box.appendChild(t); box.appendChild(s); box.appendChild(retry);
+      grid.appendChild(box);
       return;
     }
     if (!rtveEpis.length) {
@@ -2460,6 +2565,9 @@
       sincronizarOverlay(null, false, false, false, false);
     }
     updateTimerBadge();
+    // Quitar el hero "Continuar escuchando" si ya no aplica (p. ej. tras detener)
+    const heroEl = grid.querySelector('.resume-hero');
+    if (heroEl && (!currentItem || isPlaying || bsPlaying || bsPaused)) heroEl.remove();
     document.querySelectorAll('.channel-card').forEach(card => {
       const nm = card.querySelector('.channel-name');
       const isCur = currentItem && nm && nm.textContent === currentItem.name;
