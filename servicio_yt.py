@@ -87,7 +87,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
     def log_message(self, fmt, *args):
-        print("[%s] %s" % (self.address_string(), fmt % args), flush=True)
+        print("[%s] %s %s" % (
+            time.strftime("%H:%M:%S"), self.address_string(), fmt % args), flush=True)
 
     def do_HEAD(self):
         self._procesar(solo_cabeceras=True)
