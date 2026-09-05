@@ -137,6 +137,9 @@
     { id: 'nsn', name: 'Nadie Sabe Nada', logo: 'logos/nsn.png',
       feed: 'https://fapi-top.prisasd.com/podcast/playser/nadie_sabe_nada/itunestfp/podcast.xml',
       cat: 'comedia', desc: 'Andreu Buenafuente y Berto Romero improvisan sin red: el humor de la SER que es oro para tus orejas.' },
+    { id: 'tplr', name: 'Todo por la Radio', logo: 'logos/tplr.png',
+      feed: 'https://fapi-top.prisasd.com/podcast/playser/la_ventana_todo_por_la_radio/itunestfp/podcast.xml',
+      cat: 'comedia', desc: 'Toni Martínez, Especialistas Secundarios y equipo se ríen de la política y de la actualidad cada tarde en La Ventana (SER).' },
   ];
 
   // ================= LA CANCIÓN DEL DÍA (historial) =================
