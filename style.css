@@ -201,6 +201,9 @@ body {
   transition: all 0.15s;
   position: relative;
   touch-action: pan-y;
+  /* F3: altura uniforme de tarjeta (logo + 2 líneas de nombre) */
+  min-height: 118px;
+  justify-content: flex-start;
 }
 .channel-card:active { transform: scale(0.96); }
 .channel-card.active { border-color: var(--accent); background: var(--card-hover); }
@@ -216,17 +219,35 @@ body {
   cursor: pointer;
   opacity: 0.35;
   filter: grayscale(1);
+  z-index: 2;
+  transition: transform 0.15s;
 }
+.fav-btn:active { transform: scale(1.3); }
 .fav-btn.faved { opacity: 1; filter: none; }
 
 .channel-logo {
-  width: 52px; height: 52px;
+  width: 100%;
+  max-width: 88px;
+  aspect-ratio: 1 / 1;
   border-radius: 12px;
-  background: var(--bg);
-  object-fit: contain;
-  padding: 4px;
+  object-fit: cover;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
 }
-.channel-name { font-size: 0.72rem; font-weight: 600; text-align: center; line-height: 1.1; }
+.channel-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  /* F3: nombre limitado a 2 líneas → tarjetas de alto uniforme */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
+  min-height: calc(0.72rem * 1.2 * 2);
+  word-break: break-word;
+}
 .channel-card.playing-now .channel-name { color: var(--accent); }
 
 /* Error banner */
