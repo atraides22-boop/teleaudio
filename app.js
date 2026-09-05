@@ -469,309 +469,6 @@
   }
 
   // Envío: en la app nativa lo hace el plugin (sin CORS); en web, intento directo
-  // ================= YOUTUBE (SOLO AUDIO) =================
-  // Pestaña donde Manuel pega un enlace de YouTube y la app reproduce
-  // únicamente el audio (pantalla apagada, notificación, sin datos de video).
-  // En la app nativa lo resuelve el plugin (InnerTube, como yt-dlp); en web
-  // no es posible (CORS), así que se avisa y se abre el video en YouTube.
-
-  function thumbYt(videoId) {
-    return 'https://i.ytimg.com/vi/' + videoId + '/hqdefault.jpg';
-  }
-
-  function ytHistory() {
-    try { return JSON.parse(localStorage.getItem('teleaudio_yt_history') || '[]'); }
-    catch (e) { return []; }
-  }
-  function ytAddHistory(item) {
-    try {
-      const h = ytHistory().filter(x => x.videoId !== item.videoId);
-      h.unshift(item);
-      localStorage.setItem('teleaudio_yt_history', JSON.stringify(h.slice(0, 8)));
-    } catch (e) {}
-  }
-
-  function renderYoutube() {
-    grid.innerHTML = '';
-    const wrap = document.createElement('div');
-    wrap.style.gridColumn = '1 / -1';
-    wrap.style.display = 'flex';
-    wrap.style.flexDirection = 'column';
-    wrap.style.alignItems = 'center';
-    wrap.style.gap = '6px';
-    wrap.style.width = '100%';
-    grid.appendChild(wrap);
-
-    // ---------- Cabecera ----------
-    const card = document.createElement('div');
-    card.className = 'song-card';
-    card.style.textAlign = 'center';
-    card.style.width = '100%';
-    card.style.boxSizing = 'border-box';
-
-    const icon = document.createElement('div');
-    icon.className = 'song-disc';
-    icon.innerHTML = '▶️';
-    icon.style.animation = 'none';
-
-    const t = document.createElement('div');
-    t.className = 'song-title';
-    t.textContent = 'YouTube solo audio';
-
-    const sub = document.createElement('div');
-    sub.className = 'song-artist';
-    sub.textContent = isNative
-      ? 'Pega un enlace y escucha SOLO el audio, con pantalla apagada y sin gastar datos de video. Funciona como un canal más: pausa, notificación y deslizar para apagar.'
-      : 'Esto solo funciona dentro de la app de TeleAudio para Android (por las restricciones de YouTube en navegadores). En la web se abre el video normal.';
-
-    card.appendChild(icon);
-    card.appendChild(t);
-    card.appendChild(sub);
-    wrap.appendChild(card);
-
-    if (!isNative) {
-      // ---------- Web: no se puede extraer audio, abrir YouTube ----------
-      const row = document.createElement('div');
-      row.className = 'alarm-row';
-      row.style.justifyContent = 'center';
-      row.style.width = '100%';
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = 'Pega aquí el enlace de YouTube…';
-      input.style.flex = '1';
-      input.minWidth = '0';
-      const btn = document.createElement('button');
-      btn.className = 'song-play-btn';
-      btn.textContent = 'Abrir';
-      btn.addEventListener('click', () => {
-        const v = input.value.trim();
-        if (v) {
-          try { window.open(v, '_blank'); } catch (e) {}
-        }
-      });
-      row.appendChild(input);
-      row.appendChild(btn);
-      wrap.appendChild(row);
-      const aviso = document.createElement('div');
-      aviso.className = 'comment-status';
-      aviso.textContent = '📲 Descarga la app de TeleAudio (Android) para escuchar solo el audio.';
-      wrap.appendChild(aviso);
-      return;
-    }
-
-    // ---------- Si suena un video ahora: tarjeta activa ----------
-    if (currentItem && currentItem.esYoutube) {
-      const np = document.createElement('div');
-      np.className = 'song-card';
-      np.style.width = '100%';
-      np.style.boxSizing = 'border-box';
-      np.style.textAlign = 'center';
-      const img = document.createElement('img');
-      img.src = currentItem.logo || thumbYt(currentItem.ytVideoId || '');
-      img.alt = '';
-      img.style.width = '100%';
-      img.style.maxWidth = '260px';
-      img.style.borderRadius = '10px';
-      img.style.margin = '0 auto 8px';
-      img.style.display = 'block';
-      const nt = document.createElement('div');
-      nt.className = 'song-title';
-      nt.textContent = currentItem.name;
-      nt.style.fontSize = '0.95rem';
-      const st = document.createElement('div');
-      st.className = 'comment-status';
-      st.textContent = isPlaying ? '🔊 Sonando…' : '⏸ En pausa';
-      // v4.3.4: barra de progreso (adelantar/atrasar + ver cuánto queda)
-      const bar = document.createElement('div');
-      bar.style.cssText = 'width:100%;box-sizing:border-box;margin:6px 0 2px;display:none;';
-      const input = document.createElement('input');
-      input.type = 'range';
-      input.min = '0';
-      input.max = '1000';
-      input.value = '0';
-      input.style.cssText = 'width:100%;accent-color:#f00;height:26px;';
-      const times = document.createElement('div');
-      times.style.cssText = 'display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted,#999);';
-      const tAct = document.createElement('span');
-      tAct.textContent = '0:00';
-      const tDur = document.createElement('span');
-      tDur.textContent = '';
-      times.appendChild(tAct);
-      times.appendChild(tDur);
-      bar.appendChild(input);
-      bar.appendChild(times);
-      let dragging = false;
-      let ultimoSeekMs = 0; // v4.3.8: evita seeks duplicados (arrastre + soltar)
-      let barRect = null;   // v4.3.8: rect de la barra para calcular por coordenadas
-      function fracDesdeX(clientX) {
-        if (!barRect || barRect.width <= 0) return null;
-        return Math.min(1, Math.max(0, (clientX - barRect.left) / barRect.width));
-      }
-      function hacerSeek(force) {
-        // Throttle: durante el arrastre se salta ~cada 200 ms; al soltar se
-        // fuerza (force=true) para que el último salto llegue siempre.
-        const ahora = Date.now();
-        if (!force && ahora - ultimoSeekMs < 200) return;
-        ultimoSeekMs = ahora;
-        const frac = Number(input.value) / 1000;
-        if (currentItem && currentItem.esYoutube && currentItem._durMs > 0 && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
-          const ms = Math.floor(frac * currentItem._durMs);
-          Capacitor.Plugins.BackgroundAudio.seekTo({ posMs: ms }).catch(() => {});
-        }
-      }
-      function pintarPos(frac) {
-        input.value = String(Math.round(frac * 1000));
-        tAct.textContent = fmtSeg(Math.floor(frac * (currentItem._durMs / 1000)));
-      }
-      // v4.3.8: la barra se maneja “a mano” por coordenadas del dedo, con
-      // touch-action:none, para que funcione aunque el WebView de Android no
-      // mueva el cursor del input range ni dispare input/change al arrastrar
-      // o al tocar la pista (causa del fallo: “le doy a la barra y vuelve”).
-      input.style.touchAction = 'none';
-      input.addEventListener('pointerdown', (e) => {
-        dragging = true;
-        barRect = input.getBoundingClientRect();
-        try { e.preventDefault(); } catch (err) {}
-      });
-      input.addEventListener('pointermove', (e) => {
-        if (!dragging) return;
-        const frac = fracDesdeX(e.clientX);
-        if (frac === null) return;
-        pintarPos(frac);
-        hacerSeek(false);
-      });
-      // Refuerzo: si el WebView sí mueve el cursor nativo y lanza input
-      input.addEventListener('input', () => {
-        if (currentItem && currentItem.esYoutube && currentItem._durMs > 0 && dragging) {
-          const frac = Number(input.value) / 1000;
-          pintarPos(frac);
-          hacerSeek(false);
-        }
-      });
-      function alSoltar(e) {
-        // Ajuste final con la posición exacta del dedo (el último salto SIEMPRE
-        // se envía; los eventos duplicados change/pointerup/touchend que llegan
-        // juntos se filtran por el throttle de hacerSeek).
-        if (e && typeof e.clientX === 'number' && currentItem && currentItem.esYoutube && currentItem._durMs > 0) {
-          const frac = fracDesdeX(e.clientX);
-          if (frac !== null) pintarPos(frac);
-        }
-        dragging = false;
-        barRect = null;
-        hacerSeek(true);
-      }
-      input.addEventListener('change', alSoltar);
-      input.addEventListener('pointerup', alSoltar);
-      input.addEventListener('touchend', (e) => {
-        const t = e.changedTouches && e.changedTouches[0];
-        alSoltar(t || e);
-      });
-      input.addEventListener('pointercancel', alSoltar);
-      input.addEventListener('touchcancel', alSoltar);
-      // v4.3.8: un simple toque (tap) sobre la pista también salta
-      input.addEventListener('click', (e) => {
-        if (currentItem && currentItem.esYoutube && currentItem._durMs > 0) {
-          const frac = fracDesdeX(e.clientX);
-          if (frac !== null) { pintarPos(frac); hacerSeek(true); }
-        }
-      });
-      const btnStop = document.createElement('button');
-      btnStop.className = 'song-play-btn';
-      btnStop.textContent = '⏹ Parar';
-      btnStop.addEventListener('click', () => {
-        if (currentItem && currentItem.esYoutube) {
-          stopPlayback();
-          if (currentTab === 'youtube') renderYoutube();
-        }
-      });
-      np.appendChild(img);
-      np.appendChild(nt);
-      np.appendChild(st);
-      np.appendChild(bar);
-      np.appendChild(btnStop);
-      wrap.appendChild(np);
-      // Ticker suave: refresca barra mientras suena este vídeo (solo si la
-      // pestaña YouTube está a la vista) — además sirve de diagnóstico: si la
-      // barra avanza pero no se oye → el audio llega; si se queda en 0:00 → no.
-      const vId = currentItem.ytVideoId || '';
-      if (currentTab === 'youtube' && vId && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
-        (function pollYt() {
-          if (currentTab !== 'youtube' || !currentItem || !currentItem.esYoutube || currentItem.ytVideoId !== vId) return;
-          Capacitor.Plugins.BackgroundAudio.getEstado().then((est) => {
-            const dur = Number(est.durMs) || 0;
-            const pos = Number(est.posMs) || 0;
-            // v4.3.6: SOLO actualizar la duración si ExoPlayer ya la conoce
-            // (dur > 0). Antes se machacaba con 0 mientras el reproductor
-            // arrancaba → la barra se ocultaba y el seek quedaba desactivado.
-            if (dur > 0) currentItem._durMs = dur;
-            const durRef = currentItem._durMs || 0;
-            if (durRef > 0) {
-              bar.style.display = 'block';
-              tDur.textContent = fmtSeg(Math.floor(durRef / 1000));
-              if (!dragging) {
-                const frac = Math.min(1, pos / durRef);
-                input.value = String(Math.round(frac * 1000));
-                tAct.textContent = fmtSeg(Math.floor(pos / 1000));
-              }
-              // Diagnóstico visible: lleva X de Y aunque "no se oiga"
-              if (pos > 2000 && !st.textContent.includes('✅') && st.textContent.includes('Sonando')) {
-                st.textContent = '🔊 Sonando…';
-              }
-            } else {
-              bar.style.display = 'none';
-            }
-          }).catch(() => {});
-          setTimeout(pollYt, 1000);
-        })();
-      }
-      return;
-    }
-
-    // ---------- Pegar enlace ----------
-    const row = document.createElement('div');
-    row.className = 'alarm-row';
-    row.style.width = '100%';
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Pega aquí el enlace de YouTube…';
-    input.style.flex = '1';
-    input.minWidth = '0';
-    const btn = document.createElement('button');
-    btn.className = 'song-play-btn';
-    btn.textContent = '▶ Escuchar audio';
-    const status = document.createElement('div');
-    status.className = 'comment-status';
-    status.style.width = '100%';
-    status.id = 'yt-status';
-    const errDiv = document.createElement('div');
-    errDiv.id = 'yt-error';
-    errDiv.style.display = 'none';
-    errDiv.style.width = '100%';
-    errDiv.style.color = '#ff6b6b';
-    errDiv.style.fontSize = '0.8rem';
-    errDiv.style.marginTop = '4px';
-
-    function lanzar() {
-      const v = input.value.trim();
-      if (!v) { status.textContent = '✏️ Pega primero el enlace'; return; }
-      errDiv.style.display = 'none';
-      playYoutubeLink(v, status, btn);
-    }
-    btn.addEventListener('click', lanzar);
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') lanzar(); });
-    row.appendChild(input);
-    row.appendChild(btn);
-    wrap.appendChild(row);
-    wrap.appendChild(errDiv);
-    wrap.appendChild(status);
-
-    // v4.3.8: sección de Recientes quitada (Manuel no quiere ver los audios
-    // anteriores bajo el buscador). El historial sigue guardándose en local
-    // pero ya no se muestra.
-  }
-
-  // Lanza la reproducción de solo-audio de un enlace de YouTube
-
   // Comprueba qué servicio intermedio responde (nativo: evita bloqueos de
   // mixed-content del WebView con HTTP local).
   function detectarProxyYt() {
@@ -798,191 +495,6 @@
       };
       return probar(0).then(ok => { if (ok) ytProxyActivo = ok; return ok; });
     });
-  }
-
-  // Pide título/duración/miniatura al servicio (nativo)
-  function infoProxyYt(proxy, videoId) {
-    return Capacitor.Plugins.BackgroundAudio.proxyInfo({ proxy: proxy, videoId: videoId })
-      .then(r => r || null)
-      .catch(() => null);
-  }
-
-  function playYoutubeLink(enlace, statusEl, btnEl) {
-    errorBanner.style.display = 'none';
-    const setSt = (txt) => { if (statusEl) statusEl.textContent = txt; };
-    if (!isNative || !window.Capacitor || !Capacitor.Plugins.BackgroundAudio) {
-      setSt('❌ Esto solo funciona en la app de Android');
-      return;
-    }
-    if (btnEl) btnEl.disabled = true;
-    setSt('⏳ Buscando el audio del video…');
-
-    // 1) Intentar con el servicio intermedio (recomendado: trae la firma anti-bot)
-    detectarProxyYt().then(function (proxy) {
-      if (proxy) {
-        setSt('⏳ Pidiendo el audio al servicio…');
-        const videoId = extraerIdWeb(enlace);
-        // Pedir título real al servicio (nativo; no bloquea si falla)
-        const promInfo = (videoId ? infoProxyYt(proxy, videoId) : Promise.resolve(null));
-        const promPlay = Capacitor.Plugins.BackgroundAudio.playYoutubeProxy({ url: enlace, proxy: proxy });
-        return promInfo.then(info => {
-          return promPlay.then(res => {
-            if (btnEl) btnEl.disabled = false;
-            if (!res || !res.videoId) { setSt('❌ No se pudo obtener el audio'); return; }
-            const videoId2 = res.videoId;
-            const nombre = (info && info.title) ? info.title : (res.title || 'Video de YouTube');
-            const dur = (info && info.duration) ? info.duration : 0;
-            // Parar cualquier Social Radio o canal anterior y marcar como item actual
-            if (bsPlaying || bsPaused) bsStop();
-            stopStream();
-            currentItem = {
-              id: 'yt:' + videoId2,
-              esYoutube: true,
-              ytVideoId: videoId2,
-              ytLink: enlace,
-              name: nombre,
-              logo: (info && info.thumbnail) ? info.thumbnail : thumbYt(videoId2),
-              url: res.audioUrl || '',
-              _durMs: dur ? dur * 1000 : 0
-            };
-            isPlaying = true;
-            if (currentTab === 'youtube') renderYoutube();
-            updateUI();
-            setSt('✅ Sonando: ' + nombre);
-            showToast('▶ ' + nombre);
-          });
-        }).catch((err) => {
-          if (btnEl) btnEl.disabled = false;
-          const msg = (err && err.message) ? err.message : '';
-          setSt('❌ No se pudo reproducir (servicio). ' + msg);
-          showToast('❌ Error al reproducir YouTube');
-        });
-      }
-      // 2) Sin servicio: intentar con el yt-dlp EMBEBIDO (estilo Seal).
-      // v5.2.2: se DESCARGA a archivo local antes de reproducir (las URLs de
-      // yt-dlp dan 403 a la 1ª petición sin Range → "source error").
-      if (window.Capacitor && Capacitor.Plugins.BackgroundAudio && Capacitor.Plugins.BackgroundAudio.ytdlPlay) {
-        setSt('⏳ Descargando audio…');
-        Capacitor.Plugins.BackgroundAudio.ytdlPlay({ url: enlace })
-          .then((res) => {
-            if (btnEl) btnEl.disabled = false;
-            if (!res || !res.audioUrl) { setSt('❌ No se pudo obtener el audio'); return; }
-            const videoId = extraerIdWeb(enlace) || '';
-            const nombre = res.title || 'Video de YouTube';
-            if (bsPlaying || bsPaused) bsStop();
-            stopStream();
-            currentItem = {
-              id: 'yt:' + videoId,
-              esYoutube: true,
-              ytVideoId: videoId,
-              ytLink: enlace,
-              name: nombre,
-              logo: thumbYt(videoId),
-              url: res.audioUrl || ''
-            };
-            // Arrancar la reproducción nativa con la URL resuelta por yt-dlp
-            return Capacitor.Plugins.BackgroundAudio.play({ url: res.audioUrl, title: nombre, subtitle: 'YouTube · solo audio' })
-              .then(() => {
-                if (btnEl) btnEl.disabled = false;
-                isPlaying = true;
-                if (currentTab === 'youtube') renderYoutube();
-                updateUI();
-                setSt('✅ Sonando (local): ' + nombre);
-                showToast('▶ ' + nombre);
-              })
-              .catch(() => {
-                if (btnEl) btnEl.disabled = false;
-                setSt('❌ No se pudo reproducir el audio local');
-                showToast('❌ Error al reproducir (yt-dlp local)');
-              });
-          })
-          .catch((err) => {
-            // 2b) Último recurso: método antiguo de resolución directa
-            const msgL = (err && err.message) ? err.message : '';
-            try {
-              Capacitor.Plugins.BackgroundAudio.playYoutube({ url: enlace })
-                .then((res) => {
-                  if (btnEl) btnEl.disabled = false;
-                  if (!res || !res.videoId) { setSt('❌ No se pudo obtener el audio' + (msgL ? ' (' + msgL + ')' : '')); return; }
-                  const videoId = res.videoId;
-                  const nombre = res.title || 'Video de YouTube';
-                  if (bsPlaying || bsPaused) bsStop();
-                  stopStream();
-                  currentItem = {
-                    id: 'yt:' + videoId,
-                    esYoutube: true,
-                    ytVideoId: videoId,
-                    ytLink: enlace,
-                    name: nombre,
-                    logo: thumbYt(videoId),
-                    url: res.audioUrl || ''
-                  };
-                  isPlaying = true;
-                  if (currentTab === 'youtube') renderYoutube();
-                  updateUI();
-                  setSt('✅ Sonando: ' + nombre);
-                  showToast('▶ ' + nombre);
-                })
-                .catch((err2) => {
-                  if (btnEl) btnEl.disabled = false;
-                  const msg = (err2 && err2.message) ? err2.message : '';
-                  setSt('❌ No se pudo reproducir. Comprueba el enlace y tu conexión.' + (msg ? ' (' + msg + ')' : ''));
-                  showToast('❌ Error al reproducir YouTube');
-                });
-            } catch (e) {
-              if (btnEl) btnEl.disabled = false;
-              setSt('❌ Fallo interno al reproducir');
-            }
-          });
-      } else {
-        // 2b) Sin yt-dlp local: método antiguo de resolución directa
-        try {
-          Capacitor.Plugins.BackgroundAudio.playYoutube({ url: enlace })
-            .then((res) => {
-              if (btnEl) btnEl.disabled = false;
-              if (!res || !res.videoId) { setSt('❌ No se pudo obtener el audio'); return; }
-              const videoId = res.videoId;
-              const nombre = res.title || 'Video de YouTube';
-              // Parar cualquier Social Radio o canal anterior y marcar como item actual
-              if (bsPlaying || bsPaused) bsStop();
-              stopStream();
-              currentItem = {
-                id: 'yt:' + videoId,
-                esYoutube: true,
-                ytVideoId: videoId,
-                ytLink: enlace,
-                name: nombre,
-                logo: thumbYt(videoId),
-                url: res.audioUrl || ''
-              };
-              isPlaying = true;
-              if (currentTab === 'youtube') renderYoutube();
-              updateUI();
-              setSt('✅ Sonando: ' + nombre);
-              showToast('▶ ' + nombre);
-            })
-            .catch((err) => {
-              if (btnEl) btnEl.disabled = false;
-              const msg = (err && err.message) ? err.message : '';
-              setSt('❌ No se pudo reproducir. Comprueba el enlace y tu conexión.' + (msg ? ' (' + msg + ')' : ''));
-              showToast('❌ Error al reproducir YouTube');
-            });
-        } catch (e) {
-          if (btnEl) btnEl.disabled = false;
-          setSt('❌ Fallo interno al reproducir');
-        }
-      }
-    });
-  }
-
-  // Extrae el ID de YouTube en la web (sin depender del plugin)
-  function extraerIdWeb(enlace) {
-    try {
-      const m = String(enlace).match(/(?:youtube\.com|youtu\.be)\/(?:watch\?v=|shorts\/|embed\/|live\/|v\/)?([A-Za-z0-9_-]{11})/);
-      if (m) return m[1];
-      if (/^[A-Za-z0-9_-]{11}$/.test(String(enlace).trim())) return enlace.trim();
-    } catch (e) { /* no */ }
-    return null;
   }
 
   function sendComment(name, text) {    if (isNative) {
@@ -1036,7 +548,6 @@
   // Tipo legible de un canal/emisora (para etiquetas y reproductor)
   function tipoDe(ch) {
     if (!ch) return '';
-    if (ch.esYoutube) return 'YouTube';
     if (ch.esVod) return 'Audioprograma';
     if (TV_CHANNELS.some(c => c.id === ch.id)) return 'TV';
     if (RADIO_STATIONS.some(c => c.id === ch.id)) return 'Radio';
@@ -1044,7 +555,7 @@
     return '';
   }
   function esDirecto(ch) {
-    return ch && !ch.esYoutube && !ch.esVod;
+    return ch && !ch.esVod;
   }
   // Tarjeta vacía elegante (grid-column 1/-1)
   function emptyState(icono, titulo, texto) {
@@ -1118,7 +629,6 @@
   function renderChannels() {
     grid.innerHTML = '';
     if (currentTab === 'social') { renderSocial(); return; }
-    if (currentTab === 'youtube') { renderYoutube(); return; }
     if (currentTab === 'comentarios') { renderComments(); return; }
     if (currentTab === 'audioprogramas') { renderAudioProgramas(); return; }
     if (currentTab === 'cancion') { renderSongOfDay(); return; }
@@ -2434,7 +1944,7 @@
       // TV/Radio en directo → se para el servicio (al reanudar se relanza el
       // directo actual; pausar un stream en vivo y reanudar el buffer viejo
       // dejaría la emisora "atrasada").
-      if (currentItem && (currentItem.esYoutube || currentItem.esVod)) {
+      if (currentItem && (currentItem.esVod)) {
         try { Capacitor.Plugins.BackgroundAudio.pause(); } catch (e) {}
       } else {
         try { Capacitor.Plugins.BackgroundAudio.stop(); } catch (e) {}
@@ -2451,20 +1961,12 @@
     updateUI();
     statusText.textContent = '⏸ Pausado: ' + (currentItem ? currentItem.name : '');
     showToast('⏸ Pausado');
-    // Refrescar la tarjeta de la pestaña YouTube si es un video
-    if (currentTab === 'youtube' && currentItem && currentItem.esYoutube) renderYoutube();
   }
 
   function playItem(ch) {
     errorBanner.style.display = 'none';
-    // Item de YouTube: se re-resuelve el audio (la URL caduca a las ~6 h)
-    if (ch && ch.esYoutube) {
-      const statusEl = document.querySelector('#yt-status');
-      playYoutubeLink(ch.ytLink || ch.url, statusEl, null);
-      return;
-    }
     currentItem = ch;
-    if (ch && ch.id && !ch.esYoutube) guardarReciente(ch);
+    if (ch && ch.id) guardarReciente(ch);
     if (bsPlaying || bsPaused) bsStop();
     stopStream();
 
@@ -2708,21 +2210,6 @@
       // Canal sonando → pausa (recordando el canal)
       pausePlayback();
     } else if (currentItem) {
-      // v4.3.6: si es un YouTube que el servicio aún tiene cargado (pausado),
-      // reanudar EN EL SITIO (resume) en vez de re-resolver el vídeo desde 0.
-      if (currentItem.esYoutube && window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.BackgroundAudio && Capacitor.Plugins.BackgroundAudio.resume) {
-        Capacitor.Plugins.BackgroundAudio.getEstado().then((est) => {
-          if (est && est.tvUrl && est.tvUrl === currentItem.url && !est.tvSonando) {
-            Capacitor.Plugins.BackgroundAudio.resume();
-            isPlaying = true;
-            updateUI();
-            showToast('▶ ' + currentItem.name);
-          } else {
-            playItem(currentItem);
-          }
-        }).catch(() => playItem(currentItem));
-        return;
-      }
       // Canal pausado → reanudar el mismo canal
       playItem(currentItem);
       showToast('▶ ' + currentItem.name);
@@ -2749,10 +2236,6 @@
     nextFab.classList.toggle('has-item', activo);
   }
   prevFab.addEventListener('click', () => {
-    if (currentItem && currentItem.esYoutube) {
-      showToast('▶️ YouTube: sin canales anterior/siguiente');
-      return;
-    }
     if (currentItem) {
       // Canal de TV/Radio sonando → canal anterior
       if (bsPlaying || bsPaused) bsStop();
@@ -2772,10 +2255,6 @@
     showToast('Primero elige un canal o emisora');
   });
   nextFab.addEventListener('click', () => {
-    if (currentItem && currentItem.esYoutube) {
-      showToast('▶️ YouTube: sin canales anterior/siguiente');
-      return;
-    }
     if (currentItem) {
       // Canal de TV/Radio sonando → canal siguiente
       if (bsPlaying || bsPaused) bsStop();
@@ -2841,7 +2320,7 @@
     const hay = !!item || bsPlay || bsPausa;
     if (hay) {
       const datos = item
-        ? { src: item.logo || (item.esYoutube ? thumbYt(item.ytVideoId || '') : 'icon.svg'), nombre: item.name, etiqueta: sonando ? 'EN DIRECTO' : 'EN PAUSA' }
+        ? { src: item.logo || 'icon.svg', nombre: item.name, etiqueta: sonando ? 'EN DIRECTO' : 'EN PAUSA' }
         : { src: 'icon.svg', nombre: bsLabelActual(), etiqueta: bsPlay ? 'SOCIAL RADIO' : 'SOCIAL EN PAUSA' };
       ovLogo.src = datos.src || 'icon.svg';
       ovName.textContent = datos.nombre;
@@ -2854,7 +2333,7 @@
           : (bsPlay || bsPausa ? 'Social Radio' : '');
       }
       // Barra de progreso: solo contenido bajo demanda (YouTube o episodios) con duración conocida
-      const conBarra = !!(item && (item.esYoutube || item.esVod) && item._durMs > 0);
+      const conBarra = !!(item && (item.esVod) && item._durMs > 0);
       ovProgress.style.display = conBarra ? 'block' : 'none';
     }
     if (ovPower) {
@@ -2871,7 +2350,7 @@
     if (!isNative || !ovBar) return;
     ovTicker = setInterval(() => {
       if (!ovAbierto()) { ovTickerStop(); return; }
-      if (!currentItem || !(currentItem.esYoutube || currentItem.esVod)) return;
+      if (!currentItem || !(currentItem.esVod)) return;
       if (!window.Capacitor || !Capacitor.Plugins.BackgroundAudio) return;
       Capacitor.Plugins.BackgroundAudio.getEstado().then((est) => {
         const dur = Number(est.durMs) || 0;
@@ -2907,7 +2386,7 @@
       if (!force && ahora - ovUltimoSeek < 200) return;
       ovUltimoSeek = ahora;
       const frac = Number(ovBar.value) / 1000;
-      if (currentItem && (currentItem.esYoutube || currentItem.esVod) && currentItem._durMs > 0 && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
+      if (currentItem && (currentItem.esVod) && currentItem._durMs > 0 && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
         Capacitor.Plugins.BackgroundAudio.seekTo({ posMs: Math.floor(frac * currentItem._durMs) }).catch(() => {});
       }
     };
@@ -2929,14 +2408,14 @@
       ovSeek(false);
     });
     ovBar.addEventListener('input', () => {
-      if (currentItem && (currentItem.esYoutube || currentItem.esVod) && currentItem._durMs > 0 && ovDragging) {
+      if (currentItem && (currentItem.esVod) && currentItem._durMs > 0 && ovDragging) {
         const f = Number(ovBar.value) / 1000;
         ovPintar(f);
         ovSeek(false);
       }
     });
     const ovSoltar = (e) => {
-      if (e && typeof e.clientX === 'number' && currentItem && (currentItem.esYoutube || currentItem.esVod) && currentItem._durMs > 0) {
+      if (e && typeof e.clientX === 'number' && currentItem && (currentItem.esVod) && currentItem._durMs > 0) {
         const f = ovFrac(e.clientX);
         if (f !== null) ovPintar(f);
       }
@@ -2953,7 +2432,7 @@
     ovBar.addEventListener('pointercancel', ovSoltar);
     ovBar.addEventListener('touchcancel', ovSoltar);
     ovBar.addEventListener('click', (e) => {
-      if (currentItem && (currentItem.esYoutube || currentItem.esVod) && currentItem._durMs > 0) {
+      if (currentItem && (currentItem.esVod) && currentItem._durMs > 0) {
         const f = ovFrac(e.clientX);
         if (f !== null) { ovPintar(f); ovSeek(true); }
       }
@@ -3441,17 +2920,6 @@
       Capacitor.Plugins.BackgroundAudio.addListener('playbackChanged', (data) => {
         if (!data || !data.url) return;
         const ch = ALL.find(c => c.url === data.url);
-        // Video de YouTube sonando y el reloj/notificación cambió play/pausa
-        if (!ch && currentItem && currentItem.esYoutube && data.url === currentItem.url) {
-          const sonando = typeof data.sonando === 'boolean' ? data.sonando : true;
-          if (isPlaying !== sonando) {
-            isPlaying = sonando;
-            if (!sonando && 'mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
-            updateUI();
-            if (currentTab === 'youtube') renderYoutube();
-          }
-          return;
-        }
         // Mismo canal que ya mostramos → solo refrescar play/pausa (viene del reloj
         // o de la notificación: pausaron/reanudaron fuera de la app).
         if (ch && currentItem && currentItem.id === ch.id) {
@@ -3489,22 +2957,7 @@
       // mensaje REAL en pantalla en vez de quedarnos en silencio.
       Capacitor.Plugins.BackgroundAudio.addListener('playbackError', (data) => {
         const msg = (data && data.message) ? String(data.message) : 'Error de reproducción';
-        if (currentItem && currentItem.esYoutube) {
-          // YouTube: dejar de "sonando" y pintar el error en la propia pestaña
-          isPlaying = false;
-          const st = document.getElementById('yt-status');
-          const err = document.getElementById('yt-error');
-          if (err) {
-            err.textContent = '❌ ' + msg;
-            err.style.display = 'block';
-          }
-          if (st) st.textContent = '❌ No se pudo reproducir';
-          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
-          updateUI();
-          showToast('❌ ' + msg);
-        } else {
-          showToast('❌ Error: ' + msg);
-        }
+        showToast('❌ Error: ' + msg);
       });
       // Pulsaron ⏻ Apagar en la notificación de la Social Radio
       Capacitor.Plugins.BackgroundAudio.addListener('socialStopped', () => {
@@ -3753,46 +3206,10 @@
       const est = await Capacitor.Plugins.BackgroundAudio.getEstado();
       if (!est) return;
 
-      // --- TV / Radio / YouTube (solo audio) ---
+      // --- TV / Radio ---
       if (est.tvUrl) {
         const ch = ALL.find(c => c.url === est.tvUrl);
-        // ¿Es un video de YouTube que sigue sonando? (su URL no está en ALL)
-        const esYt = !ch && est.ytVideoId;
-        if (esYt) {
-          // El plugin guarda el último video lanzado; recuperamos su info
-          const hist = ytHistory().find(h => h.videoId === est.ytVideoId);
-          const vid = est.ytVideoId;
-          if (!currentItem) {
-            currentItem = {
-              id: 'yt:' + vid,
-              esYoutube: true,
-              ytVideoId: vid,
-              ytLink: hist ? hist.link : null,
-              name: est.tvTitulo || (hist ? hist.title : 'Video de YouTube'),
-              logo: hist ? hist.thumb : thumbYt(vid),
-              url: est.tvUrl
-            };
-            isPlaying = !!est.tvSonando;
-            if (!isPlaying && 'mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
-            try { setMediaSession({ name: currentItem.name, esYoutube: true }); } catch (e) {}
-            const pest = 'youtube';
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            const tab = document.querySelector('.tab[data-tab="' + pest + '"]');
-            if (tab) tab.classList.add('active');
-            currentTab = pest;
-            renderChannels();
-            updateUI();
-            showToast('▶ Continúa: ' + currentItem.name);
-          } else if (currentItem.esYoutube && currentItem.ytVideoId === vid) {
-            const sonando = !!est.tvSonando;
-            if (isPlaying !== sonando) {
-              isPlaying = sonando;
-              if (!sonando && 'mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
-              updateUI();
-              if (currentTab === 'youtube') renderYoutube();
-            }
-          }
-        } else if (ch && !currentItem) {
+        if (ch && !currentItem) {
           currentItem = ch;
           isPlaying = !!est.tvSonando;
           try { setMediaSession(ch); } catch (e) {}
