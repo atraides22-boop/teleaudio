@@ -29,6 +29,12 @@ YTDLP = "/home/manuel/.local/bin/yt-dlp"
 AUDIO_DIR = "/tmp/teleaudio_yt"
 ARCHIVO_TTL = 12 * 3600  # 12 horas: pasadas, se vuelve a descargar
 
+# v4.5.3: llave compartida con la app (el túnel público de Cloudflare expone
+# este servicio a Internet; sin llave, cualquiera podría usarlo).
+# /health queda abierto (lo usa la app para detectar el servicio); el resto
+# exige ?k= con esta llave.
+TA_KEY = "ta-2026-lucena"
+
 # Caché de resolución RTVE (id -> [timestamp, url audio]) — 6 horas
 # Las URLs DASH de RTVE son estables mientras el episodio exista; 6 h basta.
 RTVE_CACHE_TTL = 6 * 3600
@@ -133,6 +139,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             qs = urllib.parse.parse_qs(parsed.query)
             if parsed.path == "/health":
                 self._json({"ok": True})
+                return
+            # Endpoints "de pago": exigen la llave (k) de la app
+            if (qs.get("k") or [""])[0] != TA_KEY:
+                self._json({"error": "llave no válida"}, code=403)
                 return
             if parsed.path == "/info":
                 self._info(qs)
