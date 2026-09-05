@@ -116,6 +116,7 @@
     { id: 'deportes', label: 'Deportes', icon: '⚽' },
     { id: 'musica', label: 'Música', icon: '🎵' },
     { id: 'humor', label: 'Humor y entretenimiento', icon: '😄' },
+    { id: 'comedia', label: 'Comedia', icon: '🤣' },
     { id: 'historia', label: 'Historia y cultura', icon: '📖' },
     { id: 'ciencia', label: 'Ciencia y tecnología', icon: '🔬' },
     { id: 'entrevistas', label: 'Entrevistas y sociedad', icon: '🎙️' },
@@ -124,12 +125,18 @@
     { id: 'salud', label: 'Salud y bienestar', icon: '🧘' },
     { id: 'infantil', label: 'Infantil', icon: '🧸' }
   ];
-  // v5.2.0: podcasts reales. Los 24/7 son streams continuos (cat '247').
-  // Radio Red = Canal Red 24h en audio (radio.co, mp3 128k, estable).
+  // v5.2.0: podcasts reales. Dos tipos:
+  //  - cat '247': streams continuos (campo url), p. ej. Radio Red.
+  //  - resto de categorías: feeds RSS de episodios (campo feed). Al tocarlos se
+  //    abre su lista de episodios (los últimos), que se reproducen bajo demanda.
+  // La categoría siempre es un id de PODCAST_CATS. NO inventar streams.
   const PODCASTS = [
     { id: 'radiored', name: 'Radio Red', logo: 'logos/radiored.png',
       url: 'https://streams.radio.co/s450f67578/listen',
       cat: '247', desc: 'Canal Red 24 horas en audio: actualidad, análisis y entrevistas.' },
+    { id: 'nsn', name: 'Nadie Sabe Nada', logo: 'logos/nsn.png',
+      feed: 'https://fapi-top.prisasd.com/podcast/playser/nadie_sabe_nada/itunestfp/podcast.xml',
+      cat: 'comedia', desc: 'Andreu Buenafuente y Berto Romero improvisan sin red: el humor de la SER que es oro para tus orejas.' },
   ];
 
   // ================= LA CANCIÓN DEL DÍA (historial) =================
@@ -548,6 +555,8 @@
   // Tipo legible de un canal/emisora (para etiquetas y reproductor)
   function tipoDe(ch) {
     if (!ch) return '';
+    // Episodio de un podcast por feed (id propio, no está en TV/Radio/PODCASTS)
+    if (String(ch.id || '').indexOf('pod:') === 0) return 'Podcast';
     if (ch.esVod) return 'Audioprograma';
     if (TV_CHANNELS.some(c => c.id === ch.id)) return 'TV';
     if (RADIO_STATIONS.some(c => c.id === ch.id)) return 'Radio';
@@ -555,7 +564,8 @@
     return '';
   }
   function esDirecto(ch) {
-    return ch && !ch.esVod;
+    // Con feed RSS de episodios no es un directo: hay que elegir episodio
+    return ch && !ch.esVod && !ch.feed;
   }
   // Tarjeta vacía elegante (grid-column 1/-1)
   function emptyState(icono, titulo, texto) {
@@ -820,14 +830,23 @@
     const type = document.createElement('div');
     type.className = 'card-type';
     const esActivo = !!(currentItem && currentItem.id === ch.id);
-    type.textContent = tipoDe(ch) + (esDirecto(ch) ? ' \u00b7 En directo' : '');
+    // Un feed RSS de episodios se distingue en la tarjeta (no es un directo)
+    if (ch.feed) {
+      type.textContent = 'Podcast \u00b7 Episodios';
+    } else {
+      type.textContent = tipoDe(ch) + (esDirecto(ch) ? ' \u00b7 En directo' : '');
+    }
     body.appendChild(name);
     body.appendChild(type);
 
     card.appendChild(favBtn);
     card.appendChild(plate);
     card.appendChild(body);
-    card.addEventListener('click', () => playItem(ch));
+    // v5.3.1: los podcasts de episodios (campo feed) abren su lista, no suenan
+    card.addEventListener('click', () => {
+      if (ch.feed) { abrirPodcastFeed(ch); return; }
+      playItem(ch);
+    });
 
     // Indicador animado dentro de la tarjeta activa (CSS lo muestra al tener .playing-now)
     const eq = document.createElement('span');
@@ -1542,6 +1561,11 @@
 
   let rtveProg = null;      // programa abierto (vista episodios)
   let rtveEpis = [];        // episodios cargados del programa
+  // v5.3.1: podcast por feed RSS abierto (vista de sus episodios)
+  let podFeed = null;       // objeto PODCASTS con campo 'feed'
+  let podEpis = [];         // episodios parseados del feed
+  let podErr = '';          // error al cargar el feed
+  let podCargando = false;  // feed en proceso de carga
   let rtveCargando = false;
   let rtveErr = '';
 
@@ -1550,6 +1574,9 @@
   // "próximamente" con las categorías, nunca se inventan streams.
   function renderPodcast() {
     grid.innerHTML = '';
+
+    // Feed RSS abierto (p. ej. Nadie Sabe Nada): vista de episodios
+    if (podFeed) { pintarPodEpisodios(); return; }
 
     if (!PODCASTS.length) {
       // --- Aún sin contenido: presentación + categorías previstas ---
@@ -1611,6 +1638,250 @@
       grid.appendChild(header);
       seen[cat].forEach(p => renderCard(p));
     });
+  }
+
+  // ================= PODCASTS POR FEED RSS (v5.3.1) =================
+  // Los podcasts de la lista con campo 'feed' (no 'url') son feeds RSS de
+  // episodios: al tocarlos se abre su lista y cada episodio suena bajo
+  // demanda (MP3 directo del <enclosure>). Los 24/7 (campo url) siguen
+  // sonando directo como siempre.
+  const POD_CACHE_MS = 6 * 3600 * 1000; // 6 horas
+
+  function abrirPodcastFeed(p) {
+    podFeed = p;
+    podEpis = [];
+    podErr = '';
+    podCargando = true;
+    grid.innerHTML = '';
+    pintarPodEpisodios(); // skeleton mientras llega
+    const cacheKey = 'teleaudio_podfeed_' + p.id;
+    let cache = null;
+    try { cache = JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch (e) {}
+    if (cache && Array.isArray(cache.epis) && cache.epis.length && Date.now() - cache.ts < POD_CACHE_MS) {
+      podEpis = cache.epis;
+      podCargando = false;
+      pintarPodEpisodios();
+      return;
+    }
+    fetch(p.feed, { cache: 'no-store' })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(xml => {
+        const doc = new DOMParser().parseFromString(xml, 'text/xml');
+        const items = Array.from(doc.querySelectorAll('item')).slice(0, 25);
+        podEpis = items.map((it, i) => {
+          const t = (it.querySelector('title') || {}).textContent || '';
+          // Quitar el prefijo "Nombre del programa | " si el feed lo repite
+          let titulo = t;
+          if (podFeed.name && titulo.indexOf(podFeed.name + ' | ') === 0) {
+            titulo = titulo.slice(podFeed.name.length + 3);
+          }
+          const pub = (it.querySelector('pubDate') || {}).textContent || '';
+          const fecha = formatearFechaRSS(pub); // dd-mm-yyyy
+          const durRaw = (it.getElementsByTagNameNS('*', 'duration')[0] || {}).textContent || '';
+          const enc = it.querySelector('enclosure');
+          const imgEl = it.getElementsByTagNameNS('*', 'image')[0];
+          return {
+            idx: i,
+            titulo: titulo || 'Episodio',
+            fecha: fecha,
+            durMs: durRSSaMs(durRaw),
+            url: enc ? (enc.getAttribute('url') || '') : '',
+            img: imgEl ? (imgEl.getAttribute('href') || podFeed.logo) : (podFeed.logo || 'icon.svg')
+          };
+        }).filter(ep => ep.url);
+        podCargando = false;
+        pintarPodEpisodios();
+        try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), epis: podEpis })); } catch (e) {}
+      })
+      .catch(err => {
+        podCargando = false;
+        podErr = err && err.message ? err.message : 'error';
+        pintarPodEpisodios();
+      });
+  }
+
+  function formatearFechaRSS(pub) {
+    // "Sat, 05 Sep 2026 12:45:00 +0200" -> "05-09-2026" (dd-mm-yyyy)
+    const d = new Date(pub);
+    if (isNaN(d.getTime())) return '';
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return dd + '-' + mm + '-' + d.getFullYear();
+  }
+
+  function durRSSaMs(raw) {
+    // Acepta "3210" (segundos), "53:33" o "00:53:33"
+    const s = String(raw || '').trim();
+    if (!s) return 0;
+    const partes = s.split(':').map(Number);
+    if (partes.some(isNaN)) return 0;
+    let seg = 0;
+    if (partes.length === 3) seg = partes[0] * 3600 + partes[1] * 60 + partes[2];
+    else if (partes.length === 2) seg = partes[0] * 60 + partes[1];
+    else seg = partes[0];
+    return seg > 0 ? seg * 1000 : 0;
+  }
+
+  function volverPodcastFeed() {
+    podFeed = null;
+    podEpis = [];
+    podErr = '';
+    podCargando = false;
+    renderChannels(); // repinta la pestaña actual (podcast)
+  }
+
+  function pintarPodEpisodios() {
+    if (!podFeed) return;
+    grid.innerHTML = '';
+    // Fila superior: volver + nombre del podcast
+    const top = document.createElement('div');
+    top.className = 'ep-top';
+    const back = document.createElement('button');
+    back.className = 'back-chip';
+    back.textContent = '← Podcasts';
+    back.addEventListener('click', volverPodcastFeed);
+    const nom = document.createElement('span');
+    nom.className = 'ep-prog-nombre';
+    nom.textContent = '🎙️ ' + podFeed.name;
+    top.appendChild(back);
+    top.appendChild(nom);
+    grid.appendChild(top);
+
+    if (podCargando) {
+      for (let i = 0; i < 5; i++) {
+        const row = document.createElement('div');
+        row.className = 'ep-row';
+        row.style.border = 'none';
+        row.style.background = 'transparent';
+        row.style.cursor = 'default';
+        const th = document.createElement('div');
+        th.className = 'skeleton sk-thumb';
+        const info = document.createElement('div');
+        info.className = 'ep-info';
+        const l1 = document.createElement('div');
+        l1.className = 'skeleton sk-line w60';
+        const l2 = document.createElement('div');
+        l2.className = 'skeleton sk-line w30';
+        info.appendChild(l1); info.appendChild(l2);
+        row.appendChild(th); row.appendChild(info);
+        grid.appendChild(row);
+      }
+      return;
+    }
+    if (podErr) {
+      const sinConexion = typeof navigator !== 'undefined' && navigator.onLine === false;
+      const box = document.createElement('div');
+      box.className = 'conn-error';
+      const ic = document.createElement('div');
+      ic.className = 'ce-icon';
+      ic.innerHTML = sinConexion
+        ? '<svg width="26" height="26" aria-hidden="true"><use href="#i-wifi-off"/></svg>'
+        : '<svg width="26" height="26" aria-hidden="true"><use href="#i-info"/></svg>';
+      const t = document.createElement('strong');
+      t.textContent = sinConexion ? 'Sin conexión' : 'No se pudo cargar el podcast';
+      const s = document.createElement('span');
+      s.textContent = 'Comprueba tu conexión o inténtalo más tarde.';
+      const retry = document.createElement('button');
+      retry.className = 'btn btn-primary';
+      retry.textContent = '↺ Reintentar';
+      retry.addEventListener('click', () => {
+        podErr = '';
+        podCargando = true;
+        pintarPodEpisodios();
+        // fuerza recarga (sin caché)
+        try { localStorage.removeItem('teleaudio_podfeed_' + podFeed.id); } catch (e) {}
+        abrirPodcastFeed(podFeed);
+      });
+      box.appendChild(ic); box.appendChild(t); box.appendChild(s); box.appendChild(retry);
+      grid.appendChild(box);
+      return;
+    }
+    if (!podEpis.length) {
+      const av = document.createElement('div');
+      av.className = 'comment-status';
+      av.textContent = 'Este podcast aún no tiene episodios disponibles.';
+      grid.appendChild(av);
+      return;
+    }
+    const sub = document.createElement('div');
+    sub.className = 'ep-sub';
+    sub.textContent = 'Últimos ' + podEpis.length + ' episodios · toca uno para escucharlo';
+    grid.appendChild(sub);
+    podEpis.forEach(ep => grid.appendChild(filaEpisodioPod(ep)));
+  }
+
+  function filaEpisodioPod(ep) {
+    const fila = document.createElement('div');
+    fila.className = 'ep-row';
+    const idItem = 'pod:' + podFeed.id + ':' + ep.idx;
+    if (currentItem && currentItem.id === idItem) fila.classList.add('ep-activo');
+    const img = document.createElement('img');
+    img.className = 'ep-thumb';
+    img.src = ep.img || podFeed.logo || 'icon.svg';
+    img.alt = '';
+    img.loading = 'lazy';
+    img.onerror = () => { img.src = podFeed.logo || 'icon.svg'; };
+    const info = document.createElement('div');
+    info.className = 'ep-info';
+    const t = document.createElement('div');
+    t.className = 'ep-titulo';
+    t.textContent = ep.titulo;
+    const m = document.createElement('div');
+    m.className = 'ep-meta';
+    const fp = (ep.fecha || '').split('-'); // dd-mm-yyyy
+    const fecha = fp.length === 3 ? fp[0] + '/' + fp[1] + '/' + fp[2] : '';
+    const dur = ep.durMs > 0 ? ' · ' + fmtSeg(Math.floor(ep.durMs / 1000)) : '';
+    m.textContent = (fecha || 'fecha desconocida') + dur;
+    info.appendChild(t);
+    info.appendChild(m);
+    const play = document.createElement('div');
+    play.className = 'ep-play';
+    play.textContent = (currentItem && currentItem.id === idItem && isPlaying) ? '🔊' : '▶';
+    fila.appendChild(img);
+    fila.appendChild(info);
+    fila.appendChild(play);
+    fila.addEventListener('click', () => reproducirEpisodioPod(ep));
+    return fila;
+  }
+
+  // Reproduce el MP3 directo de un episodio (bajo demanda, pausa real)
+  function reproducirEpisodioPod(ep) {
+    if (!ep || !ep.url) { showToast('❌ Episodio sin audio disponible'); return; }
+    errorBanner.style.display = 'none';
+    if (bsPlaying || bsPaused) bsStop();
+    stopStream();
+    const idItem = 'pod:' + podFeed.id + ':' + ep.idx;
+    currentItem = {
+      id: idItem,
+      esVod: true, // bajo demanda: pausa real y barra de progreso
+      name: ep.titulo,
+      logo: ep.img || podFeed.logo || 'icon.svg',
+      url: ep.url,
+      _durMs: ep.durMs || 0,
+      _subtitulo: podFeed.name
+    };
+    if (isNative) {
+      try {
+        Capacitor.Plugins.BackgroundAudio.play({
+          url: ep.url,
+          title: ep.titulo,
+          subtitle: podFeed.name
+        });
+        isPlaying = true;
+        updateUI();
+        if (currentTab === 'podcast' && podFeed) pintarPodEpisodios();
+        showToast('▶ ' + ep.titulo);
+      } catch (e) { showError(); }
+      return;
+    }
+    // Web: MP3 normal
+    audio.src = ep.url;
+    audio.play()
+      .then(() => { isPlaying = true; updateUI(); setMediaSession(currentItem); })
+      .catch(() => { audio.play().catch(showError); });
+    updateUI();
+    if (currentTab === 'podcast' && podFeed) pintarPodEpisodios();
+    showToast('▶ ' + ep.titulo);
   }
 
   // ---------- Audioprogramas TV (F6, v4.4.5+): pestaña propia ----------
@@ -2492,6 +2763,7 @@
       tab.classList.add('active');
       currentTab = tab.dataset.tab;
       if (currentTab !== 'audioprogramas') rtveProg = null; // salir de la vista de episodios
+      if (currentTab !== 'podcast') podFeed = null;         // salir de la vista de episodios de un podcast
       // Cada vez que se abre 'Canción del día', buscar la versión más nueva
       if (currentTab === 'cancion') loadSongs();
       renderChannels();
