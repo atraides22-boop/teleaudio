@@ -225,6 +225,7 @@
   const nowPlaying = $('now-playing');
   const npLogo = $('np-logo');
   const npName = $('np-name');
+  const npLabel = $('np-label');
   const npEq = $('np-eq');
   const statusText = $('status-text');
   const errorBanner = $('error-banner');
@@ -1198,18 +1199,30 @@
 
   // ================= UI =================
   function updateUI() {
-    // El FAB muestra ⏸ si suena algo (canal o Social Radio) y ▶ si está pausado
+    // El botón central muestra ⏸ si suena algo (canal o Social Radio) y ▶ si está pausado
     const algoSonando = isPlaying || bsPlaying;
     const algoPausado = (currentItem && !isPlaying) || bsPaused;
     powerBtn.classList.toggle('playing', algoSonando);
     powerBtn.classList.toggle('paused-state', algoPausado);
     if (typeof updateFabSide === 'function') updateFabSide();
-    if (currentItem) {
+    // El miniplayer aparece cuando hay algo activo (canal o Social Radio)
+    const hayAlgo = !!currentItem || bsPlaying || bsPaused;
+    document.body.classList.toggle('player-active', hayAlgo);
+    if (hayAlgo) {
       nowPlaying.style.display = 'flex';
-      npLogo.src = currentItem.logo;
-      npName.textContent = currentItem.name;
-      npEq.classList.toggle('paused', !isPlaying);
-      statusText.textContent = isPlaying ? 'Reproduciendo ' + currentItem.name : '⏸ Pausado: ' + currentItem.name;
+      if (currentItem) {
+        npLogo.src = currentItem.logo;
+        npName.textContent = currentItem.name;
+        npLabel.textContent = isPlaying ? 'EN DIRECTO' : 'EN PAUSA';
+        statusText.textContent = isPlaying ? 'Reproduciendo ' + currentItem.name : '⏸ Pausado: ' + currentItem.name;
+      } else if (bsPlaying || bsPaused) {
+        // Social Radio: la barra muestra la fuente activa
+        npLogo.src = 'icon.svg';
+        npName.textContent = bsLabelActual();
+        npLabel.textContent = bsPlaying ? 'SOCIAL RADIO' : 'SOCIAL EN PAUSA';
+        statusText.textContent = bsPlaying ? '▶ Social Radio: ' + bsLabelActual() : '⏸ Social en pausa';
+      }
+      npEq.classList.toggle('paused', !algoSonando);
     } else {
       nowPlaying.style.display = 'none';
       npEq.classList.add('paused');
@@ -1434,6 +1447,22 @@
     }
     showToast('Primero elige un canal o emisora');
   });
+
+  // Botón ✕ del miniplayer: detener del todo (canal o Social Radio)
+  const stopFab = $('stop-fab');
+  if (stopFab) {
+    stopFab.addEventListener('click', () => {
+      if (currentItem) {
+        stopPlayback();
+        showToast('⏹ Detenido');
+      } else if (bsPlaying || bsPaused) {
+        bsStop();
+        showToast('⏹ Social Radio detenida');
+      } else {
+        showToast('No hay nada reproduciéndose');
+      }
+    });
+  }
 
   search.addEventListener('input', renderChannels);
 

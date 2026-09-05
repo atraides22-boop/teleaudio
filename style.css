@@ -88,31 +88,76 @@ body {
 }
 .power-btn.playing { background: var(--accent); color: var(--bg); }
 
-/* NOW PLAYING */
-.now-playing {
-  display: flex; justify-content: space-between; align-items: center;
-  background: var(--card);
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 10px;
-  border: 1px solid var(--border);
+/* MINIPLAYER ÚNICO (fusión info + controles) — aparece solo con algo activo */
+.mini-player {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  margin: 0 auto;
+  max-width: 560px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  z-index: 45;
+  box-shadow: 0 -6px 18px rgba(0,0,0,0.3);
+  animation: miniUp 0.22s ease;
 }
-.np-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.np-logo { width: 38px; height: 38px; border-radius: 8px; background: var(--bg); object-fit: contain; padding: 3px; }
-.np-label { font-size: 0.6rem; color: var(--accent); letter-spacing: 1px; font-weight: 600; }
-.np-name { font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.np-right { display: flex; align-items: center; gap: 10px; }
-.timer-badge { font-size: 0.75rem; color: var(--accent); font-weight: 600; }
-
-.np-equalizer { display: flex; align-items: flex-end; gap: 3px; height: 22px; }
-.np-equalizer span { width: 4px; background: var(--accent); border-radius: 2px; animation: eq 1s ease-in-out infinite; }
+@keyframes miniUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.mini-info { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.mini-info .np-logo {
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+.mini-text { min-width: 0; }
+.np-label { font-size: 0.58rem; color: var(--accent); letter-spacing: 1px; font-weight: 700; text-transform: uppercase; }
+.np-name { font-size: 0.92rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-player .np-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.np-equalizer { display: flex; align-items: flex-end; gap: 2px; height: 18px; margin-right: 2px; }
+.np-equalizer span { width: 3px; background: var(--accent); border-radius: 2px; animation: eq 1s ease-in-out infinite; }
 .np-equalizer span:nth-child(1) { animation-delay: 0s; }
 .np-equalizer span:nth-child(2) { animation-delay: 0.2s; }
 .np-equalizer span:nth-child(3) { animation-delay: 0.4s; }
 .np-equalizer span:nth-child(4) { animation-delay: 0.1s; }
-@keyframes eq { 0%, 100% { height: 5px; } 50% { height: 22px; } }
-.np-equalizer.paused span { animation-play-state: paused; height: 5px; }
+@keyframes eq { 0%, 100% { height: 4px; } 50% { height: 18px; } }
+.np-equalizer.paused span { animation-play-state: paused; height: 4px; }
+.timer-badge { font-size: 0.72rem; color: var(--accent); font-weight: 700; }
+.mini-ctrls { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.mini-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mini-btn:active { transform: scale(0.9); }
+.mini-power {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: var(--bg);
+}
+.mini-power.paused-state {
+  background: transparent;
+  color: var(--accent);
+  border: 2px dashed var(--accent);
+}
+.mini-power .fab-icon-pause { display: none; }
+.mini-power.playing .fab-icon-play { display: none; }
+.mini-power.playing .fab-icon-pause { display: block; }
+.mini-stop { color: var(--muted); }
+.mini-stop:active { color: var(--danger); }
 
 /* Search */
 .search {
@@ -184,9 +229,11 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  padding: 14px 16px 170px;
+  padding: 14px 16px 20px;
   flex: 1;
 }
+/* Con reproductor activo, la última fila debe poder subir por encima de la barra */
+body.player-active .channel-grid { padding-bottom: 130px; }
 
 .channel-card {
   background: var(--card);
@@ -271,6 +318,8 @@ body {
   color: var(--muted);
   border-top: 1px solid var(--border);
 }
+/* Con el miniplayer activo el pie sobra (toda la info va en la barra) */
+body.player-active .app-footer { display: none; }
 
 /* Modal */
 .modal {
@@ -630,59 +679,6 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .bs-feed-item:last-child { border-bottom: none; }
-
-/* Barra flotante de control: anterior / play-pausa / siguiente */
-.fab-controls {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 84px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 50px;
-  padding: 8px 14px;
-  z-index: 60;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.45);
-}
-.fab-side {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.fab-side:active { transform: scale(0.9); color: var(--accent); }
-.fab-side.has-item { color: var(--text); }
-.fab-side.has-item:active { color: var(--accent); }
-.power-fab {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  border: 2px solid var(--accent);
-  background: transparent;
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.power-fab.playing { background: var(--accent); color: var(--bg); }
-.power-fab.paused-state { background: var(--card); color: var(--accent); border-style: dashed; }
-.power-fab .fab-icon-pause { display: none; }
-.power-fab.playing .fab-icon-play { display: none; }
-.power-fab.playing .fab-icon-pause { display: block; }
-.power-fab:active { transform: scale(0.92); }
-
 
 /* Ocultar scrollbar lateral en móvil */
 main::-webkit-scrollbar, .channel-grid::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }

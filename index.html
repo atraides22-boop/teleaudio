@@ -27,22 +27,6 @@
       </div>
     </div>
 
-    <div id="now-playing" class="now-playing" style="display:none;">
-      <div class="np-info">
-        <img id="np-logo" src="" alt="" class="np-logo">
-        <div>
-          <div class="np-label">SONANDO AHORA</div>
-          <div id="np-name" class="np-name">—</div>
-        </div>
-      </div>
-      <div class="np-right">
-        <span id="timer-badge" class="timer-badge" style="display:none;">⏱ 30:00</span>
-        <div class="np-equalizer" id="np-eq">
-          <span></span><span></span><span></span><span></span>
-        </div>
-      </div>
-    </div>
-
     <input type="search" id="search" class="search" placeholder="🔍 Buscar canal o emisora...">
   </header>
 
@@ -73,18 +57,36 @@
     <span class="data-note">📡 Solo audio · ahorro de datos</span>
   </footer>
 
-  <!-- Controles flotantes: anterior / play-pausa / siguiente -->
-  <div id="fab-controls" class="fab-controls">
-    <button id="prev-fab" class="fab-side" title="Canal anterior">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M7 6h2v12H7zM20 6l-9 6 9 6V6z"/></svg>
-    </button>
-    <button id="power-fab" class="power-fab" title="Play / Pausa">
-      <svg class="fab-icon-play" width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-      <svg class="fab-icon-pause" width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-    </button>
-    <button id="next-fab" class="fab-side" title="Canal siguiente">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6h2v12h-2zM4 6l9 6-9 6V6z"/></svg>
-    </button>
+  <!-- Miniplayer único: info (logo/nombre/estado) + controles, fusionado -->
+  <div id="now-playing" class="mini-player" style="display:none;">
+    <div class="mini-info">
+      <img id="np-logo" src="" alt="" class="np-logo">
+      <div class="mini-text">
+        <div class="np-label" id="np-label">SONANDO AHORA</div>
+        <div id="np-name" class="np-name">—</div>
+      </div>
+    </div>
+    <div class="np-right">
+      <span id="timer-badge" class="timer-badge" style="display:none;">⏱ 30:00</span>
+      <div class="np-equalizer" id="np-eq">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+    <div class="mini-ctrls">
+      <button id="prev-fab" class="mini-btn" title="Canal anterior">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 6h2v12H7zM20 6l-9 6 9 6V6z"/></svg>
+      </button>
+      <button id="power-fab" class="mini-btn mini-power" title="Play / Pausa">
+        <svg class="fab-icon-play" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="fab-icon-pause" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      </button>
+      <button id="next-fab" class="mini-btn" title="Canal siguiente">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6h2v12h-2zM4 6l9 6-9 6V6z"/></svg>
+      </button>
+      <button id="stop-fab" class="mini-btn mini-stop" title="Detener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>
+      </button>
+    </div>
   </div>
 
   <!-- Modal ajustes -->
