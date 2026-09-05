@@ -862,3 +862,12 @@ body.full-open { overflow: hidden; }
   display: flex; align-items: center; justify-content: center;
   font-size: 0.9rem;
 }
+
+/* Sub-categorías del catálogo de La 2 en AudioprogramasTV */
+.cat-muted {
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 14px;
+}
