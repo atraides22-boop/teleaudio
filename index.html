@@ -5,142 +5,165 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>TeleAudio - La tele en tu oreja</title>
   <meta name="description" content="Escucha el audio de los canales de televisión y radios españolas sin imagen. Ahorra datos.">
-  <meta name="theme-color" id="meta-theme" content="#0b0f19">
+  <meta name="theme-color" id="meta-theme" content="#0a0e14">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=20260905-1">
+  <link rel="stylesheet" href="style.css?v=20260905-r2">
+  <!-- Sprite de iconos SVG (una sola fuente de iconografía, sin emojis en la interfaz) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <!-- Iconos de TRAZO (estilo línea, consistente) -->
+    <symbol id="i-tv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2.5"/><path d="M8 2.5 12 6l4-3.5"/></symbol>
+    <symbol id="i-radio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="8" width="20" height="13" rx="2.5"/><path d="M6.5 2.5 18 8"/><circle cx="16.5" cy="14.5" r="3.2"/><path d="M5 14.5h6"/></symbol>
+    <symbol id="i-podcast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0-6 6v5a2 2 0 0 1-2 2h1a2 2 0 0 0 2-2V9a8 8 0 0 1 16 0v5a2 2 0 0 0 2 2h1a2 2 0 0 1-2-2v-5a6 6 0 0 0-6-6z"/><path d="M12 11a2.5 2.5 0 0 1 2.5 2.5v4A2.5 2.5 0 0 1 12 20a2.5 2.5 0 0 1-2.5-2.5v-4A2.5 2.5 0 0 1 12 11z"/></symbol>
+    <symbol id="i-youtube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 8.2a3 3 0 0 0-2.1-2.2C18 5.5 12 5.5 12 5.5s-6 0-7.9.5A3 3 0 0 0 2 8.2 32 32 0 0 0 1.6 12 32 32 0 0 0 2 15.8a3 3 0 0 0 2.1 2.2c1.9.5 7.9.5 7.9.5s6 0 7.9-.5a3 3 0 0 0 2.1-2.2A32 32 0 0 0 22.4 12 32 32 0 0 0 22 8.2z"/></symbol>
+    <symbol id="i-song" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+    <symbol id="i-social" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a9.5 9.5 0 0 0-9.5 9.5c0 1.7.45 3.3 1.23 4.7L2.6 21.4l5.2-1.13a9.6 9.6 0 0 0 4.2 1 9.5 9.5 0 1 0 0-19z"/><path d="M8.2 10.2h7.6M8.2 13.4h4.8"/></symbol>
+    <symbol id="i-tv-program" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2.5"/><path d="M8 21.5h8M12 18v3.5"/><path d="m8 8.5 5 2.8-5 2.8z"/></symbol>
+    <symbol id="i-fav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.2-4.7-9.6-9C.9 9 2.6 5.5 5.9 5.5c2 0 3.3 1 4.1 2.3C10.8 6.5 12.1 5.5 14.1 5.5c3.3 0 5 3.5 3.5 6.5-2.4 4.3-9.6 9-9.6 9z"/></symbol>
+    <symbol id="i-fav-filled" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21s-7.2-4.7-9.6-9C.9 9 2.6 5.5 5.9 5.5c2 0 3.3 1 4.1 2.3C10.8 6.5 12.1 5.5 14.1 5.5c3.3 0 5 3.5 3.5 6.5-2.4 4.3-9.6 9-9.6 9z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.4-4.4"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05A1.7 1.7 0 0 0 15 19.36V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.14-1.59 1.7 1.7 0 0 0-1.87.34l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05A1.7 1.7 0 0 0 4.64 15H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.68 9.9a1.7 1.7 0 0 0-.34-1.87l-.05-.05a2 2 0 1 1 2.83-2.83l.05.05A1.7 1.7 0 0 0 9 4.64V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.14 1.59 1.7 1.7 0 0 0 1.87-.34l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05A1.7 1.7 0 0 0 19.36 9H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path fill="currentColor" d="M7 5h2v14H7zM19 5l-9.5 7L19 19z"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path fill="currentColor" d="M15 5h2v14h-2zM5 5l9.5 7L5 19z"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect fill="currentColor" x="6" y="6" width="12" height="12" rx="1.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.5 5 5 10-11"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></symbol>
+    <symbol id="i-alarm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5M5 4 2.8 6.5M19 4l2.2 2.5"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 0 0 0 18c1.5 0 2-1 2-2 0-.6-.3-1-.6-1.4-.3-.4-.6-.8-.6-1.4 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4c0-4-4-7.4-9-7.4z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10" cy="7.5" r="1.2"/><circle cx="14.5" cy="7.5" r="1.2"/></symbol>
+    <symbol id="i-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v5.5M12 7.6v.1"/></symbol>
+    <symbol id="i-live" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 19.1a10 10 0 0 1 0-14.2M19.1 4.9a10 10 0 0 1 0 14.2"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6L3.5 8.5"/><path d="M3.5 4v4.5H8"/><path d="M12 8v4.5l3 1.8"/></symbol>
+  </svg>
 </head>
 <body>
   <header class="app-header">
     <div class="header-top">
-      <div class="logo-title">
-        <img src="icon.svg" alt="TeleAudio" class="app-logo">
-        <div>
-          <h1>TeleAudio</h1>
-          <span class="subtitle">La tele y la radio en tu oreja</span>
+      <div class="brand">
+        <span class="brand-logo" aria-hidden="true"><img src="icon.svg" alt="" class="app-logo"></span>
+        <div class="brand-text">
+          <h1 class="brand-name">TeleAudio</h1>
+          <span class="brand-sub">La tele y la radio en tu oreja</span>
         </div>
       </div>
       <div class="header-actions">
-        <button id="settings-btn" class="icon-btn" title="Ajustes">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <button id="settings-btn" class="icon-btn" title="Ajustes" aria-label="Ajustes">
+          <svg width="20" height="20" aria-hidden="true"><use href="#i-gear"/></svg>
         </button>
       </div>
     </div>
-
-    <input type="search" id="search" class="search" placeholder="🔍 Buscar canal o emisora...">
+    <div class="search-wrap">
+      <svg class="search-icon" width="17" height="17" aria-hidden="true"><use href="#i-search"/></svg>
+      <input type="search" id="search" class="search" placeholder="Buscar canales, radios o podcasts…" aria-label="Buscar contenido" autocomplete="off">
+    </div>
   </header>
 
-  <nav class="tabs">
-    <div class="tabs-primary">
-      <button class="tab active" data-tab="tv">📺 TV</button>
-      <button class="tab" data-tab="radio">📻 Radio</button>
-      <button class="tab" data-tab="podcast">🎙️ Podcast</button>
-      <button class="tab" data-tab="youtube">▶️ YouTube</button>
+  <nav class="tabs" aria-label="Secciones principales">
+    <div class="tabs-primary" role="tablist">
+      <button class="tab active" data-tab="tv" role="tab"><svg width="17" height="17" aria-hidden="true"><use href="#i-tv"/></svg><span>TV</span></button>
+      <button class="tab" data-tab="radio" role="tab"><svg width="17" height="17" aria-hidden="true"><use href="#i-radio"/></svg><span>Radio</span></button>
+      <button class="tab" data-tab="podcast" role="tab"><svg width="17" height="17" aria-hidden="true"><use href="#i-podcast"/></svg><span>Podcast</span></button>
+      <button class="tab" data-tab="youtube" role="tab"><svg width="17" height="17" aria-hidden="true"><use href="#i-youtube"/></svg><span>YouTube</span></button>
     </div>
-    <div class="tabs-secondary">
-      <button class="tab" data-tab="cancion">🎵 Canción del día</button>
-      <button class="tab" data-tab="social">🦋 Social</button>
-      <button class="tab" data-tab="audioprogramas">🎬 AudioprogramasTV</button>
-      <button class="tab" data-tab="favs">❤️ Favoritos</button>
+    <div class="tabs-secondary" role="tablist">
+      <button class="tab chip" data-tab="cancion" role="tab"><svg width="14" height="14" aria-hidden="true"><use href="#i-song"/></svg><span>Canción del día</span></button>
+      <button class="tab chip" data-tab="social" role="tab"><svg width="14" height="14" aria-hidden="true"><use href="#i-social"/></svg><span>Social</span></button>
+      <button class="tab chip" data-tab="audioprogramas" role="tab"><svg width="14" height="14" aria-hidden="true"><use href="#i-tv-program"/></svg><span>AudioprogramasTV</span></button>
+      <button class="tab chip" data-tab="favs" role="tab"><svg width="14" height="14" aria-hidden="true"><use href="#i-fav"/></svg><span>Favoritos</span></button>
     </div>
   </nav>
 
   <main>
     <div id="channel-grid" class="channel-grid"></div>
-    <div id="error-banner" class="error-banner" style="display:none;">
-      ⚠️ No se puede reproducir este canal. Prueba con otro.
+    <div id="error-banner" class="error-banner" style="display:none;" role="alert">
+      <div>
+        <strong>No se puede reproducir este contenido</strong>
+        <span class="error-banner-sub">Comprueba tu conexión o prueba con otro canal.</span>
+      </div>
+      <button id="retry-btn" class="btn btn-ghost" style="display:none;">↺ Reintentar</button>
     </div>
   </main>
 
   <footer class="app-footer">
     <span id="status-text">Toca un canal para escucharlo</span>
-    <span class="data-note">📡 Solo audio · ahorro de datos</span>
+    <span class="data-note">Solo audio · ahorro de datos</span>
   </footer>
 
-  <!-- Miniplayer único: info (logo/nombre/estado) + controles, fusionado -->
-  <div id="now-playing" class="mini-player" style="display:none;">
+  <!-- Miniplayer persistente (aparece solo con algo activo) -->
+  <div id="now-playing" class="mini-player" style="display:none;" role="region" aria-label="Reproductor">
     <div class="mini-info">
       <img id="np-logo" src="" alt="" class="np-logo">
       <div class="mini-text">
-        <div class="np-label" id="np-label">SONANDO AHORA</div>
+        <div class="np-label" id="np-label">EN DIRECTO</div>
         <div id="np-name" class="np-name">—</div>
       </div>
     </div>
     <div class="np-right">
       <span id="timer-badge" class="timer-badge" style="display:none;">⏱ 30:00</span>
-      <div class="np-equalizer" id="np-eq">
-        <span></span><span></span><span></span><span></span>
-      </div>
+      <div class="np-equalizer" id="np-eq" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
     </div>
     <div class="mini-ctrls">
-      <button id="prev-fab" class="mini-btn" title="Canal anterior">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 6h2v12H7zM20 6l-9 6 9 6V6z"/></svg>
+      <button id="prev-fab" class="mini-btn" title="Anterior" aria-label="Anterior">
+        <svg width="20" height="20" aria-hidden="true"><use href="#i-prev"/></svg>
       </button>
-      <button id="power-fab" class="mini-btn mini-power" title="Play / Pausa">
-        <svg class="fab-icon-play" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        <svg class="fab-icon-pause" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      <button id="power-fab" class="mini-btn mini-power" title="Reproducir / Pausar" aria-label="Reproducir o pausar">
+        <svg class="fab-icon-play" width="24" height="24" aria-hidden="true"><use href="#i-play"/></svg>
+        <svg class="fab-icon-pause" width="24" height="24" aria-hidden="true"><use href="#i-pause"/></svg>
       </button>
-      <button id="next-fab" class="mini-btn" title="Canal siguiente">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6h2v12h-2zM4 6l9 6-9 6V6z"/></svg>
+      <button id="next-fab" class="mini-btn" title="Siguiente" aria-label="Siguiente">
+        <svg width="20" height="20" aria-hidden="true"><use href="#i-next"/></svg>
       </button>
-      <button id="stop-fab" class="mini-btn mini-stop" title="Detener">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>
+      <button id="stop-fab" class="mini-btn mini-stop" title="Detener" aria-label="Detener">
+        <svg width="18" height="18" aria-hidden="true"><use href="#i-stop"/></svg>
       </button>
     </div>
   </div>
 
-  <!-- Reproductor completo (overlay F8): se abre tocando el miniplayer -->
-  <div id="player-overlay" class="player-overlay" style="display:none;">
+  <!-- Reproductor completo (overlay) -->
+  <div id="player-overlay" class="player-overlay" style="display:none;" role="dialog" aria-label="Reproductor completo">
     <div class="ov-top">
       <button id="ov-close" class="icon-btn ov-close-btn" title="Cerrar reproductor" aria-label="Cerrar reproductor">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        <svg width="22" height="22" aria-hidden="true"><use href="#i-close"/></svg>
       </button>
       <span class="ov-app">TeleAudio</span>
     </div>
     <div class="ov-stage">
-      <img id="ov-logo" class="ov-logo" src="icon.svg" alt="">
+      <div class="ov-art"><img id="ov-logo" class="ov-logo" src="icon.svg" alt=""></div>
       <div class="ov-meta">
-        <div class="ov-eq np-equalizer" id="ov-eq">
-          <span></span><span></span><span></span><span></span>
-        </div>
+        <div class="ov-eq np-equalizer" id="ov-eq" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
         <div id="ov-label" class="ov-label">EN DIRECTO</div>
         <div id="ov-name" class="ov-name">—</div>
+        <div id="ov-sub" class="ov-sub">TeleAudio</div>
       </div>
       <div class="ov-progress" id="ov-progress" style="display:none;">
         <input type="range" id="ov-bar" min="0" max="1000" value="0" step="1" aria-label="Posición de reproducción">
-        <div class="ov-times">
-          <span id="ov-tAct">0:00</span>
-          <span id="ov-tDur">0:00</span>
-        </div>
+        <div class="ov-times"><span id="ov-tAct">0:00</span><span id="ov-tDur">0:00</span></div>
       </div>
     </div>
     <div class="ov-controls">
-      <button id="ov-prev" class="ov-btn" title="Canal anterior">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M7 6h2v12H7zM20 6l-9 6 9 6V6z"/></svg>
+      <button id="ov-prev" class="ov-btn" title="Anterior" aria-label="Anterior"><svg width="28" height="28" aria-hidden="true"><use href="#i-prev"/></svg></button>
+      <button id="ov-power" class="ov-btn ov-power" title="Reproducir / Pausar" aria-label="Reproducir o pausar">
+        <svg class="fab-icon-play" width="40" height="40" aria-hidden="true"><use href="#i-play"/></svg>
+        <svg class="fab-icon-pause" width="40" height="40" aria-hidden="true"><use href="#i-pause"/></svg>
       </button>
-      <button id="ov-power" class="ov-btn ov-power" title="Play / Pausa">
-        <svg class="fab-icon-play" width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        <svg class="fab-icon-pause" width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-      </button>
-      <button id="ov-next" class="ov-btn" title="Canal siguiente">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6h2v12h-2zM4 6l9 6-9 6V6z"/></svg>
-      </button>
-      <button id="ov-stop" class="ov-btn ov-stop" title="Detener">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>
-      </button>
+      <button id="ov-next" class="ov-btn" title="Siguiente" aria-label="Siguiente"><svg width="28" height="28" aria-hidden="true"><use href="#i-next"/></svg></button>
+      <button id="ov-stop" class="ov-btn ov-stop" title="Detener" aria-label="Detener"><svg width="24" height="24" aria-hidden="true"><use href="#i-stop"/></svg></button>
     </div>
   </div>
 
   <!-- Modal ajustes -->
-  <div id="settings-modal" class="modal" style="display:none;">
+  <div id="settings-modal" class="modal" style="display:none;" role="dialog" aria-label="Ajustes">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>⚙️ Ajustes</h2>
-        <button class="modal-close" data-close="settings-modal">✕</button>
+        <h2>Ajustes</h2>
+        <button class="modal-close" data-close="settings-modal" aria-label="Cerrar ajustes">✕</button>
       </div>
       <div class="modal-body">
         <div class="setting-group">
-          <h3>⏱ Temporizador de apagado</h3>
+          <h3 class="setting-title"><svg width="16" height="16" aria-hidden="true"><use href="#i-clock"/></svg>Temporizador de apagado</h3>
           <div class="btn-row">
             <button class="btn" data-timer="15">15 min</button>
             <button class="btn" data-timer="30">30 min</button>
@@ -149,24 +172,24 @@
           </div>
         </div>
         <div class="setting-group">
-          <h3>⏰ Despertador</h3>
+          <h3 class="setting-title"><svg width="16" height="16" aria-hidden="true"><use href="#i-alarm"/></svg>Despertador</h3>
           <div class="alarm-row">
-            <input type="time" id="alarm-time" value="07:00">
-            <select id="alarm-channel"></select>
+            <input type="time" id="alarm-time" value="07:00" aria-label="Hora del despertador">
+            <select id="alarm-channel" aria-label="Canal del despertador"></select>
             <button id="alarm-set-btn" class="btn btn-primary">Activar</button>
           </div>
           <div id="alarm-status" class="alarm-status"></div>
           <p class="hint">⚠️ Suena si la app está abierta (en segundo plano). Es una limitación de las apps web.</p>
         </div>
         <div class="setting-group">
-          <h3>🎨 Tema</h3>
+          <h3 class="setting-title"><svg width="16" height="16" aria-hidden="true"><use href="#i-palette"/></svg>Apariencia</h3>
           <div class="btn-row">
             <button id="theme-dark-btn" class="btn">🌙 Oscuro</button>
             <button id="theme-light-btn" class="btn">☀️ Claro</button>
           </div>
         </div>
         <div class="setting-group">
-          <h3>🎵 Canción del día personalizada</h3>
+          <h3 class="setting-title"><svg width="16" height="16" aria-hidden="true"><use href="#i-song"/></svg>Canción del día personalizada</h3>
           <p class="hint">Pega el enlace de YouTube o Spotify de la canción que quieras poner hoy (solo visible en este dispositivo).</p>
           <div class="alarm-row">
             <input type="text" id="song-url" placeholder="Enlace de YouTube o Spotify">
@@ -179,21 +202,21 @@
           <button id="song-reset-btn" class="btn">↺ Volver a la rotación automática</button>
         </div>
         <div class="setting-group">
-          <h3>👤 Cuenta</h3>
+          <h3 class="setting-title"><svg width="16" height="16" aria-hidden="true"><use href="#i-info"/></svg>Cuenta</h3>
           <p class="hint" id="cuenta-hint">Por ahora no hay cuenta. Cerrar la app la apaga por completo (detiene lo que suene).</p>
           <button id="exit-btn" class="btn btn-danger">🚪 Cerrar la app</button>
         </div>
         <div class="setting-group">
-          <h3>ℹ️ Acerca de</h3>
-          <p class="hint" id="acerca-version">TeleAudio — La tele y la radio en tu oreja. Solo audio, ahorro de datos. Los streams son los oficiales públicos de cada cadena.</p>
+          <h3 class="setting-title"><svg width="16" height="16" aria-hidden="true"><use href="#i-info"/></svg>Acerca de</h3>
+          <p class="hint" id="acerca-version">TeleAudio — La tele y la radio en tu oreja. Solo audio, ahorro de datos.</p>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" role="status"></div>
 
   <script src="hls.min.js"></script>
-  <script src="app.js?v=20260905-1"></script>
+  <script src="app.js?v=20260905-r2"></script>
 </body>
 </html>

@@ -94,14 +94,14 @@
   ];
 
   const CAT_LABELS = {
-    generalista: '📺 Generalistas',
-    informativos: '🗞️ Informativos',
-    deportes: '⚽ Deportes',
-    infantil: '🧸 Infantil',
-    local: '📍 Autonómicas y locales',
-    populares: '🎙️ Populares',
-    musicales: '🎵 Musicales',
-    autonomas: '🌍 Autonómicas'
+    generalista: 'Generalistas',
+    informativos: 'Informativos',
+    deportes: 'Deportes',
+    infantil: 'Infantil',
+    local: 'Autonómicas y locales',
+    populares: 'Populares',
+    musicales: 'Musicales',
+    autonomas: 'Autonómicas'
   };
 
   const ALL = [...TV_CHANNELS, ...RADIO_STATIONS];
@@ -237,6 +237,7 @@
   const ovLogo = $('ov-logo');
   const ovLabel = $('ov-label');
   const ovName = $('ov-name');
+  const ovSub = $('ov-sub');
   const ovEq = $('ov-eq');
   const ovPower = $('ov-power');
   const ovProgress = $('ov-progress');
@@ -1024,110 +1025,267 @@
     return out;
   }
 
+  // ====== REDISEÑO 2.1: helpers de UI ======
+  // Tipo legible de un canal/emisora (para etiquetas y reproductor)
+  function tipoDe(ch) {
+    if (!ch) return '';
+    if (ch.esYoutube) return 'YouTube';
+    if (ch.esVod) return 'Audioprograma';
+    if (TV_CHANNELS.some(c => c.id === ch.id)) return 'TV';
+    if (RADIO_STATIONS.some(c => c.id === ch.id)) return 'Radio';
+    if (PODCASTS.some(c => c.id === ch.id)) return 'Podcast';
+    return '';
+  }
+  function esDirecto(ch) {
+    return ch && !ch.esYoutube && !ch.esVod;
+  }
+  // Tarjeta vacía elegante (grid-column 1/-1)
+  function emptyState(icono, titulo, texto) {
+    const box = document.createElement('div');
+    box.className = 'empty-state';
+    const ic = document.createElement('div');
+    ic.className = 'empty-icon';
+    ic.innerHTML = icono;
+    const t = document.createElement('strong');
+    t.textContent = titulo;
+    const s = document.createElement('span');
+    s.textContent = texto || '';
+    box.appendChild(ic); box.appendChild(t); box.appendChild(s);
+    return box;
+  }
+  // Botón "Ver todos" de una cabecera de categoría
+  function botonVerTodos(cat, lista) {
+    const b = document.createElement('button');
+    b.className = 'see-all';
+    b.textContent = 'Ver todos \u2192';
+    b.setAttribute('aria-label', 'Ver todos los de ' + cat);
+    b.addEventListener('click', () => {
+      vistaCategoria = { titulo: cat, lista: lista.slice() };
+      renderChannels();
+    });
+    return b;
+  }
+  // Cabecera de sección con acciones (usada en carruseles y grids)
+  function sectionHead(titulo, accion) {
+    const h = document.createElement('div');
+    h.className = 'section-header';
+    const span = document.createElement('span');
+    span.textContent = titulo;
+    h.appendChild(span);
+    if (accion) h.appendChild(accion);
+    return h;
+  }
+  // Contenedor de carrusel horizontal
+  function carrusel() {
+    const c = document.createElement('div');
+    c.className = 'h-scroll';
+    return c;
+  }
+  let vistaCategoria = null; // {titulo, lista} cuando se pulsa "Ver todos"
+
   function renderChannels() {
     grid.innerHTML = '';
-    if (currentTab === 'social') {
-      renderSocial();
-      return;
-    }
-    if (currentTab === 'youtube') {
-      renderYoutube();
-      return;
-    }
-    if (currentTab === 'comentarios') {
-      renderComments();
-      return;
-    }
-    if (currentTab === 'audioprogramas') {
-      renderAudioProgramas();
-      return;
-    }
-    if (currentTab === 'cancion') {
-      renderSongOfDay();
-      return;
-    }
-    if (currentTab === 'podcast') {
-      renderPodcast();
-      return;
-    }
-    const list = getVisibleList(currentTab, search.value);
-    const hasQuery = (search.value || '').trim().length > 0;
+    if (currentTab === 'social') { renderSocial(); return; }
+    if (currentTab === 'youtube') { renderYoutube(); return; }
+    if (currentTab === 'comentarios') { renderComments(); return; }
+    if (currentTab === 'audioprogramas') { renderAudioProgramas(); return; }
+    if (currentTab === 'cancion') { renderSongOfDay(); return; }
+    if (currentTab === 'podcast') { renderPodcast(); return; }
 
-    if (list.length === 0) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:30px;">Nada por aquí' + (currentTab === 'favs' ? ' — pulsa ❤️ en un canal para añadirlo' : '') + '</div>';
-      return;
-    }
+    const query = (search.value || '').trim();
+    const hasQuery = query.length > 0;
 
-    // Si hay búsqueda, mostrar plano (sin secciones)
+    // ---------- Búsqueda global AGRUPADA por tipo (TV / Radio / Podcast) ----------
     if (hasQuery) {
+      const q = query.toLowerCase();
+      const grupos = { TV: [], Radio: [], Podcast: [] };
+      TV_CHANNELS.forEach(ch => { if (ch.name.toLowerCase().includes(q)) grupos.TV.push(ch); });
+      RADIO_STATIONS.forEach(ch => { if (ch.name.toLowerCase().includes(q)) grupos.Radio.push(ch); });
+      PODCASTS.forEach(ch => { if (ch.name.toLowerCase().includes(q)) grupos.Podcast.push(ch); });
+      const hayAlgo = grupos.TV.length || grupos.Radio.length || grupos.Podcast.length;
+      if (!hayAlgo) {
+        grid.appendChild(emptyState('<svg width="24" height="24" aria-hidden="true"><use href="#i-search"/></svg>',
+          'Sin resultados', 'No encontramos nada para \u201c' + query + '\u201d. Prueba con otro nombre.'));
+        return;
+      }
+      grid.appendChild(sectionHead('Resultados para \u201c' + query + '\u201d'));
+      ['TV', 'Radio', 'Podcast'].forEach(tipo => {
+        if (!grupos[tipo].length) return;
+        const sub = document.createElement('div');
+        sub.className = 'section-header cat-muted';
+        sub.textContent = tipo + ' (' + grupos[tipo].length + ')';
+        grid.appendChild(sub);
+        grupos[tipo].forEach(ch => renderCard(ch));
+      });
+      return;
+    }
+
+    // ---------- Vista "Ver todos" de una categoría ----------
+    if (vistaCategoria && (currentTab === 'tv' || currentTab === 'radio')) {
+      const volver = document.createElement('button');
+      volver.className = 'back-chip';
+      volver.innerHTML = '<svg width="14" height="14" aria-hidden="true"><use href="#i-close"/></svg> Volver';
+      volver.addEventListener('click', () => { vistaCategoria = null; renderChannels(); });
+      const head = document.createElement('div');
+      head.className = 'ep-top';
+      head.appendChild(volver);
+      const titulo = document.createElement('span');
+      titulo.className = 'ep-prog-nombre';
+      titulo.textContent = vistaCategoria.titulo;
+      head.appendChild(titulo);
+      grid.appendChild(head);
+      grid.appendChild(sectionHead(vistaCategoria.titulo + ' \u00b7 ' + vistaCategoria.lista.length));
+      vistaCategoria.lista.forEach(ch => renderCard(ch));
+      return;
+    }
+
+    const list = currentTab === 'favs'
+      ? ALL.filter(c => favs.has(c.id))
+      : (currentTab === 'tv' ? TV_CHANNELS : RADIO_STATIONS);
+
+    // ---------- Favoritos: vacío elegante ----------
+    if (currentTab === 'favs') {
+      if (!list.length) {
+        grid.appendChild(emptyState(
+          '<svg width="26" height="26" aria-hidden="true"><use href="#i-fav"/></svg>',
+          'Todavía no hay favoritos',
+          'Toca el coraz\u00f3n de un canal o emisora para tenerlo siempre a mano.'));
+        return;
+      }
+      grid.appendChild(sectionHead('Mis favoritos \u00b7 ' + list.length));
       list.forEach(ch => renderCard(ch));
       return;
     }
 
-    // Sección "🕘 Escuchado recientemente" al inicio de TV y Radio
+    if (!list.length) {
+      grid.appendChild(emptyState(
+        '<svg width="24" height="24" aria-hidden="true"><use href="#i-radio"/></svg>',
+        'Nada por aqu\u00ed', ''));
+      return;
+    }
+
+    // ---------- Recientes (carrusel horizontal) ----------
+    const recs = recientesDeLista(list);
     if (currentTab === 'tv' || currentTab === 'radio') {
-      const recs = recientesDeLista(list);
       if (recs.length) {
-        const header = document.createElement('div');
-        header.className = 'section-header';
-        header.textContent = '🕘 Escuchado recientemente';
-        grid.appendChild(header);
-        recs.forEach(ch => renderCard(ch));
+        grid.appendChild(sectionHead('Escuchado recientemente'));
+        const c = carrusel();
+        recs.forEach(ch => renderCard(ch, c));
+        grid.appendChild(c);
+      } else {
+        // Estado vacío elegante del historial (solo la primera vez que se ve)
+        const hint = document.createElement('div');
+        hint.className = 'recents-hint';
+        hint.innerHTML = '<svg width="18" height="18" aria-hidden="true"><use href="#i-history"/></svg><span>Aqu\u00ed aparecer\u00e1n tus \u00faltimos canales y emisoras.</span>';
+        grid.appendChild(hint);
       }
     }
 
-    // Agrupar por categoría manteniendo el orden de definición
+    // ---------- Categorías como carruseles + "Ver todos" ----------
     const seen = {};
     list.forEach(ch => {
       const cat = ch.cat || 'generalista';
       if (!seen[cat]) seen[cat] = [];
       seen[cat].push(ch);
     });
-
-    Object.keys(seen).forEach(cat => {
-      const header = document.createElement('div');
-      header.className = 'section-header';
-      header.textContent = CAT_LABELS[cat] || cat;
-      grid.appendChild(header);
-      seen[cat].forEach(ch => renderCard(ch));
+    const esUltimaCategoriaGrande = Object.keys(seen).length === 1;
+    Object.keys(seen).forEach((cat, idx) => {
+      const items = seen[cat];
+      const etiqueta = (CAT_LABELS[cat] || cat);
+      const conIcono = (currentTab === 'tv' ? 'TV' : 'Radio') + ' \u00b7 ' + etiqueta;
+      // "Ver todos" solo cuando la categoría tiene más de 6 elementos
+      const verTodos = items.length > 6 ? botonVerTodos(etiqueta, items) : null;
+      grid.appendChild(sectionHead(conIcono, verTodos));
+      if (verTodos) {
+        // Carrusel horizontal (categoría grande)
+        const c = carrusel();
+        items.forEach(ch => renderCard(ch, c));
+        grid.appendChild(c);
+      } else {
+        // Categoría pequeña: rejilla normal (no ocupa carrusel)
+        items.forEach(ch => renderCard(ch));
+      }
     });
   }
 
-  function renderCard(ch) {
+  function renderCard(ch, contenedor) {
     const card = document.createElement('div');
     card.className = 'channel-card' + (currentItem && currentItem.id === ch.id ? ' active' : '') + (isPlaying && currentItem && currentItem.id === ch.id ? ' playing-now' : '');
+    card.setAttribute('data-id', ch.id);
 
     const favBtn = document.createElement('button');
     favBtn.className = 'fav-btn' + (favs.has(ch.id) ? ' faved' : '');
-    favBtn.textContent = '❤️';
+    const esFav = favs.has(ch.id);
+    favBtn.setAttribute('aria-label', esFav ? 'Quitar de favoritos' : 'A\u00f1adir a favoritos');
+    favBtn.innerHTML = '<svg width="18" height="18" aria-hidden="true"><use href="#' + (esFav ? 'i-fav-filled' : 'i-fav') + '"/></svg>';
     favBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       toggleFav(ch.id);
     });
 
+    const plate = document.createElement('div');
+    plate.className = 'logo-plate';
     const img = document.createElement('img');
     img.className = 'channel-logo';
     img.src = ch.logo;
     img.alt = ch.name;
     img.loading = 'lazy';
     img.onerror = () => { img.src = 'icon.svg'; };
+    plate.appendChild(img);
 
+    const body = document.createElement('div');
+    body.className = 'card-body';
     const name = document.createElement('div');
     name.className = 'channel-name';
     name.textContent = ch.name;
+    const type = document.createElement('div');
+    type.className = 'card-type';
+    const esActivo = !!(currentItem && currentItem.id === ch.id);
+    type.textContent = tipoDe(ch) + (esDirecto(ch) ? ' \u00b7 En directo' : '');
+    body.appendChild(name);
+    body.appendChild(type);
 
     card.appendChild(favBtn);
-    card.appendChild(img);
-    card.appendChild(name);
+    card.appendChild(plate);
+    card.appendChild(body);
     card.addEventListener('click', () => playItem(ch));
-    grid.appendChild(card);
+
+    // Indicador animado dentro de la tarjeta activa (CSS lo muestra al tener .playing-now)
+    const eq = document.createElement('span');
+    eq.className = 'eq-mini';
+    eq.setAttribute('aria-hidden', 'true');
+    eq.innerHTML = '<span></span><span></span><span></span>';
+    type.appendChild(eq);
+
+    (contenedor || grid).appendChild(card);
   }
 
   function toggleFav(id) {
-    if (favs.has(id)) { favs.delete(id); showToast('Quitado de favoritos'); }
+    const eraFav = favs.has(id);
+    if (eraFav) { favs.delete(id); showToast('Quitado de favoritos'); }
     else { favs.add(id); showToast('❤️ Añadido a favoritos'); }
     localStorage.setItem('teleaudio_favs', JSON.stringify([...favs]));
-    renderChannels();
+    // En la pestaña Favoritos, al quitar uno desaparece de la lista
+    if (currentTab === 'favs' && eraFav) { renderChannels(); return; }
+    // Actualizar el corazón en sitio con micro-animación (sin recargar)
+    const card = grid.querySelector('.channel-card[data-id="' + id + '"]');
+    if (card) {
+      const favBtn = card.querySelector('.fav-btn');
+      if (favBtn) {
+        const ahoraFav = favs.has(id);
+        favBtn.classList.toggle('faved', ahoraFav);
+        favBtn.setAttribute('aria-label', ahoraFav ? 'Quitar de favoritos' : 'Añadir a favoritos');
+        const uso = favBtn.querySelector('use');
+        if (uso) uso.setAttribute('href', ahoraFav ? '#i-fav-filled' : '#i-fav');
+        favBtn.classList.remove('pop');
+        void favBtn.offsetWidth; // reiniciar animación
+        favBtn.classList.add('pop');
+      }
+    }
+    // Refrescar el resto de corazones sin recargar (puede haber duplicados en vista "todos")
+    grid.querySelectorAll('.channel-card[data-id="' + id + '"] .fav-btn').forEach(b => {
+      b.classList.toggle('faved', favs.has(id));
+    });
   }
 
   // ================= AUDIOPROGRAMAS TV =================
@@ -1946,21 +2104,27 @@
     const card = document.createElement('div');
     card.className = 'channel-card';
     card.style.cursor = 'pointer';
+    const plate = document.createElement('div');
+    plate.className = 'logo-plate';
     const img = document.createElement('img');
     img.className = 'channel-logo';
     img.src = p.img || imgProgRTVE(p.uid);
     img.alt = p.nombre;
     img.loading = 'lazy';
     img.onerror = () => { img.src = 'icon.svg'; };
+    plate.appendChild(img);
+    const body = document.createElement('div');
+    body.className = 'card-body';
     const name = document.createElement('div');
     name.className = 'channel-name';
     name.textContent = p.nombre;
-    const canal = document.createElement('div');
-    canal.className = 'prog-canal';
-    canal.textContent = '🎬 ' + (p.canal || 'La 2');
-    card.appendChild(img);
-    card.appendChild(name);
-    card.appendChild(canal);
+    const tipo = document.createElement('div');
+    tipo.className = 'card-type';
+    tipo.textContent = 'Audioprograma · ' + (p.canal || 'RTVE');
+    body.appendChild(name);
+    body.appendChild(tipo);
+    card.appendChild(plate);
+    card.appendChild(body);
     card.addEventListener('click', () => abrirProgramaRTVE(p));
     grid.appendChild(card);
   }
@@ -2255,8 +2419,9 @@
   }
 
   function showError() {
-    errorBanner.style.display = 'block';
+    errorBanner.style.display = 'flex';
     isPlaying = false;
+    if (retryBtn) retryBtn.style.display = 'inline-flex';
     updateUI();
   }
 
@@ -2276,7 +2441,9 @@
       if (currentItem) {
         npLogo.src = currentItem.logo;
         npName.textContent = currentItem.name;
-        npLabel.textContent = isPlaying ? 'EN DIRECTO' : 'EN PAUSA';
+        const tipo = tipoDe(currentItem);
+        const estado = esDirecto(currentItem) ? (isPlaying ? 'EN DIRECTO' : 'EN PAUSA') : (isPlaying ? 'REPRODUCIENDO' : 'EN PAUSA');
+        npLabel.textContent = (tipo ? tipo.toUpperCase() + ' \u00b7 ' : '') + estado;
         statusText.textContent = isPlaying ? 'Reproduciendo ' + currentItem.name : '⏸ Pausado: ' + currentItem.name;
       } else if (bsPlaying || bsPaused) {
         // Social Radio: la barra muestra la fuente activa
@@ -2565,6 +2732,12 @@
       ovName.textContent = datos.nombre;
       ovLabel.textContent = datos.etiqueta;
       ovEq.classList.toggle('paused', !eqActivo);
+      if (ovSub) {
+        const t = item ? tipoDe(item) : '';
+        ovSub.textContent = item
+          ? (t ? t + ' \u00b7 ' : '') + (esDirecto(item) ? (sonando ? 'En directo' : 'En pausa') : (sonando ? 'Reproduciendo' : 'En pausa'))
+          : (bsPlay || bsPausa ? 'Social Radio' : '');
+      }
       // Barra de progreso: solo contenido bajo demanda (YouTube o episodios) con duración conocida
       const conBarra = !!(item && (item.esYoutube || item.esVod) && item._durMs > 0);
       ovProgress.style.display = conBarra ? 'block' : 'none';
@@ -2725,6 +2898,17 @@
       } else {
         if (window.close) window.close();
         showToast('👋 ¡Hasta luego!');
+      }
+    });
+  }
+
+  // Reintentar reproducción tras un error (red, stream caído…)
+  const retryBtn = document.getElementById('retry-btn');
+  if (retryBtn) {
+    retryBtn.addEventListener('click', () => {
+      errorBanner.style.display = 'none';
+      if (currentItem) {
+        try { playItem(currentItem); } catch (e) { showError(); }
       }
     });
   }
