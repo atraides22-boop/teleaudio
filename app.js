@@ -864,11 +864,12 @@
           showToast('❌ Error al reproducir YouTube');
         });
       }
-      // 2) Sin servicio: intentar con el yt-dlp EMBEBIDO (spike v4.6.0, estilo
-      // Seal: resuelve en el propio móvil, sin Mac ni servidores).
-      if (window.Capacitor && Capacitor.Plugins.BackgroundAudio && Capacitor.Plugins.BackgroundAudio.ytdlResolve) {
-        setSt('⏳ Resolviendo con yt-dlp local…');
-        Capacitor.Plugins.BackgroundAudio.ytdlResolve({ url: enlace })
+      // 2) Sin servicio: intentar con el yt-dlp EMBEBIDO (estilo Seal).
+      // v5.2.2: se DESCARGA a archivo local antes de reproducir (las URLs de
+      // yt-dlp dan 403 a la 1ª petición sin Range → "source error").
+      if (window.Capacitor && Capacitor.Plugins.BackgroundAudio && Capacitor.Plugins.BackgroundAudio.ytdlPlay) {
+        setSt('⏳ Descargando audio…');
+        Capacitor.Plugins.BackgroundAudio.ytdlPlay({ url: enlace })
           .then((res) => {
             if (btnEl) btnEl.disabled = false;
             if (!res || !res.audioUrl) { setSt('❌ No se pudo obtener el audio'); return; }
