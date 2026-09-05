@@ -12,16 +12,6 @@
   ];
   let ytProxyActivo = null; // se rellena al primer health check OK
 
-  // v4.4.6: refs globales de la barra de la pestaña YouTube para que el evento
-  // nativo playbackProgress la mueva SIN depender de temporizadores JS (la
-  // causa de que "la barrita no avanzara" dentro de la app).
-  let ytBarVid = null;      // videoId al que pertenece la barra montada
-  let ytBarDiv = null;
-  let ytBarInput = null;
-  let ytBarTAct = null;
-  let ytBarTDur = null;
-  let ytDraggingGlobal = false;
-
   // Limpieza automática al arrancar (app nativa): elimina cachés y service
   // workers viejos que puedan servir versiones antiguas de la app.
   (function limpiarCaches() {
@@ -485,13 +475,6 @@
 
   function renderYoutube() {
     grid.innerHTML = '';
-    // Barra montada anterior: invalidar refs (la web se repinta y las pierde)
-    ytBarVid = null;
-    ytBarDiv = null;
-    ytBarInput = null;
-    ytBarTAct = null;
-    ytBarTDur = null;
-    ytDraggingGlobal = false;
     const wrap = document.createElement('div');
     wrap.style.gridColumn = '1 / -1';
     wrap.style.display = 'flex';
@@ -599,11 +582,6 @@
       times.appendChild(tDur);
       bar.appendChild(input);
       bar.appendChild(times);
-      // v4.4.6: exponer la barra montada al evento nativo playbackProgress
-      ytBarDiv = bar;
-      ytBarInput = input;
-      ytBarTAct = tAct;
-      ytBarTDur = tDur;
       let dragging = false;
       let ultimoSeekMs = 0; // v4.3.8: evita seeks duplicados (arrastre + soltar)
       let barRect = null;   // v4.3.8: rect de la barra para calcular por coordenadas
@@ -634,7 +612,6 @@
       input.style.touchAction = 'none';
       input.addEventListener('pointerdown', (e) => {
         dragging = true;
-        ytDraggingGlobal = true;
         barRect = input.getBoundingClientRect();
         try { e.preventDefault(); } catch (err) {}
       });
@@ -662,7 +639,6 @@
           if (frac !== null) pintarPos(frac);
         }
         dragging = false;
-        ytDraggingGlobal = false;
         barRect = null;
         hacerSeek(true);
       }
@@ -700,7 +676,6 @@
       // pestaña YouTube está a la vista) — además sirve de diagnóstico: si la
       // barra avanza pero no se oye → el audio llega; si se queda en 0:00 → no.
       const vId = currentItem.ytVideoId || '';
-      ytBarVid = vId;
       if (currentTab === 'youtube' && vId && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
         (function pollYt() {
           if (currentTab !== 'youtube' || !currentItem || !currentItem.esYoutube || currentItem.ytVideoId !== vId) return;
@@ -2382,35 +2357,6 @@
         } else {
           showToast('❌ Error: ' + msg);
         }
-      });
-      // v4.4.6: el servicio nativo EMPUJA la posición (2/s) → movemos las barras
-      // de progreso de la app (pestaña YouTube + reproductor completo). Esto
-      // arregla de raíz que "la barrita no avance" dentro de la app: ya no
-      // depende de temporizadores JS, sino del mismo dato que usa el carrusel
-      // del sistema (que siempre avanzó bien).
-      Capacitor.Plugins.BackgroundAudio.addListener('playbackProgress', (data) => {
-        try {
-          if (!currentItem || !(currentItem.esYoutube || currentItem.esVod)) return;
-          const dur = Number(data.durMs) || 0;
-          if (dur > 0) currentItem._durMs = dur;
-          const durRef = currentItem._durMs || 0;
-          if (durRef <= 0) return;
-          const pos = Math.min(durRef, Math.max(0, Number(data.posMs) || 0));
-          // Barra del reproductor completo (F8), si está abierto
-          if (ovAbierto() && ovBar && !ovDragging) {
-            ovBar.value = String(Math.round((pos / durRef) * 1000));
-            ovTAct.textContent = fmtSeg(Math.floor(pos / 1000));
-            ovTDur.textContent = fmtSeg(Math.floor(durRef / 1000));
-            ovProgress.style.display = 'block';
-          }
-          // Barra de la pestaña YouTube (si la hay montada y es este video)
-          if (currentTab === 'youtube' && currentItem.esYoutube && ytBarVid && ytBarVid === currentItem.ytVideoId && ytBarInput && !ytDraggingGlobal) {
-            ytBarDiv.style.display = 'block';
-            ytBarInput.value = String(Math.round((pos / durRef) * 1000));
-            ytBarTAct.textContent = fmtSeg(Math.floor(pos / 1000));
-            ytBarTDur.textContent = fmtSeg(Math.floor(durRef / 1000));
-          }
-        } catch (e) { /* nunca romper por esto */ }
       });
       // Pulsaron ⏻ Apagar en la notificación de la Social Radio
       Capacitor.Plugins.BackgroundAudio.addListener('socialStopped', () => {
