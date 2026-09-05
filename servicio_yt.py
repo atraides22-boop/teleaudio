@@ -29,6 +29,37 @@ YTDLP = "/home/manuel/.local/bin/yt-dlp"
 AUDIO_DIR = "/tmp/teleaudio_yt"
 ARCHIVO_TTL = 12 * 3600  # 12 horas: pasadas, se vuelve a descargar
 
+# Caché de resolución RTVE (id -> [timestamp, url audio]) — 6 horas
+# Las URLs DASH de RTVE son estables mientras el episodio exista; 6 h basta.
+RTVE_CACHE_TTL = 6 * 3600
+rtve_cache = {}
+
+
+def resolver_rtve(video_id):
+    """Resuelve la URL DASH de audio (MPD, solo audio) de un episodio RTVE."""
+    ahora = time.time()
+    dato = rtve_cache.get(video_id)
+    if dato and ahora - dato[0] < RTVE_CACHE_TTL:
+        return dato[1]
+    env = dict(os.environ)
+    env["PATH"] = DENO_PATH + ":" + env.get("PATH", "")
+    cmd = [
+        YTDLP,
+        "--no-playlist",
+        "--no-warnings",
+        "-f", "dash-audio/bestaudio",
+        "-g",
+        "https://www.rtve.es/v/" + video_id,
+    ]
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120, env=env)
+    if proc.returncode != 0:
+        raise RuntimeError("yt-dlp error: " + (proc.stderr[-300:] or proc.stdout[-300:]))
+    url = (proc.stdout or "").strip().splitlines()[-1].strip() if proc.stdout.strip() else ""
+    if not url or not url.startswith("http"):
+        raise RuntimeError("URL de audio vacía")
+    rtve_cache[video_id] = [ahora, url]
+    return url
+
 os.makedirs(AUDIO_DIR, exist_ok=True)
 
 
@@ -105,6 +136,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return
             if parsed.path == "/info":
                 self._info(qs)
+                return
+            if parsed.path == "/rtve":
+                self._rtve(qs)
                 return
             if parsed.path != "/audio":
                 self._json({"error": "endpoint no válido. Usa /audio?url=<videoId|urlYouTube>"}, code=404)
@@ -226,6 +260,23 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._json({"videoId": video_id, "title": titulo, "duration": dur, "thumbnail": thumb})
         except Exception as e:
             self._json({"videoId": video_id, "error": str(e)}, code=500)
+
+    def _rtve(self, qs):
+        """Programas de TV de RTVE (F6): resuelve la URL de audio DASH (MPD
+        solo-audio) de un episodio de RTVE Play vía yt-dlp (las URLs reales
+        van firmadas/templadas y la API oficial no las expone). Con caché.
+        El móvil reproduce el MPD directamente desde el CDN de RTVE (abierto,
+        con soporte Range): aquí solo se RESUELVE, no se hace de proxy.
+        Uso: /rtve?id=<videoId numerico>"""
+        video_id = (qs.get("id") or [""])[0].strip()
+        if not video_id or not video_id.isdigit():
+            self._json({"error": "id no válido. Usa /rtve?id=<videoId>"}, code=400)
+            return
+        try:
+            url = resolver_rtve(video_id)
+            self._json({"videoId": video_id, "audioUrl": url})
+        except Exception as e:
+            self._json({"videoId": video_id, "error": str(e)}, code=502)
 
 
 if __name__ == "__main__":

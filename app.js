@@ -7,7 +7,7 @@
   // Se auto-detecta al reproducir: si no responde, se usa la resolución
   // interna antigua (que fallará si YouTube bloquea la IP).
   const YT_PROXY_CANDIDATOS = [
-    'http://192.168.1.88:8787',  // Mac en la red de casa
+    'http://192.168.1.117:8787',  // Mac en la red de casa (repetidor, IP fija desde 05-09)
     'http://manuel-macmini.local:8787' // por si cambia la IP
   ];
   let ytProxyActivo = null; // se rellena al primer health check OK
@@ -1029,11 +1029,34 @@
   }
 
   // ================= PODCAST =================
+  // F6 (v4.4.4): programas de TV de RTVE con sus episodios en audio bajo
+  // demanda (mismo espíritu que la app de RTVE). Catálogo fijo de programas
+  // (uid oficial de RTVE); los episodios se listan desde su API pública
+  // (videos.json, con CORS abierto) y el audio (MPD DASH solo-audio) lo
+  // resuelve el servicio del Mac (/rtve?id=) porque la API no expone la URL.
+  const RTVE_PROGRAMAS = [
+    { uid: '1030536', nombre: 'El Perro Andaluz', canal: 'La 1', img: 'https://img.rtve.es/imagenes/miguel-rellan-vuelve-mirar-tetuan-perro-andaluz/01788448276526.jpg' },
+    { uid: '1000646', nombre: 'La Revuelta', canal: 'La 1', img: 'https://img.rtve.es/imagenes/revuelta-vuelve-7-septiembre-nuevo-teatro/01788378371065.jpg' },
+    { uid: '169690', nombre: 'La Promesa', canal: 'La 1', img: 'https://img.rtve.es/imagenes/promesa-temporada-5-episodio-899/01788270479151.jpg' },
+    { uid: '129646', nombre: 'El Cazador', canal: 'La 2', img: 'https://img.rtve.es/imagenes/cazador-especial-5/01767741580083.jpg' },
+    { uid: '67990', nombre: 'Cachitos de hierro y cromo', canal: 'La 2', img: 'https://img.rtve.es/imagenes/cachitos-hierro-cromo-bis-2/1767478025404.jpg' }
+  ];
+  let rtveProg = null;      // programa abierto (vista episodios)
+  let rtveEpis = [];        // episodios cargados del programa
+  let rtveCargando = false;
+  let rtveErr = '';
+
   // Sección nueva (estructura): categorías fijas + podcasts que se irán
   // añadiendo. Mientras no haya podcasts REALES, se muestra un estado
   // "próximamente" con las categorías, nunca se inventan streams.
   function renderPodcast() {
     grid.innerHTML = '';
+
+    // Un programa de TV abierto → vista de sus episodios
+    if (rtveProg) {
+      pintarEpisodios();
+      return;
+    }
 
     if (!PODCASTS.length) {
       // --- Aún sin contenido: presentación + categorías previstas ---
@@ -1064,6 +1087,7 @@
         cats.appendChild(chip);
       });
       grid.appendChild(cats);
+      agregarProgramasRTVE();
       return;
     }
 
@@ -1095,6 +1119,205 @@
       grid.appendChild(header);
       seen[cat].forEach(p => renderCard(p));
     });
+
+    // Los programas de TV de RTVE conviven con los podcasts de radio
+    if (!hasQuery) agregarProgramasRTVE();
+  }
+
+  // ---------- Programas de TV de RTVE (F6) ----------
+  function agregarProgramasRTVE() {
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    header.textContent = '📺 Programas de TV · RTVE';
+    grid.appendChild(header);
+    RTVE_PROGRAMAS.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'channel-card';
+      card.style.cursor = 'pointer';
+      const img = document.createElement('img');
+      img.className = 'channel-logo';
+      img.src = p.img;
+      img.alt = p.nombre;
+      img.loading = 'lazy';
+      img.onerror = () => { img.src = 'icon.svg'; };
+      const name = document.createElement('div');
+      name.className = 'channel-name';
+      name.textContent = p.nombre;
+      const canal = document.createElement('div');
+      canal.className = 'prog-canal';
+      canal.textContent = '🎬 ' + p.canal;
+      card.appendChild(img);
+      card.appendChild(name);
+      card.appendChild(canal);
+      card.addEventListener('click', () => abrirProgramaRTVE(p));
+      grid.appendChild(card);
+    });
+  }
+
+  function abrirProgramaRTVE(p) {
+    rtveProg = p;
+    rtveEpis = [];
+    rtveErr = '';
+    rtveCargando = true;
+    grid.innerHTML = '';
+    pintarEpisodios();
+    cargarEpisodiosRTVE(p.uid);
+  }
+
+  function volverProgramasRTVE() {
+    rtveProg = null;
+    rtveEpis = [];
+    rtveErr = '';
+    rtveCargando = false;
+    renderPodcast();
+  }
+
+  function cargarEpisodiosRTVE(uid) {
+    const url = 'https://www.rtve.es/api/programas/' + uid + '/videos.json?page=1&size=15';
+    fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(d => {
+        const items = (d && d.page && d.page.items) || [];
+        rtveEpis = items.map(it => ({
+          id: String(it.id || ''),
+          titulo: it.title || it.longTitle || 'Episodio',
+          fecha: String(it.dateOfEmission || '').slice(0, 10), // dd-mm-yyyy
+          durMs: Number(it.duration) || 0,
+          img: it.thumbnail || '',
+          enlace: it.htmlUrl || ''
+        }));
+        rtveCargando = false;
+        pintarEpisodios();
+      })
+      .catch(err => {
+        rtveCargando = false;
+        rtveErr = err && err.message ? err.message : 'error';
+        pintarEpisodios();
+      });
+  }
+
+  function pintarEpisodios() {
+    if (!rtveProg) return;
+    grid.innerHTML = '';
+    // Fila superior: volver + nombre del programa
+    const top = document.createElement('div');
+    top.className = 'ep-top';
+    const back = document.createElement('button');
+    back.className = 'back-chip';
+    back.textContent = '← Programas';
+    back.addEventListener('click', volverProgramasRTVE);
+    const nom = document.createElement('span');
+    nom.className = 'ep-prog-nombre';
+    nom.textContent = '📺 ' + rtveProg.nombre;
+    top.appendChild(back);
+    top.appendChild(nom);
+    grid.appendChild(top);
+
+    if (rtveCargando) {
+      const av = document.createElement('div');
+      av.className = 'comment-status';
+      av.textContent = '⏳ Cargando episodios…';
+      grid.appendChild(av);
+      return;
+    }
+    if (rtveErr) {
+      const av = document.createElement('div');
+      av.className = 'comment-status';
+      av.textContent = '❌ No se pudieron cargar los episodios (' + rtveErr + '). ¿Estás conectado?';
+      const retry = document.createElement('button');
+      retry.className = 'back-chip';
+      retry.style.marginTop = '10px';
+      retry.textContent = '↺ Reintentar';
+      retry.addEventListener('click', () => {
+        rtveCargando = true;
+        rtveErr = '';
+        pintarEpisodios();
+        cargarEpisodiosRTVE(rtveProg.uid);
+      });
+      av.appendChild(document.createElement('br'));
+      av.appendChild(retry);
+      grid.appendChild(av);
+      return;
+    }
+    if (!rtveEpis.length) {
+      const av = document.createElement('div');
+      av.className = 'comment-status';
+      av.textContent = 'Este programa aún no tiene episodios disponibles.';
+      grid.appendChild(av);
+      return;
+    }
+    const sub = document.createElement('div');
+    sub.className = 'ep-sub';
+    sub.textContent = 'Últimos ' + rtveEpis.length + ' episodios · toca uno para escucharlo en audio';
+    grid.appendChild(sub);
+    rtveEpis.forEach(ep => grid.appendChild(filaEpisodio(ep)));
+  }
+
+  function filaEpisodio(ep) {
+    const fila = document.createElement('div');
+    fila.className = 'ep-row';
+    if (currentItem && currentItem.id === 'rtve:' + ep.id) fila.classList.add('ep-activo');
+    const img = document.createElement('img');
+    img.className = 'ep-thumb';
+    img.src = ep.img || 'icon.svg';
+    img.alt = '';
+    img.loading = 'lazy';
+    img.onerror = () => { img.src = 'icon.svg'; };
+    const info = document.createElement('div');
+    info.className = 'ep-info';
+    const t = document.createElement('div');
+    t.className = 'ep-titulo';
+    t.textContent = ep.titulo;
+    const m = document.createElement('div');
+    m.className = 'ep-meta';
+    const fp = (ep.fecha || '').split('-'); // dd-mm-aaaa
+    const fecha = fp.length === 3 ? fp[0] + '/' + fp[1] + '/' + fp[2] : '';
+    const dur = ep.durMs > 0 ? ' · ' + fmtSeg(Math.floor(ep.durMs / 1000)) : '';
+    m.textContent = (fecha || 'fecha desconocida') + dur;
+    info.appendChild(t);
+    info.appendChild(m);
+    const play = document.createElement('div');
+    play.className = 'ep-play';
+    play.textContent = (currentItem && currentItem.id === 'rtve:' + ep.id && isPlaying) ? '🔊' : '▶';
+    fila.appendChild(img);
+    fila.appendChild(info);
+    fila.appendChild(play);
+    fila.addEventListener('click', () => reproducirEpisodioRTVE(ep));
+    return fila;
+  }
+
+  function reproducirEpisodioRTVE(ep) {
+    if (!isNative || !window.Capacitor || !Capacitor.Plugins || !Capacitor.Plugins.BackgroundAudio) {
+      showToast('📲 Esto solo va en la app de Android');
+      if (ep.enlace) { try { window.open(ep.enlace, '_blank'); } catch (e) {} }
+      return;
+    }
+    showToast('⏳ Buscando el audio del episodio…');
+    detectarProxyYt().then(proxy => {
+      if (!proxy) { showToast('❌ Servicio de audio no disponible (¿encendido el Mac?)'); return; }
+      Capacitor.Plugins.BackgroundAudio.playRtveProxy({ id: ep.id, proxy: proxy, title: ep.titulo })
+        .then(res => {
+          if (!res || !res.audioUrl) { showToast('❌ No se pudo obtener el audio'); return; }
+          if (bsPlaying || bsPaused) bsStop();
+          stopStream();
+          currentItem = {
+            id: 'rtve:' + ep.id,
+            esVod: true, // bajo demanda: pausa real (no como directo)
+            name: ep.titulo,
+            logo: ep.img || 'icon.svg',
+            url: res.audioUrl,
+            _durMs: ep.durMs || 0
+          };
+          isPlaying = true;
+          updateUI();
+          if (currentTab === 'podcast' && rtveProg) pintarEpisodios();
+          showToast('▶ ' + ep.titulo);
+        })
+        .catch(err => {
+          const msg = (err && err.message) ? err.message : '';
+          showToast('❌ No se pudo reproducir el episodio' + (msg ? ': ' + msg : ''));
+        });
+    }).catch(() => showToast('❌ Servicio de audio no disponible'));
   }
 
 
@@ -1104,10 +1327,11 @@
   function pausePlayback() {
     if (isNative) {
       // v4.3.6: YouTube → PAUSA REAL (servicio vivo, posición conservada).
+      // v4.4.4: lo mismo para episodios bajo demanda (esVod, p. ej. RTVE).
       // TV/Radio en directo → se para el servicio (al reanudar se relanza el
       // directo actual; pausar un stream en vivo y reanudar el buffer viejo
       // dejaría la emisora "atrasada").
-      if (currentItem && currentItem.esYoutube) {
+      if (currentItem && (currentItem.esYoutube || currentItem.esVod)) {
         try { Capacitor.Plugins.BackgroundAudio.pause(); } catch (e) {}
       } else {
         try { Capacitor.Plugins.BackgroundAudio.stop(); } catch (e) {}
@@ -1514,8 +1738,8 @@
       ovName.textContent = datos.nombre;
       ovLabel.textContent = datos.etiqueta;
       ovEq.classList.toggle('paused', !eqActivo);
-      // Barra de progreso: solo YouTube con duración conocida
-      const conBarra = !!(item && item.esYoutube && item._durMs > 0);
+      // Barra de progreso: solo contenido bajo demanda (YouTube o episodios) con duración conocida
+      const conBarra = !!(item && (item.esYoutube || item.esVod) && item._durMs > 0);
       ovProgress.style.display = conBarra ? 'block' : 'none';
     }
     if (ovPower) {
@@ -1532,7 +1756,7 @@
     if (!isNative || !ovBar) return;
     ovTicker = setInterval(() => {
       if (!ovAbierto()) { ovTickerStop(); return; }
-      if (!currentItem || !currentItem.esYoutube) return;
+      if (!currentItem || !(currentItem.esYoutube || currentItem.esVod)) return;
       if (!window.Capacitor || !Capacitor.Plugins.BackgroundAudio) return;
       Capacitor.Plugins.BackgroundAudio.getEstado().then((est) => {
         const dur = Number(est.durMs) || 0;
@@ -1568,7 +1792,7 @@
       if (!force && ahora - ovUltimoSeek < 200) return;
       ovUltimoSeek = ahora;
       const frac = Number(ovBar.value) / 1000;
-      if (currentItem && currentItem.esYoutube && currentItem._durMs > 0 && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
+      if (currentItem && (currentItem.esYoutube || currentItem.esVod) && currentItem._durMs > 0 && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
         Capacitor.Plugins.BackgroundAudio.seekTo({ posMs: Math.floor(frac * currentItem._durMs) }).catch(() => {});
       }
     };
@@ -1590,14 +1814,14 @@
       ovSeek(false);
     });
     ovBar.addEventListener('input', () => {
-      if (currentItem && currentItem.esYoutube && currentItem._durMs > 0 && ovDragging) {
+      if (currentItem && (currentItem.esYoutube || currentItem.esVod) && currentItem._durMs > 0 && ovDragging) {
         const f = Number(ovBar.value) / 1000;
         ovPintar(f);
         ovSeek(false);
       }
     });
     const ovSoltar = (e) => {
-      if (e && typeof e.clientX === 'number' && currentItem && currentItem.esYoutube && currentItem._durMs > 0) {
+      if (e && typeof e.clientX === 'number' && currentItem && (currentItem.esYoutube || currentItem.esVod) && currentItem._durMs > 0) {
         const f = ovFrac(e.clientX);
         if (f !== null) ovPintar(f);
       }
@@ -1614,7 +1838,7 @@
     ovBar.addEventListener('pointercancel', ovSoltar);
     ovBar.addEventListener('touchcancel', ovSoltar);
     ovBar.addEventListener('click', (e) => {
-      if (currentItem && currentItem.esYoutube && currentItem._durMs > 0) {
+      if (currentItem && (currentItem.esYoutube || currentItem.esVod) && currentItem._durMs > 0) {
         const f = ovFrac(e.clientX);
         if (f !== null) { ovPintar(f); ovSeek(true); }
       }
@@ -1646,6 +1870,7 @@
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       currentTab = tab.dataset.tab;
+      if (currentTab !== 'podcast') rtveProg = null; // salir de la vista de episodios
       // Cada vez que se abre 'Canción del día', buscar la versión más nueva
       if (currentTab === 'cancion') loadSongs();
       renderChannels();
