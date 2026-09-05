@@ -130,6 +130,12 @@
     { id: 'radiored', name: 'Radio Red', logo: 'logos/radiored.png',
       url: 'https://streams.radio.co/s450f67578/listen',
       cat: '247', desc: 'Canal Red 24 horas en audio: actualidad, análisis y entrevistas.' },
+    { id: 'france24', name: 'France 24 Español', logo: 'logos/france24.png',
+      url: 'https://static.france24.com/live/F24_ES_LO_HLS/live_web.m3u8',
+      cat: '247', desc: 'Noticias internacionales 24 horas en español.' },
+    { id: 'dw', name: 'DW Español', logo: 'logos/dw.png',
+      url: 'https://dwamdstream104.akamaized.net/hls/live/2015526/dwstream104/index.m3u8',
+      cat: '247', desc: 'Deutsche Welle en español: noticias y cultura 24/7.' },
   ];
 
   // ================= LA CANCIÓN DEL DÍA (historial) =================
