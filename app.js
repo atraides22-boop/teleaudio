@@ -253,6 +253,17 @@
     const ch = document.getElementById('cuenta-hint');
     if (ch) ch.style.display = 'none';
   }
+
+  // v4.5.1: muestra la versión REAL de la app en Ajustes → Acerca de
+  (function mostrarVersion() {
+    const el = document.getElementById('acerca-version');
+    if (!el) return;
+    if (isNative && window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.BackgroundAudio && Capacitor.Plugins.BackgroundAudio.getVersion) {
+      Capacitor.Plugins.BackgroundAudio.getVersion()
+        .then(r => { if (r && r.version) el.textContent = 'TeleAudio v' + r.version + ' — La tele y la radio en tu oreja. Solo audio, ahorro de datos. Los streams son los oficiales de cada cadena.'; })
+        .catch(() => {});
+    }
+  })();
   const audio = new Audio();
   audio.preload = 'none';
   let hls = null;
@@ -2008,23 +2019,25 @@
     // v4.5.0: primero intento DIRECTO (resuelve el audio en el propio móvil,
     // sin el Mac → funciona en cualquier WiFi/datos, también fuera de casa).
     showToast('⏳ Buscando el audio del episodio…');
+    let errDirecto = '';
     const lanzarDirecto = () => {
       Capacitor.Plugins.BackgroundAudio.playRtveDirect({ id: ep.id, title: ep.titulo })
         .then(res => marcarReproducido(ep, res))
-        .catch(() => {
+        .catch(err => {
+          errDirecto = (err && err.message) ? String(err.message) : '';
           // Plan B: servicio del Mac (si está en la misma red)
           detectarProxyYt().then(proxy => {
             if (!proxy) {
-              showToast('❌ No se pudo obtener el audio (revisa tu conexión)');
+              showToast('❌ No se pudo obtener el audio' + (errDirecto ? ' (' + errDirecto + ')' : ''));
               return;
             }
             Capacitor.Plugins.BackgroundAudio.playRtveProxy({ id: ep.id, proxy: proxy, title: ep.titulo })
               .then(res => marcarReproducido(ep, res))
-              .catch(err => {
-                const msg = (err && err.message) ? err.message : '';
-                showToast('❌ No se pudo reproducir el episodio' + (msg ? ': ' + msg : ''));
+              .catch(err2 => {
+                const msg = (err2 && err2.message) ? err2.message : '';
+                showToast('❌ No se pudo reproducir el episodio' + (msg ? ': ' + msg : (errDirecto ? ' (directo: ' + errDirecto + ')' : '')));
               });
-          }).catch(() => showToast('❌ No se pudo obtener el audio'));
+          }).catch(() => showToast('❌ No se pudo obtener el audio' + (errDirecto ? ' (' + errDirecto + ')' : '')));
         });
     };
     const marcarReproducido = (episodio, res) => {
