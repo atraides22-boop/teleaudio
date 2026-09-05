@@ -89,6 +89,48 @@
     </div>
   </div>
 
+  <!-- Reproductor completo (overlay F8): se abre tocando el miniplayer -->
+  <div id="player-overlay" class="player-overlay" style="display:none;">
+    <div class="ov-top">
+      <button id="ov-close" class="icon-btn ov-close-btn" title="Cerrar reproductor" aria-label="Cerrar reproductor">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <span class="ov-app">TeleAudio</span>
+    </div>
+    <div class="ov-stage">
+      <img id="ov-logo" class="ov-logo" src="icon.svg" alt="">
+      <div class="ov-meta">
+        <div class="ov-eq np-equalizer" id="ov-eq">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div id="ov-label" class="ov-label">EN DIRECTO</div>
+        <div id="ov-name" class="ov-name">—</div>
+      </div>
+      <div class="ov-progress" id="ov-progress" style="display:none;">
+        <input type="range" id="ov-bar" min="0" max="1000" value="0" step="1" aria-label="Posición de reproducción">
+        <div class="ov-times">
+          <span id="ov-tAct">0:00</span>
+          <span id="ov-tDur">0:00</span>
+        </div>
+      </div>
+    </div>
+    <div class="ov-controls">
+      <button id="ov-prev" class="ov-btn" title="Canal anterior">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M7 6h2v12H7zM20 6l-9 6 9 6V6z"/></svg>
+      </button>
+      <button id="ov-power" class="ov-btn ov-power" title="Play / Pausa">
+        <svg class="fab-icon-play" width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="fab-icon-pause" width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      </button>
+      <button id="ov-next" class="ov-btn" title="Canal siguiente">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6h2v12h-2zM4 6l9 6-9 6V6z"/></svg>
+      </button>
+      <button id="ov-stop" class="ov-btn ov-stop" title="Detener">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>
+      </button>
+    </div>
+  </div>
+
   <!-- Modal ajustes -->
   <div id="settings-modal" class="modal" style="display:none;">
     <div class="modal-content">

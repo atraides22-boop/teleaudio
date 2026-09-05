@@ -683,3 +683,111 @@ body.player-active .app-footer { display: none; }
 /* Ocultar scrollbar lateral en móvil */
 main::-webkit-scrollbar, .channel-grid::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 main { scrollbar-width: none; }
+
+/* ===== F8: REPRODUCTOR COMPLETO (OVERLAY) =====
+   Se abre tocando la barra del miniplayer. Pantalla completa tipo Spotify:
+   carátula grande, estado, barra de progreso (solo YouTube) y controles grandes. */
+.player-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: none; /* flex cuando se abre (inline desde JS) */
+  flex-direction: column;
+  background: var(--bg);
+  background-image: radial-gradient(ellipse 130% 55% at 50% -8%, var(--bg2) 0%, transparent 62%);
+  animation: ovIn 0.25s ease;
+  color: var(--text);
+}
+@keyframes ovIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+.ov-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 4px;
+}
+.ov-close-btn { margin-left: -4px; background: transparent; border-color: transparent; }
+.ov-app { font-size: 0.78rem; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.ov-stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 8px 26px;
+}
+.ov-logo {
+  width: min(62vw, 300px);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 16px 44px rgba(0,0,0,0.45);
+}
+.ov-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  text-align: center;
+  max-width: 92%;
+}
+.ov-eq { height: 22px; margin: 0; }
+.ov-eq span { width: 4px; }
+.ov-eq.paused span { height: 4px; }
+.ov-label { font-size: 0.7rem; letter-spacing: 2px; color: var(--accent); font-weight: 800; text-transform: uppercase; }
+.ov-name { font-size: 1.4rem; font-weight: 800; line-height: 1.2; }
+.ov-progress { width: min(88%, 420px); margin-top: 4px; }
+.ov-progress input[type="range"] {
+  width: 100%;
+  height: 28px;
+  accent-color: var(--accent);
+  touch-action: none;
+  cursor: pointer;
+}
+.ov-times { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); }
+.ov-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 8px 16px calc(30px + env(safe-area-inset-bottom, 0px));
+}
+.ov-btn {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg2);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+.ov-btn:active { transform: scale(0.92); }
+.ov-power {
+  width: 80px;
+  height: 80px;
+  background: var(--accent);
+  color: var(--bg);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+}
+.ov-power .fab-icon-pause { display: none; }
+.ov-power.playing .fab-icon-play { display: none; }
+.ov-power.playing .fab-icon-pause { display: block; }
+.ov-power.paused-state { background: transparent; color: var(--accent); border: 2px dashed var(--accent); box-shadow: none; }
+.ov-stop { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+.ov-stop:active { color: var(--danger); }
+body.full-open { overflow: hidden; }

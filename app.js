@@ -232,6 +232,18 @@
   const toast = $('toast');
   const timerBadge = $('timer-badge');
 
+  // F8: reproductor completo (overlay) — refs DOM
+  const playerOverlay = $('player-overlay');
+  const ovLogo = $('ov-logo');
+  const ovLabel = $('ov-label');
+  const ovName = $('ov-name');
+  const ovEq = $('ov-eq');
+  const ovPower = $('ov-power');
+  const ovProgress = $('ov-progress');
+  const ovBar = $('ov-bar');
+  const ovTAct = $('ov-tAct');
+  const ovTDur = $('ov-tDur');
+
   // ================= ESTADO =================
   const isNative = typeof window !== 'undefined' && window.Capacitor && Capacitor.isNativePlatform();
   // El botón de salir solo tiene sentido en la app Android
@@ -1223,9 +1235,11 @@
         statusText.textContent = bsPlaying ? '▶ Social Radio: ' + bsLabelActual() : '⏸ Social en pausa';
       }
       npEq.classList.toggle('paused', !algoSonando);
+      sincronizarOverlay(currentItem, isPlaying, bsPlaying, bsPaused, algoSonando);
     } else {
       nowPlaying.style.display = 'none';
       npEq.classList.add('paused');
+      sincronizarOverlay(null, false, false, false, false);
     }
     updateTimerBadge();
     document.querySelectorAll('.channel-card').forEach(card => {
@@ -1463,6 +1477,167 @@
       }
     });
   }
+
+  // ===== F8: REPRODUCTOR COMPLETO (OVERLAY) =====
+  // Tocar el miniplayer (fuera de sus botones) abre la pantalla completa.
+  // Los controles del overlay DELEGAN en los del miniplayer (misma lógica,
+  // un solo sitio que mantener). El estado visual lo sincroniza updateUI.
+  let ovDragging = false;
+  let ovTicker = null;
+
+  function ovAbierto() {
+    return playerOverlay && playerOverlay.style.display !== 'none';
+  }
+  function abrirOverlay() {
+    if (!playerOverlay) return;
+    playerOverlay.style.display = 'flex';
+    document.body.classList.add('full-open');
+    updateUI(); // rellena carátula, nombre, estado y botón ▶/⏸
+    ovTickerStart();
+  }
+  function cerrarOverlay() {
+    if (!playerOverlay) return;
+    playerOverlay.style.display = 'none';
+    document.body.classList.remove('full-open');
+    ovTickerStop();
+  }
+
+  // Refresca el overlay con el estado actual (llamado desde updateUI)
+  function sincronizarOverlay(item, sonando, bsPlay, bsPausa, eqActivo) {
+    if (!ovName || !ovLogo) return;
+    const hay = !!item || bsPlay || bsPausa;
+    if (hay) {
+      const datos = item
+        ? { src: item.logo || (item.esYoutube ? thumbYt(item.ytVideoId || '') : 'icon.svg'), nombre: item.name, etiqueta: sonando ? 'EN DIRECTO' : 'EN PAUSA' }
+        : { src: 'icon.svg', nombre: bsLabelActual(), etiqueta: bsPlay ? 'SOCIAL RADIO' : 'SOCIAL EN PAUSA' };
+      ovLogo.src = datos.src || 'icon.svg';
+      ovName.textContent = datos.nombre;
+      ovLabel.textContent = datos.etiqueta;
+      ovEq.classList.toggle('paused', !eqActivo);
+      // Barra de progreso: solo YouTube con duración conocida
+      const conBarra = !!(item && item.esYoutube && item._durMs > 0);
+      ovProgress.style.display = conBarra ? 'block' : 'none';
+    }
+    if (ovPower) {
+      ovPower.classList.toggle('playing', !!sonando || !!bsPlay);
+      ovPower.classList.toggle('paused-state', (item && !sonando) || !!bsPausa);
+    }
+    // Si ya no suena nada, el overlay se cierra solo
+    if (!hay && ovAbierto()) cerrarOverlay();
+  }
+
+  // Ticker: refresca posición/duración del overlay cuando suena YouTube
+  function ovTickerStart() {
+    ovTickerStop();
+    if (!isNative || !ovBar) return;
+    ovTicker = setInterval(() => {
+      if (!ovAbierto()) { ovTickerStop(); return; }
+      if (!currentItem || !currentItem.esYoutube) return;
+      if (!window.Capacitor || !Capacitor.Plugins.BackgroundAudio) return;
+      Capacitor.Plugins.BackgroundAudio.getEstado().then((est) => {
+        const dur = Number(est.durMs) || 0;
+        const pos = Number(est.posMs) || 0;
+        if (dur > 0) currentItem._durMs = dur;
+        const durRef = currentItem._durMs || 0;
+        if (durRef > 0) {
+          ovProgress.style.display = 'block';
+          ovTDur.textContent = fmtSeg(Math.floor(durRef / 1000));
+          if (!ovDragging) {
+            ovBar.value = String(Math.round(Math.min(1, pos / durRef) * 1000));
+            ovTAct.textContent = fmtSeg(Math.floor(pos / 1000));
+          }
+        }
+      }).catch(() => {});
+    }, 1000);
+  }
+  function ovTickerStop() {
+    if (ovTicker) { clearInterval(ovTicker); ovTicker = null; }
+  }
+
+  // Barra de progreso del overlay: misma mecánica por coordenadas de dedo
+  // que la barra de la pestaña YouTube (tap o arrastre saltan siempre).
+  if (ovBar) {
+    let ovRect = null;
+    let ovUltimoSeek = 0;
+    const ovFrac = (cx) => {
+      if (!ovRect || ovRect.width <= 0) return null;
+      return Math.min(1, Math.max(0, (cx - ovRect.left) / ovRect.width));
+    };
+    const ovSeek = (force) => {
+      const ahora = Date.now();
+      if (!force && ahora - ovUltimoSeek < 200) return;
+      ovUltimoSeek = ahora;
+      const frac = Number(ovBar.value) / 1000;
+      if (currentItem && currentItem.esYoutube && currentItem._durMs > 0 && window.Capacitor && Capacitor.Plugins.BackgroundAudio) {
+        Capacitor.Plugins.BackgroundAudio.seekTo({ posMs: Math.floor(frac * currentItem._durMs) }).catch(() => {});
+      }
+    };
+    const ovPintar = (frac) => {
+      ovBar.value = String(Math.round(frac * 1000));
+      if (currentItem) ovTAct.textContent = fmtSeg(Math.floor(frac * (currentItem._durMs / 1000)));
+    };
+    ovBar.style.touchAction = 'none';
+    ovBar.addEventListener('pointerdown', (e) => {
+      ovDragging = true;
+      ovRect = ovBar.getBoundingClientRect();
+      try { e.preventDefault(); } catch (err) {}
+    });
+    ovBar.addEventListener('pointermove', (e) => {
+      if (!ovDragging) return;
+      const f = ovFrac(e.clientX);
+      if (f === null) return;
+      ovPintar(f);
+      ovSeek(false);
+    });
+    ovBar.addEventListener('input', () => {
+      if (currentItem && currentItem.esYoutube && currentItem._durMs > 0 && ovDragging) {
+        const f = Number(ovBar.value) / 1000;
+        ovPintar(f);
+        ovSeek(false);
+      }
+    });
+    const ovSoltar = (e) => {
+      if (e && typeof e.clientX === 'number' && currentItem && currentItem.esYoutube && currentItem._durMs > 0) {
+        const f = ovFrac(e.clientX);
+        if (f !== null) ovPintar(f);
+      }
+      ovDragging = false;
+      ovRect = null;
+      ovSeek(true);
+    };
+    ovBar.addEventListener('change', ovSoltar);
+    ovBar.addEventListener('pointerup', ovSoltar);
+    ovBar.addEventListener('touchend', (e) => {
+      const t = e.changedTouches && e.changedTouches[0];
+      ovSoltar(t || e);
+    });
+    ovBar.addEventListener('pointercancel', ovSoltar);
+    ovBar.addEventListener('touchcancel', ovSoltar);
+    ovBar.addEventListener('click', (e) => {
+      if (currentItem && currentItem.esYoutube && currentItem._durMs > 0) {
+        const f = ovFrac(e.clientX);
+        if (f !== null) { ovPintar(f); ovSeek(true); }
+      }
+    });
+  }
+
+  // Abrir al tocar el miniplayer (cualquier sitio menos sus botones)
+  if (nowPlaying) {
+    nowPlaying.addEventListener('click', (e) => {
+      if (e.target.closest('.mini-ctrls')) return;
+      abrirOverlay();
+    });
+  }
+  const ovCloseBtn = $('ov-close');
+  if (ovCloseBtn) ovCloseBtn.addEventListener('click', cerrarOverlay);
+  // Controles grandes: delegan en los del miniplayer (una sola lógica)
+  const ovPrevBtn = $('ov-prev');
+  const ovNextBtn = $('ov-next');
+  const ovStopBtn = $('ov-stop');
+  if (ovPrevBtn) ovPrevBtn.addEventListener('click', () => prevFab.click());
+  if (ovNextBtn) ovNextBtn.addEventListener('click', () => nextFab.click());
+  if (ovStopBtn && stopFab) ovStopBtn.addEventListener('click', () => stopFab.click());
+  if (ovPower) ovPower.addEventListener('click', () => powerBtn.click());
 
   search.addEventListener('input', renderChannels);
 
