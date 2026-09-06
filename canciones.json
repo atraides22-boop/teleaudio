@@ -1,6 +1,14 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-07",
+            "titulo": "Todos los Besos",
+            "artista": "Siloé",
+            "youtube": "https://www.youtube.com/watch?v=9iJNXx0IpFw",
+            "spotify": "https://open.spotify.com/track/2vSJKKmOEJQA5tr082p5XX",
+            "likes": 0
+        },
+        {
             "fecha": "2026-09-06",
             "titulo": "Calaveras y Estrellas",
             "artista": "Rebeca Jiménez",
