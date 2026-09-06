@@ -1234,3 +1234,275 @@ body.player-active .app-footer { display: none; }
 .conn-error strong { color: var(--text-2); font-size: var(--fs-h3); }
 .conn-error span { font-size: var(--fs-small); max-width: 300px; line-height: 1.5; }
 .conn-error .btn { margin-top: 4px; }
+/* ===== Podcast Pro v5.4: UI de la pestaña Podcast (hero 24/7, chips, mis podcasts) ===== */
+
+/* Cabecera de la pestaña Podcast */
+.pod-head { grid-column: 1 / -1; padding: 4px 2px 10px; }
+.pod-head-titulo { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.2px; }
+.pod-head-sub { font-size: var(--fs-small); color: var(--muted); margin-top: 3px; }
+
+/* Chips de sub-vista: Todos / 24/7 / Mis podcasts / Favoritos */
+.pod-chips {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 2px 12px;
+}
+.chip-btn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.chip-btn:active { transform: scale(0.95); }
+.chip-btn.on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+/* Hero PODCAST 24/7 */
+.pod-247-hero {
+  grid-column: 1 / -1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 18px 18px 16px;
+  margin-bottom: 14px;
+  background:
+    radial-gradient(130% 160% at 100% 0%, var(--accent-soft), transparent 55%),
+    linear-gradient(135deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.pod-247-hero:hover { border-color: var(--accent); }
+.pod-247-hero:active { transform: scale(0.99); }
+.pod-247-lab { font-weight: 800; font-size: 1.05rem; letter-spacing: 0.3px; }
+.pod-247-txt { font-size: var(--fs-small); color: var(--muted); line-height: 1.45; }
+.pod-247-btn { margin-top: 6px; }
+
+/* Fila "ahora sonando" de la vista 24/7 */
+.pod-now {
+  grid-column: 1 / -1;
+  padding: 14px;
+  margin-bottom: 14px;
+  background: linear-gradient(160deg, var(--accent-soft), var(--surface) 60%);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-lg);
+}
+.pod-now-lab { font-size: var(--fs-tiny); font-weight: 800; color: var(--accent-text); letter-spacing: 1px; }
+.pod-now-art { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.pod-now-art img { width: 64px; height: 64px; border-radius: var(--r-md); object-fit: cover; background: #fff; flex-shrink: 0; }
+.pod-now-meta { min-width: 0; }
+.pod-now-name { font-size: var(--fs-tiny); color: var(--accent-text); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.pod-now-titulo { font-size: 0.95rem; font-weight: 700; margin-top: 2px; }
+.pod-now-next { margin-top: 10px; font-size: var(--fs-small); color: var(--muted); }
+.pod-now .btn-row { margin-top: 12px; }
+
+/* Estaciones 24/7 (scroll horizontal) */
+.pod-station {
+  flex: 0 0 172px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.pod-station:active { transform: scale(0.97); }
+.pod-station:hover { border-color: var(--accent); background: var(--surface-2); }
+.pod-station.wide { flex: 0 0 240px; }
+.pod-station-ico { font-size: 1.6rem; }
+.pod-station-name { font-weight: 700; font-size: 0.88rem; }
+.pod-station-desc { font-size: var(--fs-tiny); color: var(--muted); }
+.pod-station-play {
+  margin-top: auto;
+  align-self: flex-end;
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  border-radius: 50%;
+}
+
+/* Invitación a añadir podcast */
+.pod-invite {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 16px;
+  margin-bottom: 10px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.pod-invite div:nth-child(2) { color: var(--muted); font-weight: 400; font-size: var(--fs-small); }
+.pod-invite .btn { margin-top: 8px; }
+.pod-add-btn { grid-column: 1 / -1; margin: 4px 0 8px; }
+.pod-add-btn.big { padding: 13px; font-size: 0.95rem; }
+
+/* Chips de categorías */
+.pod-cats {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+.pod-cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: var(--fs-small);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.pod-cat-chip:hover { border-color: var(--accent); background: var(--surface-2); }
+.pod-cat-ico { font-size: 0.95rem; }
+.pod-cat-n { color: var(--muted); font-size: 0.72rem; background: var(--surface-2); padding: 1px 7px; border-radius: 999px; }
+
+/* Fila de episodio: botones ♡ y ⋮ */
+.ep-fav {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.ep-fav.faved { color: var(--fav); }
+.ep-more {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.1rem;
+  padding: 4px 8px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.ep-more:hover { background: var(--surface-2); color: var(--text); }
+
+/* Menú contextual (⋮) */
+.pod-menu {
+  z-index: 400;
+  min-width: 190px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  overflow: hidden;
+  padding: 5px;
+}
+.pod-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: var(--fs-small);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.pod-menu-item:hover { background: var(--surface-2); color: var(--accent-text); }
+
+/* Detalle de podcast (vista de episodios) */
+.pod-detail {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px;
+  margin-bottom: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+.pod-detail-img {
+  width: 92px;
+  height: 92px;
+  border-radius: var(--r-md);
+  object-fit: cover;
+  background: #fff;
+  flex-shrink: 0;
+}
+.pod-detail-info { flex: 1 1 220px; min-width: 0; }
+.pod-detail-nombre { font-size: 1.08rem; font-weight: 800; }
+.pod-detail-autor { font-size: var(--fs-small); color: var(--accent-text); margin-top: 2px; }
+.pod-detail-desc { font-size: var(--fs-small); color: var(--muted); margin-top: 6px; line-height: 1.5; }
+.pod-detail-cats { display: inline-block; font-size: 0.72rem; background: var(--surface-2); padding: 2px 9px; border-radius: 999px; margin-bottom: 6px; }
+.pod-detail-acciones { width: 100%; }
+
+/* Checkbox de selección de podcasts (crear estación) */
+.pod-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  font-size: var(--fs-small);
+  cursor: pointer;
+}
+.pod-check img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: #fff; }
+.pod-check input { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+
+/* Pequeños ajustes para inputs en los modales de podcast */
+#modal-mispod .modal-content, #modal-estacion .modal-content { width: min(94vw, 430px); }
+#modal-mispod label, #modal-estacion label {
+  display: block;
+  font-size: var(--fs-tiny);
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin: 10px 0 5px;
+}
+
+/* Botón velocidad de reproducción en el overlay (podcasts, web) */
+.ov-rate {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 18px;
+}
+.rate-btn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent-text);
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 6px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.rate-btn:active { transform: scale(0.94); }
+.rate-btn:hover { border-color: var(--accent); }

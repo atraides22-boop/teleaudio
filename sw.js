@@ -1,9 +1,9 @@
-const CACHE_NAME = 'teleaudio-v77';
+const CACHE_NAME = 'teleaudio-v78-podpro';
 const ASSETS = [
   './',
   './index.html',
-  './style.css',
-  './app.js',
+  './style.css?v=20260906-podpro',
+  './app.js?v=20260906-podpro',
   './hls.min.js',
   './manifest.json', './canciones.json',
   './icon.svg',
@@ -12,17 +12,20 @@ const ASSETS = [
   './logos/canalsurmas.png', './logos/eltoro.png', './logos/trece.png',
   './logos/euronews.png', './logos/rne.png', './logos/r5.png',
   './logos/los40.png', './logos/dial.png', './logos/radiole.png', './logos/melodia.png',
-  './logos/tv3.png', './logos/esport3.png', './logos/sx3.png', './logos/tdt324.png', './logos/7tvgranada.png', './logos/radiocable.png',
+  './logos/tv3.png', './logos/esport3.png', './logos/sx3.png', './logos/tdt324.png', './logos/7tvgranada.png',
   './logos/rmtv.png', './logos/esradio.png', './logos/rmarca.png', './logos/rac1.png', './logos/catradio.png',
-  './logos/euskadi.png', './logos/galega.png', './logos/ondavalencia.png', './logos/musictv.png'
+  './logos/euskadi.png', './logos/galega.png', './logos/ondavalencia.png', './logos/musictv.png',
   './logos/ser.png', './logos/cope.png', './logos/onda0.png',
-  './logos/c100.png', './logos/rockfm.png', './logos/kissfm.png', './logos/europafm.png', './logos/radiocable.png'
+  './logos/c100.png', './logos/rockfm.png', './logos/kissfm.png', './logos/europafm.png', './logos/radiocable.png',
+  './logos/radiored.png', './logos/nsn.png', './logos/tplr.png',
+  './logos/serhistoria.png', './logos/lascript.png', './logos/acontece.png',
+  './logos/larguero.png', './logos/hora25.png', './logos/avirir.png'
 ];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME)
-      .then((c) => c.addAll(ASSETS))
+      .then((c) => c.addAll(ASSETS).catch(() => {}))
       .then(() => self.skipWaiting())
   );
 });
