@@ -1,6 +1,14 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-09",
+            "titulo": "XXI",
+            "artista": "Supersubmarina",
+            "youtube": "https://www.youtube.com/watch?v=XV4suNULL_E",
+            "spotify": "https://open.spotify.com/track/16AGC1s7rdQP7jQ6jLaNgG",
+            "likes": 0
+        },
+        {
             "fecha": "2026-09-08",
             "titulo": "Pájaros de Desván",
             "artista": "Litus y M-Clan",
