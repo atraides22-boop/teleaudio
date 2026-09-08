@@ -1,6 +1,14 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-08",
+            "titulo": "Pájaros de Desván",
+            "artista": "Litus y M-Clan",
+            "youtube": "https://www.youtube.com/watch?v=YLL0iNfcYZ8",
+            "spotify": "https://open.spotify.com/track/3zCKtvltc5c52y7ARFSJ2N",
+            "likes": 0
+        },
+        {
             "fecha": "2026-09-07",
             "titulo": "Todos los Besos",
             "artista": "Siloé",
@@ -12,7 +20,7 @@
             "fecha": "2026-09-06",
             "titulo": "Calaveras y Estrellas",
             "artista": "Rebeca Jiménez",
-            "youtube": "https://www.youtube.com/watch?v=BvIPRmqsrTQ",
+            "youtube": "https://www.youtube.com/watch?v=9g7Un_635zE",
             "spotify": "https://open.spotify.com/track/1LcAztCMrEDMBXJXJnyH3a",
             "likes": 0
         },
@@ -44,7 +52,7 @@
             "fecha": "2026-09-02",
             "titulo": "La mujer de verde",
             "artista": "IZAL",
-            "youtube": "https://www.youtube.com/watch?v=guzh1l71iAE",
+            "youtube": "https://www.youtube.com/watch?v=LI452AmS6Rg",
             "spotify": "https://open.spotify.com/track/5sXPNCkjikRUHKKlaRsFJY",
             "likes": 1
         },
