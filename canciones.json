@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-11",
+            "titulo": "Héroes Del Sábado",
+            "artista": "La Maravillosa Orquesta del Alcohol",
+            "youtube": "https://youtu.be/6MS3Sp2A9cU",
+            "spotify": "https://open.spotify.com/track/06TMI3QGaUZbcAzKWQLnXm?si=fcTG4bkRS0u6m4qdFV2uRg&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/6MS3Sp2A9cU/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-10",
             "titulo": "Colocao",
             "artista": "Nicki Nicole",
