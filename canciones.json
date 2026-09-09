@@ -1,6 +1,14 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-10",
+            "titulo": "Colocao",
+            "artista": "Nicki Nicole",
+            "youtube": "https://youtu.be/qq6d7OgUp28",
+            "spotify": "https://open.spotify.com/track/54uIyu406dDF7kIJxAj7IC?si=aZffxX4MS-mrjyuIeRLWqA&utm_source=copy-link",
+            "likes": 0
+        },
+        {
             "fecha": "2026-09-09",
             "titulo": "XXI",
             "artista": "Supersubmarina",
