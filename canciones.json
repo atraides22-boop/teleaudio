@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-12",
+            "titulo": "\"Sinmigo\"",
+            "artista": "Mr.Kilombo ft. Rozalén",
+            "youtube": "https://youtu.be/sDfkiiyVC-8",
+            "spotify": "https://open.spotify.com/track/4GjjFFJpivq5otRgAfUGqw?si=HdicV-qnR0uoZemK_CSjYg&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/sDfkiiyVC-8/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-11",
             "titulo": "Héroes Del Sábado",
             "artista": "La Maravillosa Orquesta del Alcohol",
