@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-14",
+            "titulo": "Domingo Astromantico",
+            "artista": "Zahara y Santi Balmes",
+            "youtube": "https://youtu.be/FskJDPCHWfI",
+            "spotify": "https://open.spotify.com/track/67GKhkkMA08KWI50WzZN8m?si=lMhx5P_tS3uOtYreCDbOMw&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/FskJDPCHWfI/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-12",
             "titulo": "Sinmigo",
             "artista": "Mr. Kilombo, Rozalén",
