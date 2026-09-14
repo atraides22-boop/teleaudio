@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-15",
+            "titulo": "La Salvación",
+            "artista": "Arde Bogotá",
+            "youtube": "https://youtu.be/cFn_omYY4bQ",
+            "spotify": "https://open.spotify.com/track/0txzIz1WcoAn6m07xypcD5?si=ugH6-4IzR5SAdYwJOYN3VA&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/cFn_omYY4bQ/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-13",
             "titulo": "Domingo Astromantico ZAHARA y Santi Balmes",
             "artista": "Zahara & Santi Balmes",
