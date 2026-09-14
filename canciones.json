@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-16",
+            "titulo": "Europa",
+            "artista": "Ultraligera feat Shinova",
+            "youtube": "https://youtu.be/QggqPbBm-iM",
+            "spotify": "https://open.spotify.com/track/5LSqh5EL4um03gaY1OMSL2?si=hkAvc5JTTRy4U2g0i2xQIQ&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/QggqPbBm-iM/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-15",
             "titulo": "Te echaré de menos",
             "artista": "Iván Ferreiro, Sole Gimenez",
