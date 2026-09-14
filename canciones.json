@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-15",
+            "titulo": "Te echaré de menos",
+            "artista": "Iván Ferreiro, Sole Gimenez",
+            "youtube": "https://youtu.be/maBbEKbfwYI",
+            "spotify": "https://open.spotify.com/track/5LSqh5EL4um03gaY1OMSL2?si=86REZxZkT5mOCjEhAq2n3g&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/maBbEKbfwYI/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-14",
             "titulo": "La Salvación",
             "artista": "Arde Bogotá",
