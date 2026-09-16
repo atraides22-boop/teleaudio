@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-17",
+            "titulo": "Europa",
+            "artista": "Ultraligera y shinova",
+            "youtube": "https://youtu.be/D_tfTBRmUFk",
+            "spotify": "https://open.spotify.com/track/4QPykQfbojatVJbDrnl9Qa?si=pVoVpYVUT6qo0lyYABgcrg&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/D_tfTBRmUFk/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-16",
             "titulo": "tiene que ser más fácil",
             "artista": "Valeria Castro",
