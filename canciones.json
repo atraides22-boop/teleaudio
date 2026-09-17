@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-18",
+            "titulo": "Gil",
+            "artista": "Milo J, Trueno",
+            "youtube": "https://youtu.be/2ezVj9wLr5U",
+            "spotify": "https://open.spotify.com/track/5jgmQkVypORb3enASCxjYs?si=lFgcOe2qS6mlWfnqRC5pzw&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/2ezVj9wLr5U/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-17",
             "titulo": "Europa",
             "artista": "Ultraligera y shinova",
