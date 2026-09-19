@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-20",
+            "titulo": "Santo y seña",
+            "artista": "Vanesa Martín",
+            "youtube": "https://youtu.be/eb4n_ZzaHDA",
+            "spotify": "https://open.spotify.com/track/0VMJML6S7zmdGP5lijdQnG?si=KfaAEfzOTwee7DDvR_NkMQ&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/eb4n_ZzaHDA/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-19",
             "titulo": "CALIFORNIA",
             "artista": "M CLAN",
