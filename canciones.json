@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-22",
+            "titulo": "Navaja de papel (Versión 2023) - Lyric video oficial",
+            "artista": "El Último de la Fila",
+            "youtube": "https://youtu.be/PxMDDx4t6Ao",
+            "spotify": "https://open.spotify.com/track/2mqmO4AXdOKkiTmOGw3jqP?si=WHfSiIlfStOdO75rHh4Ebw&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/PxMDDx4t6Ao/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-21",
             "titulo": "Los Restos de Esta Historia",
             "artista": "Marwán & Iván Ferreiro",
