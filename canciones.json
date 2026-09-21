@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-22",
+            "titulo": "Los Restos de Esta Historia",
+            "artista": "Marwán & Iván Ferreiro",
+            "youtube": "https://youtu.be/bfgN6xOy7pk",
+            "spotify": "https://open.spotify.com/track/1eaBXQH5jc9zuVLkIl0Dlm?si=Zigr7T2uQB-KLhXX8p8NtA&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/bfgN6xOy7pk/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-20",
             "titulo": "Santo y seña",
             "artista": "Vanesa Martín",
