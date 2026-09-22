@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-23",
+            "titulo": "La Yugular",
+            "artista": "ROSALÍA",
+            "youtube": "https://youtu.be/3-TsnIjVU8o",
+            "spotify": "https://open.spotify.com/track/7JKpS5rKsKWeVPZ0ojBqv9?si=YGhPiarvQFWsxP7CPHnkYg&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/3-TsnIjVU8o/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-22",
             "titulo": "Navaja de papel (Versión 2023) - Lyric video oficial",
             "artista": "El Último de la Fila",
