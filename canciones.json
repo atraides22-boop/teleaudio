@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-28",
+            "titulo": "Tramuntana",
+            "artista": "Guitarricadelafuente",
+            "youtube": "https://youtu.be/jdvnHihVnL4",
+            "spotify": "https://open.spotify.com/track/3aZTZQ3mu6GihdOry4xqpV?si=61xtZnlCQ6eWSjp-_WES_g&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/jdvnHihVnL4/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-27",
             "titulo": "Orange county",
             "artista": "Gorillaz",
