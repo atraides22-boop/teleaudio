@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-01",
+            "titulo": "Esa Estrella",
+            "artista": "Siloé",
+            "youtube": "https://youtu.be/e4aL79FUN3I",
+            "spotify": "https://open.spotify.com/track/1yryiFTRWdp6gI4GEfPnQ3?si=ZCNtU4CFTv6OcUrFgGYZQg&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/e4aL79FUN3I/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-30",
             "titulo": "El Gigante de Big Fish",
             "artista": "Leiva",
@@ -8,15 +17,6 @@
             "spotify": "https://open.spotify.com/track/78zQod0uqH9aeSEEAUNsRc?si=eCSeQbBIQ6WjiTseTFx0DA&utm_source=copy-link",
             "likes": 0,
             "portada": "https://i.ytimg.com/vi/pHzwOSCdpUM/hqdefault.jpg"
-        },
-        {
-            "fecha": "2026-09-29",
-            "titulo": "Esa Estrella",
-            "artista": "Siloé",
-            "youtube": "https://youtu.be/e4aL79FUN3I",
-            "spotify": "https://open.spotify.com/track/1yryiFTRWdp6gI4GEfPnQ3?si=ZCNtU4CFTv6OcUrFgGYZQg&utm_source=copy-link",
-            "likes": 0,
-            "portada": "https://i.ytimg.com/vi/e4aL79FUN3I/hqdefault.jpg"
         },
         {
             "fecha": "2026-09-28",
