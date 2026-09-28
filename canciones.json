@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-09-30",
+            "titulo": "El Gigante de Big Fish",
+            "artista": "Leiva",
+            "youtube": "https://youtu.be/pHzwOSCdpUM",
+            "spotify": "https://open.spotify.com/track/78zQod0uqH9aeSEEAUNsRc?si=eCSeQbBIQ6WjiTseTFx0DA&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/pHzwOSCdpUM/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-09-29",
             "titulo": "Puntos suspensivos",
             "artista": "Robe",
