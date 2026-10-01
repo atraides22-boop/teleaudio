@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-02",
+            "titulo": "Carlos Ares *PEREGRINO*",
+            "artista": "CARLOS ARES",
+            "youtube": "https://youtu.be/I_Fj5C-5Lso",
+            "spotify": "https://open.spotify.com/track/78j0p3yRnrD4aBF0Rrok3T?si=eqmE8UrnRcu2xbZVwvtheQ&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/I_Fj5C-5Lso/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-01",
             "titulo": "Esa Estrella",
             "artista": "Siloé",
