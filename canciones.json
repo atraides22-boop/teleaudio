@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-03",
+            "titulo": "Álgebra",
+            "artista": "Vanesa Martín",
+            "youtube": "https://youtu.be/ukZGUHZZkJk",
+            "spotify": "https://open.spotify.com/track/0N6InkRreGcS8YOLZedkIt?si=ouiAUCz9TLWdCWAeiEC27w&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/ukZGUHZZkJk/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-02",
             "titulo": "Carlos Ares *PEREGRINO*",
             "artista": "CARLOS ARES",
