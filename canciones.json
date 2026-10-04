@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-05",
+            "titulo": "Viento-Madera",
+            "artista": "María Ruiz",
+            "youtube": "https://youtu.be/-qcrFt0XUwc",
+            "spotify": "https://open.spotify.com/track/5t53Rhu1ZmX9xyeVBRgqur?si=Nk-QFVD9QMeWxLr1MOvEAA&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/-qcrFt0XUwc/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-04",
             "titulo": "Alli donde soliamos gritar",
             "artista": "Love of Lesbian",
