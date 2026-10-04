@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-05",
+            "titulo": "Alli donde soliamos gritar",
+            "artista": "Love of Lesbian",
+            "youtube": "https://youtu.be/tZapJzlivGY",
+            "spotify": "https://open.spotify.com/track/29tVNOmg85qDLh2wVnJxpv?si=rR90nSBbRU6BYutOsq7llg&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/tZapJzlivGY/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-03",
             "titulo": "Álgebra",
             "artista": "Vanesa Martín",
