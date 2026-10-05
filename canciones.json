@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-08",
+            "titulo": "Tupolev",
+            "artista": "Iván Ferreiro",
+            "youtube": "https://youtu.be/8N3VxJjTaBQ",
+            "spotify": "https://open.spotify.com/track/2iwIKM7RxGlxe0GmU8qYE8?si=v_5m9MKKRriFmXVWjcJP3w&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/8N3VxJjTaBQ/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-07",
             "titulo": "Conviene Saber",
             "artista": "Marwán & Rozalen",
