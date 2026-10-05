@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-09",
+            "titulo": "Hasta la Raíz",
+            "artista": "Natalia Lafourcade",
+            "youtube": "https://youtu.be/IKmPci5VXz0",
+            "spotify": "https://open.spotify.com/track/3lGMtkONrZdJ8kTCg6KIFf?si=ajkz6rICRQ6iNuDW7-tXyA&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/IKmPci5VXz0/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-08",
             "titulo": "Tupolev",
             "artista": "Iván Ferreiro",
