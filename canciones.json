@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-10",
+            "titulo": "Silverado",
+            "artista": "Barry B",
+            "youtube": "https://youtu.be/3J_JsXCW798",
+            "spotify": "https://open.spotify.com/track/7AiufZydQdIZypUWpiEABD?si=WBFYgzjKTUifL6EWVtAN9g&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/3J_JsXCW798/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-09",
             "titulo": "Hasta la Raíz",
             "artista": "Natalia Lafourcade",
@@ -42,7 +51,7 @@
             "artista": "Mundo Chillon",
             "youtube": "https://youtu.be/r1zliIFUMgU",
             "spotify": "https://open.spotify.com/track/3tuTc4T01JCEkwU4JhJxv8?si=M6sov4N7SyOXsn-B_HsZeQ&utm_source=copy-link",
-            "likes": 0,
+            "likes": 1,
             "portada": "https://i.ytimg.com/vi/r1zliIFUMgU/hqdefault.jpg"
         },
         {
@@ -51,7 +60,7 @@
             "artista": "Love of Lesbian",
             "youtube": "https://youtu.be/tZapJzlivGY",
             "spotify": "https://open.spotify.com/track/29tVNOmg85qDLh2wVnJxpv?si=rR90nSBbRU6BYutOsq7llg&utm_source=copy-link",
-            "likes": 0,
+            "likes": 1,
             "portada": "https://i.ytimg.com/vi/tZapJzlivGY/hqdefault.jpg"
         },
         {
@@ -60,7 +69,7 @@
             "artista": "Vanesa Martín",
             "youtube": "https://youtu.be/ukZGUHZZkJk",
             "spotify": "https://open.spotify.com/track/0N6InkRreGcS8YOLZedkIt?si=ouiAUCz9TLWdCWAeiEC27w&utm_source=copy-link",
-            "likes": 0,
+            "likes": 1,
             "portada": "https://i.ytimg.com/vi/ukZGUHZZkJk/hqdefault.jpg"
         },
         {
@@ -69,7 +78,7 @@
             "artista": "CARLOS ARES",
             "youtube": "https://youtu.be/I_Fj5C-5Lso",
             "spotify": "https://open.spotify.com/track/78j0p3yRnrD4aBF0Rrok3T?si=eqmE8UrnRcu2xbZVwvtheQ&utm_source=copy-link",
-            "likes": 0,
+            "likes": 2,
             "portada": "https://i.ytimg.com/vi/I_Fj5C-5Lso/hqdefault.jpg"
         },
         {
