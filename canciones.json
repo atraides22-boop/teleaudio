@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-11",
+            "titulo": "guerrera",
+            "artista": "Valeria Castro",
+            "youtube": "https://youtu.be/tcqK3pEKh_Y",
+            "spotify": "https://open.spotify.com/track/4zXhEgk3gx2HkLVREPBYdq?si=BYTRS3xSQbinTgf985lxMQ&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/tcqK3pEKh_Y/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-10",
             "titulo": "Silverado",
             "artista": "Barry B",
