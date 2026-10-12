@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-13",
+            "titulo": "Dime",
+            "artista": "Grupo de expertos Solynieve",
+            "youtube": "https://youtu.be/IqrHbFjDSSE",
+            "spotify": "https://open.spotify.com/track/37wpoRxSKBfQGMJ7SeFExP?si=1R8CF_o5RAKyRbSOTTT31Q&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/IqrHbFjDSSE/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-11",
             "titulo": "guerrera",
             "artista": "Valeria Castro",
