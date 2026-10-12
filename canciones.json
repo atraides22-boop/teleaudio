@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-13",
+            "titulo": "Un Día en el Parque",
+            "artista": "Love Of Lesbian",
+            "youtube": "https://youtu.be/8-wBmLnCNOQ",
+            "spotify": "https://open.spotify.com/track/1Gbgr0NQ6XlK9VKAWaiwjv?si=-HYzR8KWTBy0CU7e2mNV6Q&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/8-wBmLnCNOQ/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-12",
             "titulo": "Dime",
             "artista": "Grupo de expertos Solynieve",
