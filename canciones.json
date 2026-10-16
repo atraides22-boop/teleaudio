@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-16",
+            "titulo": "Camino a L.A. (Versión Acústica 2011)",
+            "artista": "Sahara",
+            "youtube": "https://youtu.be/-i9EroaOqwo",
+            "spotify": "https://open.spotify.com/track/3gc8FkW3zBoYZ6cUBoXHlu?si=7LNcBZiMQ8mmFbdJJC9Dug&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/-i9EroaOqwo/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-15",
             "titulo": "La sangre del pobre",
             "artista": "Alcalá Norte",
