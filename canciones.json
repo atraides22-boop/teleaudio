@@ -1,12 +1,21 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-15",
+            "titulo": "La sangre del pobre",
+            "artista": "Alcalá Norte",
+            "youtube": "https://youtu.be/d6_iewDWcP0",
+            "spotify": "https://open.spotify.com/track/5KRSwJxQZxNiYau7NyPUxl?si=r9W_V4uCTtyrP0rz0SbI0A&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/d6_iewDWcP0/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-14",
             "titulo": "Linger ( Remastered )",
             "artista": "Cranberries",
             "youtube": "https://youtu.be/jQFFhqR-lRk",
             "spotify": "https://open.spotify.com/track/0gEyKnHvgkrkBM6fbeHdwK?si=tL7iUy_EQ3Kof8nOOLrH1g&utm_source=copy-link",
-            "likes": 0,
+            "likes": 1,
             "portada": "https://i.ytimg.com/vi/jQFFhqR-lRk/hqdefault.jpg"
         },
         {
@@ -15,7 +24,7 @@
             "artista": "Love of lesbians",
             "youtube": "https://youtu.be/8-wBmLnCNOQ",
             "spotify": "https://youtu.be/jQFFhqR-lRk",
-            "likes": 0,
+            "likes": 1,
             "portada": "https://i.ytimg.com/vi/8-wBmLnCNOQ/hqdefault.jpg"
         },
         {
@@ -24,7 +33,7 @@
             "artista": "Grupo de expertos Solynieve",
             "youtube": "https://youtu.be/IqrHbFjDSSE",
             "spotify": "https://open.spotify.com/track/37wpoRxSKBfQGMJ7SeFExP?si=1R8CF_o5RAKyRbSOTTT31Q&utm_source=copy-link",
-            "likes": 0,
+            "likes": 1,
             "portada": "https://i.ytimg.com/vi/IqrHbFjDSSE/hqdefault.jpg"
         },
         {
@@ -33,7 +42,7 @@
             "artista": "Valeria Castro",
             "youtube": "https://youtu.be/tcqK3pEKh_Y",
             "spotify": "https://open.spotify.com/track/4zXhEgk3gx2HkLVREPBYdq?si=BYTRS3xSQbinTgf985lxMQ&utm_source=copy-link",
-            "likes": 0,
+            "likes": 1,
             "portada": "https://i.ytimg.com/vi/tcqK3pEKh_Y/hqdefault.jpg"
         },
         {
