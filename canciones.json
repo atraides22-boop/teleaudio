@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-17",
+            "titulo": "'Hay un fuego'",
+            "artista": "La M.O.D.A.",
+            "youtube": "https://youtu.be/JT9EPauojrE",
+            "spotify": "https://open.spotify.com/track/0BsaUEexBWQWYZ0E7GLTQb?si=OJihWmbhQyi4H3UnBTBneA&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/JT9EPauojrE/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-16",
             "titulo": "Camino a L.A. (Versión Acústica 2011)",
             "artista": "Sahara",
