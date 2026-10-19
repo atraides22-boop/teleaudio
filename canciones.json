@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-19",
+            "titulo": "Se Puede (10 Años de Canciones)",
+            "artista": "María Ruiz & Noelia Morgana",
+            "youtube": "https://youtu.be/ez4_7y2je5Y",
+            "spotify": "https://open.spotify.com/track/1wOLP23rzNCOrx8j2Luk0Y?si=OW253abVQ4eqIp1ye9cqHA&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/ez4_7y2je5Y/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-18",
             "titulo": "Cuando El Agua Hirviendo",
             "artista": "Milo J",
