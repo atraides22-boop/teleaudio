@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-18",
+            "titulo": "Cuando El Agua Hirviendo",
+            "artista": "Milo J",
+            "youtube": "https://youtu.be/Zwggkz3z6SY",
+            "spotify": "https://open.spotify.com/track/1EGahoey0DylpaNtGk3Mae?si=pxX4XwMJSJSU19iQIX5fbQ&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/Zwggkz3z6SY/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-17",
             "titulo": "'Hay un fuego'",
             "artista": "La M.O.D.A.",
