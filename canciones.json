@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-22",
+            "titulo": "Hermana duda",
+            "artista": "Jorge Drexler",
+            "youtube": "https://youtu.be/uS4NevvO-jc",
+            "spotify": "https://open.spotify.com/track/5uZZ88IZdP8aai502Jj4gW?si=D-aJde1fRZySwUr1biKFOQ&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/uS4NevvO-jc/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-21",
             "titulo": "Eres (MTV Unplugged)",
             "artista": "Café Tacvba",
