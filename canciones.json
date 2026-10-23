@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-23",
+            "titulo": "Nos Ocupamos del Mar",
+            "artista": "Alberto Pérez",
+            "youtube": "https://youtu.be/VGnMxL3A2tQ",
+            "spotify": "",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/VGnMxL3A2tQ/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-22",
             "titulo": "Hermana duda",
             "artista": "Jorge Drexler",
