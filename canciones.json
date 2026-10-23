@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-21",
+            "titulo": "Eres (MTV Unplugged)",
+            "artista": "Café Tacvba",
+            "youtube": "https://youtu.be/PlA9o1rw-rY",
+            "spotify": "https://open.spotify.com/track/7stJkVkDr8fn52qR2HL2I0?si=_qhQTrZ_RUudbCnsBSJdDw&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/PlA9o1rw-rY/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-20",
             "titulo": "Octubre",
             "artista": "Santero y Los Muchachos",
