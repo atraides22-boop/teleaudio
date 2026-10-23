@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-25",
+            "titulo": "Sign of the Times",
+            "artista": "Harry Styles",
+            "youtube": "https://youtu.be/qN4ooNx77u0",
+            "spotify": "https://open.spotify.com/track/5Ohxk2dO5COHF1krpoPigN?si=SpIMY5jaRGWFdSXGBY8aYg&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/qN4ooNx77u0/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-23",
             "titulo": "Nos Ocupamos del Mar",
             "artista": "Alberto Pérez",
