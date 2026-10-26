@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-27",
+            "titulo": "Miénteme al oído",
+            "artista": "Luz Casal",
+            "youtube": "https://youtu.be/RyD1QIHYQB8",
+            "spotify": "https://open.spotify.com/track/04huFyrSsqCyFl0Lcjks0c?si=38vwn9YmRrmOKHpv_X6Huw&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/RyD1QIHYQB8/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-26",
             "titulo": "Variables",
             "artista": "The New Raemon",
