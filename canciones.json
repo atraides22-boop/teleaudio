@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-25",
+            "titulo": "Sargento de Hierro",
+            "artista": "Morgan",
+            "youtube": "https://youtu.be/cx5h4QUhG58",
+            "spotify": "https://open.spotify.com/track/1pv5scBTTQyqN2NOiEj8oe?si=ODjTih85TBqUCYr68w6GXg&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/cx5h4QUhG58/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-24",
             "titulo": "Sign of the Times",
             "artista": "Harry Styles",
