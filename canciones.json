@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-26",
+            "titulo": "Variables",
+            "artista": "The New Raemon",
+            "youtube": "https://youtu.be/y4zI9VPtjrQ",
+            "spotify": "https://open.spotify.com/track/33MzyhD65Zm7c7ukastxcr?si=zLoN_NNlQBey3BLtP3jRng&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/y4zI9VPtjrQ/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-25",
             "titulo": "Sargento de Hierro",
             "artista": "Morgan",
