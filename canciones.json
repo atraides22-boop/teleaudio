@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-29",
+            "titulo": "Agujeros de gusano",
+            "artista": "IZAL",
+            "youtube": "https://youtu.be/sqzSLjW8x1k",
+            "spotify": "https://open.spotify.com/track/20hgRx10nNad4Se5vVL4fR?si=bZ5gFoZ6SEyIaj9z1ga7gw&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/sqzSLjW8x1k/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-28",
             "titulo": "TODOS MIS MALES (con Dani Martín)",
             "artista": "SIDECARS",
