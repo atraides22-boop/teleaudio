@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-28",
+            "titulo": "TODOS MIS MALES (con Dani Martín)",
+            "artista": "SIDECARS",
+            "youtube": "https://youtu.be/-v8OYDnj2xY",
+            "spotify": "https://open.spotify.com/track/7riXYl8wPi1wkrYrGc56Yh?si=VW-XTtK8S3-Zrwsxh1XFgw&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/-v8OYDnj2xY/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-27",
             "titulo": "Miénteme al oído",
             "artista": "Luz Casal",
