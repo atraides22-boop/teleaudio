@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-10-31",
+            "titulo": "Puta Vida",
+            "artista": "Supersubmarina",
+            "youtube": "https://youtu.be/6P6lcLw_iaQ",
+            "spotify": "https://youtu.be/prmzWy98c-I",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/6P6lcLw_iaQ/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-10-30",
             "titulo": "La de la Mala Suerte (feat. Pablo Alborán)",
             "artista": "Jesse & Joy",
