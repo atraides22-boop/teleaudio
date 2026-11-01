@@ -1,6 +1,14 @@
 {
     "canciones": [
         {
+            "fecha": "2026-11-02",
+            "titulo": "Causa perdida",
+            "artista": "Nena daconte",
+            "youtube": "https://youtu.be/pZA3SyENvPU",
+            "spotify": "https://open.spotify.com/track/1sv7obfXqfsuDodMZSO5PN?si=jSMfjicAT5i21eVmwEjRyw&utm_source=copy-link",
+            "likes": 0
+        },
+        {
             "fecha": "2026-10-31",
             "titulo": "Puta Vida",
             "artista": "Supersubmarina",
@@ -87,7 +95,7 @@
             "artista": "Jorge Drexler",
             "youtube": "https://youtu.be/uS4NevvO-jc",
             "spotify": "https://open.spotify.com/track/5uZZ88IZdP8aai502Jj4gW?si=D-aJde1fRZySwUr1biKFOQ&utm_source=copy-link",
-            "likes": 0,
+            "likes": 1,
             "portada": "https://i.ytimg.com/vi/uS4NevvO-jc/hqdefault.jpg"
         },
         {
