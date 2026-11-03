@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-11-04",
+            "titulo": "El amor no se explica",
+            "artista": "Vanesa Martín",
+            "youtube": "https://youtu.be/FDVl6fLlcuw",
+            "spotify": "https://open.spotify.com/track/0kRxxQaxIPAmuf3vjUXOfU?si=9_bT5AXgRROPsoUG5WWBdg&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/FDVl6fLlcuw/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-11-03",
             "titulo": "El bien",
             "artista": "Viva Suecia",
