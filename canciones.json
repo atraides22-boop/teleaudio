@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-11-06",
+            "titulo": "Un buen día",
+            "artista": "Los planetas",
+            "youtube": "https://youtu.be/5KwqOxlwQlc",
+            "spotify": "https://open.spotify.com/track/53AdGgVPCP8P4CutTFKJ1V?si=S8qscUMPQJagx50mbLGZFQ&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/5KwqOxlwQlc/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-11-05",
             "titulo": "No Te Preocupes por Mi",
             "artista": "Leiva",
