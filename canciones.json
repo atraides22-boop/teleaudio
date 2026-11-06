@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-11-07",
+            "titulo": "Vuelves",
+            "artista": "Rozalén",
+            "youtube": "https://youtu.be/RtxOajecGqU",
+            "spotify": "https://open.spotify.com/track/4oHTChAK7Ixs3VtkrHQCtI?si=p8aJ5baTTlWEx22365fb-g&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/RtxOajecGqU/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-11-06",
             "titulo": "Un buen día",
             "artista": "Los planetas",
