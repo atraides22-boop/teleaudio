@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-11-09",
+            "titulo": "Me Prometo",
+            "artista": "Antoñito Molina",
+            "youtube": "https://youtu.be/if6FSD1Aj-A",
+            "spotify": "https://open.spotify.com/track/2JRYGpV7u6iQCVtvupDyFe?si=lYy4ptJNRYakcObJzrek1A&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/if6FSD1Aj-A/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-11-08",
             "titulo": "Materia Prestada",
             "artista": "Carlos Ares",
