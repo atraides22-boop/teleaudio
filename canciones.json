@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-11-10",
+            "titulo": "Frente a Frente",
+            "artista": "Enrique Bunbury (con Miren Iza “Tulsa\")",
+            "youtube": "https://youtu.be/2eIy648WfJQ",
+            "spotify": "https://open.spotify.com/track/5kFkQoKmsuRZjjS4GEaxNj?si=LrHefH6yR9SCZa7jTMfn5g&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/2eIy648WfJQ/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-11-09",
             "titulo": "Me Prometo",
             "artista": "Antoñito Molina",
