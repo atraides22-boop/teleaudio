@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-11-12",
+            "titulo": "Mi rock perdido",
+            "artista": "Los Rodriguez",
+            "youtube": "https://youtu.be/8tRu1o-h4wg",
+            "spotify": "https://open.spotify.com/track/1cGAix30oina7PtIHLoQvp?si=X6xIg9EqQlaxDdBg9GqgUg&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/8tRu1o-h4wg/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-11-11",
             "titulo": "GARRA",
             "artista": "Sienna",
