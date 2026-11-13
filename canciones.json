@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-11-13",
+            "titulo": "Hacia lo salvaje",
+            "artista": "Amaral",
+            "youtube": "https://youtu.be/bVK4oR_AbZ8",
+            "spotify": "https://open.spotify.com/track/3jGevJ0rCPTpfY4hmZUxaN?si=swzyDxzOShKgkcamPLmvVA&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/bVK4oR_AbZ8/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-11-12",
             "titulo": "Mi rock perdido",
             "artista": "Los Rodriguez",
