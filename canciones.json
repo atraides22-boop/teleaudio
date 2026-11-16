@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-11-16",
+            "titulo": "Disfruto",
+            "artista": "Carla Morrison",
+            "youtube": "https://youtu.be/_ruEj-XK1lA",
+            "spotify": "https://open.spotify.com/track/6UR5tB1wVm7qvH4xfsHr8m?si=PqEuMRV_R8ytj87njcnOig&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/_ruEj-XK1lA/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-11-15",
             "titulo": "A poco ft. Valeria Castro",
             "artista": "Tu Otra Bonita",
