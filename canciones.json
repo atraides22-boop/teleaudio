@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-11-17",
+            "titulo": "Ya no danzo al son de los tambores - Versión 2023",
+            "artista": "El Último de la Fila",
+            "youtube": "https://youtu.be/WtMcMQvXbvc",
+            "spotify": "https://open.spotify.com/track/7dTS9Lbnracrf2HLJcNV7T?si=JCYBvXI_Q2KjRXD7VwVugA&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/WtMcMQvXbvc/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-11-16",
             "titulo": "Disfruto",
             "artista": "Carla Morrison",
