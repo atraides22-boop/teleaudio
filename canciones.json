@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-11-18",
+            "titulo": "1932 (Letra - Lyrics)",
+            "artista": "La Maravillosa Orquesta del Alcohol (La M.O.D.A.)",
+            "youtube": "https://youtu.be/EZd1IOE-Pe8",
+            "spotify": "https://open.spotify.com/track/7qSYymHEX6i0hHof9EjqWW?si=dAqVQYwSRIeMTnUoh7Y2HA&utm_source=copy-link",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/EZd1IOE-Pe8/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-11-17",
             "titulo": "Ya no danzo al son de los tambores - Versión 2023",
             "artista": "El Último de la Fila",
