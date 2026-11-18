@@ -1,6 +1,15 @@
 {
     "canciones": [
         {
+            "fecha": "2026-11-19",
+            "titulo": "Termonuclear",
+            "artista": "Coque Malla",
+            "youtube": "https://youtu.be/AGIrlUYSCOA",
+            "spotify": "https://open.spotify.com/track/0cBIHt0oKoVinyjUND6JCS?si=CJeimldvTeSfjwDjQXuq2A&utm_source=copy-link&sci=spotify%3Acard-config%3A6XyVprNG7jrWMKqiAalBrQ",
+            "likes": 0,
+            "portada": "https://i.ytimg.com/vi/AGIrlUYSCOA/hqdefault.jpg"
+        },
+        {
             "fecha": "2026-11-18",
             "titulo": "1932 (Letra - Lyrics)",
             "artista": "La Maravillosa Orquesta del Alcohol (La M.O.D.A.)",
